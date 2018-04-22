@@ -1,10 +1,13 @@
 <?php
 
-namespace App\Models\SDE;
+namespace ESIK\Models\SDE;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Ancestry extends Model
 {
-    //
+    protected $primaryKey = 'id';
+    protected $table = 'ancestries';
+    public $incrementing = false;
+    protected static $unguarded = true;
 }

@@ -14,8 +14,21 @@ class CreateMemberBookmarksTable extends Migration
     public function up()
     {
         Schema::create('member_bookmarks', function (Blueprint $table) {
-            $table->increments('id');
+            $table->unsignedBigInteger('id');
+            $table->unsignedInteger('bookmark_id');
+            $table->unsignedInteger('folder_id')->nullable();
+            $table->timestamp('created')->nullable();
+            $table->string('label');
+            $table->text('notes')->nullable();
+            $table->unsignedInteger('location_id');
+            $table->unsignedBigInteger('creator_id');
+            $table->json('item')->nullable();
+            $table->json('coordinates')->nullable();
             $table->timestamps();
+
+            $table->primary(['id', 'bookmark_id']);
+
+            $table->foreign('id')->references('id')->on('members')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

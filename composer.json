@@ -27,7 +27,7 @@
             "database/factories"
         ],
         "psr-4": {
-            "App\\": "app/"
+            "ESIK\\": "app/"
         }
     },
     "autoload-dev": {

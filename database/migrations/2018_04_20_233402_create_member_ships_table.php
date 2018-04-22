@@ -14,8 +14,14 @@ class CreateMemberShipsTable extends Migration
     public function up()
     {
         Schema::create('member_ships', function (Blueprint $table) {
-            $table->increments('id');
+            $table->unsignedBigInteger('id');
+            $table->integer('type_id');
+            $table->string('name');
             $table->timestamps();
+
+            $table->primary(['id', 'type_id']);
+
+            $table->foreign('id')->references('id')->on('members')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

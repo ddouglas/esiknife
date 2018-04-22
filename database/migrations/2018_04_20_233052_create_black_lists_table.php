@@ -14,8 +14,12 @@ class CreateBlackListsTable extends Migration
     public function up()
     {
         Schema::create('black_lists', function (Blueprint $table) {
-            $table->increments('id');
+            $table->unsignedBigInteger('id');
+            $table->enum('type', ['character', 'corporation', 'alliance']);
+            $table->text('reason');
             $table->timestamps();
+
+            $table->primary('id');
         });
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace ESIK\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
