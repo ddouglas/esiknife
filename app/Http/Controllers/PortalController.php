@@ -17,7 +17,7 @@ class PortalController extends Controller
     }
     public function dashboard ()
     {
-        dd("This is the Dashboard View with no associated view");
+        return view('portal.dashboard');
     }
 
     public function welcome ()
@@ -50,7 +50,6 @@ class PortalController extends Controller
 
         if (Request::has('state')) {
             $ssoResponse = Session::get(Request::get('state'));
-
             // Session::forget(Request::get('state'));
             $hashedResponseScopes = hash('sha1', collect(explode(' ', $ssoResponse->get('Scopes')))->sort()->values()->implode(' '));
             if ($hashedResponseScopes !== $ssoResponse->get('authorizedScopesHash')) {
@@ -63,6 +62,7 @@ class PortalController extends Controller
                 return redirect(route('welcome'));
             }
             $getMemberData = $this->dataCont->getMemberData($ssoResponse->get('CharacterID'));
+
             $status = $getMemberData->status;
             $payload = $getMemberData->payload;
             if (!$status) {
@@ -159,7 +159,6 @@ class PortalController extends Controller
 
             if ($scopes->contains('esi-location.read_location.v1')) {
                 $getMemberLocation = $this->dataCont->getMemberLocation($member, $scopes);
-                dd($getMemberLocation);
                 $status = $getMemberLocation->status;
                 $payload = $getMemberLocation->payload;
                 if (!$status) {
@@ -178,14 +177,16 @@ class PortalController extends Controller
 
             if ($scopes->contains("esi-clones.read_clones.v1")) {
                 $getMemberClones = $this->dataCont->getMemberClones($member, $scopes);
-                dd($getMemberClones);
                 $status = $getMemberClones->status;
                 $payload = $getMemberClones->payload;
                 if (!$status) {
                     $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
-            return redirect(route('welcome'));
+            if (!Auth::check()) {
+                Auth::login($member);
+            }
+            return redirect(route('dashboard'));
         }
         return view('portal.welcome');
     }

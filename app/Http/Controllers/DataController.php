@@ -4,7 +4,7 @@ namespace ESIK\Http\Controllers;
 
 use Carbon, DOMDocument, Request, Session;
 
-use ESIK\Jobs\ESI\{GetCharacter, GetSystem, GetType, GetStation, GetStructure};
+use ESIK\Jobs\ESI\{GetCharacter, GetCorporation, GetSystem, GetType, GetStation, GetStructure};
 use ESIK\Models\{Member};
 use ESIK\Models\ESI\{Alliance, Character, Corporation, Station, Structure, System, Type};
 
@@ -121,6 +121,31 @@ class DataController extends Controller
             }
             $character->fill($data);
             $character->save();
+
+            $request = $this->httpCont->getCharactersCharacterIdCorporationHistory($id);
+            if (!$request->status) {
+                return $request;
+            }
+            $response = collect($request->payload->response)->recursive();
+            $corporationIds = $response->pluck('corporation_id')->unique();
+            $knownCorps = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
+            $now = now(); $x = 0;
+            $corporationIds->diff($knownCorps->keys())->each(function ($corporation) use (&$now, &$x) {
+                GetCorporation::dispatch($corporation)->delay($now);
+                if ($x%10==0) {
+                    $now->addSecond();
+                }
+                $x++;
+            });
+
+            $response->each(function ($record) use ($character) {
+                $character->corporationHistory()->updateOrCreate(['record_id' => $record->get('record_id')], [
+                    'corporation_id' => $record->get('corporation_id'),
+                    'is_deleted' => $record->has('is_deleted'),
+                    'start_date' => Carbon::parse($record->get('start_date'))
+                ]);
+            });
+
         }
         return (object)[
             'status' => true,
@@ -338,7 +363,6 @@ class DataController extends Controller
 
             });
         }
-        abort(200);
         return $request;
     }
 

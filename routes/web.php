@@ -11,9 +11,11 @@ Route::match(['GET'],'/sso/callback', 'SSOController@callback')->name('sso.callb
 Route::match(['GET'],'/sso/revoke', 'SSOController@revoke')->name('sso.revoke');
 Route::match(['GET'],'/sso/refresh', 'SSOController@refresh')->name('sso.refresh');
 
-
-Route::match(['GET', 'POST'], '/dashboard', 'PortalController@dashboard')->name('dashboard');
 Route::match(['GET', 'POST'], '/welcome', 'PortalController@welcome')->name('welcome');
+
+Route::group(['middleware' => ['auth']], function () {
+    Route::match(['GET', 'POST'], '/dashboard', 'PortalController@dashboard')->name('dashboard');
+});
 
 
 Route::match(['GET'], '/hack', 'HackingController@index');

@@ -159,6 +159,14 @@ class HttpController extends Controller
         ], 'get', config('services.eve.urls.esi'),"/v3/characters/{$id}/clones/", []);
     }
 
+    public function getCharactersCharacterIdCorporationHistory ($id)
+    {
+        return $this->request([
+            "Content-Type" => "application/json",
+            "User-Agent" => config('base.userAgent')
+        ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/corporationhistory/", []);
+    }
+
     public function getCharactersCharacterIdFittings ($id, $token)
     {
         return $this->request([

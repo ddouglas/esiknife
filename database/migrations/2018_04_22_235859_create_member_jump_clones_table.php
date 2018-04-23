@@ -20,6 +20,10 @@ class CreateMemberJumpClonesTable extends Migration
             $table->enum('location_type', ['station', 'structure']);
             $table->json('implants');
             $table->timestamps();
+
+            $table->primary(['id', 'clone_id']);
+
+            $table->foreign('id')->references('id')->on('members')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
