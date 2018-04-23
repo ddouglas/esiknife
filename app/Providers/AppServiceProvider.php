@@ -3,6 +3,9 @@
 namespace ESIK\Providers;
 
 use Illuminate\Support\{Collection, ServiceProvider};
+use Illuminate\Database\Eloquent\Relations\Relation;
+
+use ESIK\Models\ESI\{Station, Structure, System};
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +16,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        Relation::morphMap([
+            'system' => System::class,
+            'station' => Station::class,
+            'structure' => Structure::class
+        ]);
     }
 
     /**

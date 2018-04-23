@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateMemberShipsTable extends Migration
+class CreateMemberBookmarkFoldersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,16 +13,15 @@ class CreateMemberShipsTable extends Migration
      */
     public function up()
     {
-        Schema::create('member_ships', function (Blueprint $table) {
+        Schema::create('member_bookmark_folders', function (Blueprint $table) {
             $table->unsignedBigInteger('id');
-            $table->integer('type_id');
-            $table->unsignedBigInteger('item_id');
+            $table->unsignedInteger('folder_id');
             $table->string('name');
             $table->timestamps();
 
-            $table->primary(['id', 'type_id']);
+            $table->primary(['id', 'folder_id']);
 
-            $table->foreign('id')->references('id')->on('members')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('id')->references('id')->on('members')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
@@ -33,6 +32,6 @@ class CreateMemberShipsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('member_ships');
+        Schema::dropIfExists('member_bookmark_folders');
     }
 }

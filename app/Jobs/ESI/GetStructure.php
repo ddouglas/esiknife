@@ -8,21 +8,23 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
+use ESIK\Models\Member;
 use ESIK\Http\Controllers\DataController;
 
-class GetType implements ShouldQueue
+class GetStructure implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $id, $dataCont;
+    public $member, $id, $dataCont;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(int $id)
+    public function __construct(Member $member, int $id)
     {
+        $this->member = $member;
         $this->id = $id;
         $this->dataCont = new DataController();
     }
@@ -34,6 +36,6 @@ class GetType implements ShouldQueue
      */
     public function handle()
     {
-        return $this->dataCont->getType($this->id)->status;
+        return $this->dataCont->getStructure($this->member, $this->id)->status;
     }
 }

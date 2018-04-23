@@ -132,6 +132,24 @@ class HttpController extends Controller
         ], 'get', config('services.eve.urls.esi'),"/v1/status/", []);
     }
 
+    public function getCharactersCharacterIdBookmarks($id, $token)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config('base.userAgent')
+        ], 'get', config('services.eve.urls.esi'),"/v2/characters/{$id}/bookmarks/", []);
+    }
+
+    public function getCharactersCharacterIdBookmarksFolders($id, $token)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config('base.userAgent')
+        ], 'get', config('services.eve.urls.esi'),"/v2/characters/{$id}/bookmarks/folders/", []);
+    }
+
     public function getCharactersCharacterIdClones($id, $token)
     {
         return $this->request([

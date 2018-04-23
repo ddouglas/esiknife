@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateMemberShipsTable extends Migration
+class CreateMemberJumpClonesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,16 +13,13 @@ class CreateMemberShipsTable extends Migration
      */
     public function up()
     {
-        Schema::create('member_ships', function (Blueprint $table) {
+        Schema::create('member_jump_clones', function (Blueprint $table) {
             $table->unsignedBigInteger('id');
-            $table->integer('type_id');
-            $table->unsignedBigInteger('item_id');
-            $table->string('name');
+            $table->unsignedInteger('clone_id');
+            $table->unsignedBigInteger('location_id');
+            $table->enum('location_type', ['station', 'structure']);
+            $table->json('implants');
             $table->timestamps();
-
-            $table->primary(['id', 'type_id']);
-
-            $table->foreign('id')->references('id')->on('members')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 
@@ -33,6 +30,6 @@ class CreateMemberShipsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('member_ships');
+        Schema::dropIfExists('member_jump_clones');
     }
 }

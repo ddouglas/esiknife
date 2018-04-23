@@ -16,8 +16,8 @@ class CreateMemberLocationsTable extends Migration
         Schema::create('member_locations', function (Blueprint $table) {
             $table->unsignedBigInteger('id');
             $table->integer('solar_system_id')->nullable();
-            $table->integer('station_id')->nullable();
-            $table->unsignedBigInteger('structure_id')->nullable();
+            $table->unsignedBigInteger('location_id')->nullable();
+            $table->enum('location_type', ['station', 'structure', 'system'])->nullable();
             $table->timestamps();
 
             $table->primary('id');

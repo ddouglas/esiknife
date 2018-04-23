@@ -97,7 +97,7 @@ class PortalController extends Controller
                     'refresh_token' => $ssoResponse->get('refresh_token'),
                     'expires' => Carbon::now()->addSeconds($ssoResponse->get('expires_in'))->toDateTimeString()
                 ]);
-            } else if ($member->disabled) {
+            } else {
                 $member->fill([
                     'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
                     'access_token' => $ssoResponse->get('access_token'),
@@ -129,26 +129,63 @@ class PortalController extends Controller
                     $alert->push("Unfortunately we were unable to query your skills right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
+
             if ($scopes->contains('esi-skills.read_skillqueue.v1')) {
-                $getMemberSkillz = $this->dataCont->getMemberSkillqueue($member);
-                $status = $getMemberSkillz->status;
-                $payload = $getMemberSkillz->payload;
+                $getMemberSkillQueue = $this->dataCont->getMemberSkillqueue($member);
+                $status = $getMemberSkillQueue->status;
+                $payload = $getMemberSkillQueue->payload;
                 if (!$status) {
                     $alert->push("Unfortunately we were unable to query your skills right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
 
-            if ($scopes->contains('esi-wallet.read_character_wallet.v1')) {
-                $getMemberWallet = $this->dataCont->getMemberWallet($member);
-                $status = $getMemberWallet->status;
-                $payload = $getMemberWallet->payload;
+            if ($scopes->contains('esi-bookmarks.read_character_bookmarks.v1')) {
+                $getMemberBookmarks = $this->dataCont->getMemberBookmarks($member);
+                $status = $getMemberBookmarks->status;
+                $payload = $getMemberBookmarks->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your bookmarks right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains('esi-location.read_ship_type.v1')) {
+                $getMemberShip = $this->dataCont->getMemberShip($member);
+                $status = $getMemberShip->status;
+                $payload = $getMemberShip->payload;
                 if (!$status) {
                     $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
-                $member->fill([
-                    'wallet_balance' => $payload->response
-                ]);
             }
+
+            if ($scopes->contains('esi-location.read_location.v1')) {
+                $getMemberLocation = $this->dataCont->getMemberLocation($member, $scopes);
+                dd($getMemberLocation);
+                $status = $getMemberLocation->status;
+                $payload = $getMemberLocation->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains('esi-location.read_location.v1')) {
+                $getMemberLocation = $this->dataCont->getMemberLocation($member, $scopes);
+                $status = $getMemberLocation->status;
+                $payload = $getMemberLocation->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains("esi-clones.read_clones.v1")) {
+                $getMemberClones = $this->dataCont->getMemberClones($member, $scopes);
+                dd($getMemberClones);
+                $status = $getMemberClones->status;
+                $payload = $getMemberClones->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+            return redirect(route('welcome'));
         }
         return view('portal.welcome');
     }

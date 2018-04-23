@@ -66,8 +66,38 @@ class Member extends Authenticatable
     {
         return $this->belongsToMany(Type::class, 'member_skillz', 'id', 'skill_id')->withPivot('active_skill_level','trained_skill_level', 'skillpoints_in_skill');
     }
-    public function skill_queue()
+    public function skillQueue()
     {
-        return $this->belongsToMany(Type::class, 'member_skill_queues', 'id', 'skill_id')->withPivot('queue_position', 'finished_level', 'starting_sp', 'finishing_sp', 'training_start_sp', 'start_date', 'finish_date');
+        return $this->belongsToMany(Type::class, 'member_skill_queue', 'id', 'skill_id')->withPivot('queue_position', 'finished_level', 'starting_sp', 'finishing_sp', 'training_start_sp', 'start_date', 'finish_date');
+    }
+
+    public function bookmarks()
+    {
+        return $this->hasMany(MemberBookmark::class, 'id', 'id');
+    }
+
+    public function bookmarkFolders()
+    {
+        return $this->hasMany(MemberBookmarkFolder::class, 'id', 'id');
+    }
+
+    public function clone()
+    {
+        $this->morphTo('clone', 'clone_location_type', 'clone_location_id', 'id');
+    }
+
+    public function jumpClones()
+    {
+        return $this->hasMany(MemberJumpClone::class, 'id', 'id');
+    }
+
+    public function ship()
+    {
+        return $this->hasOne(MemberShip::class, 'id', 'id');
+    }
+
+    public function location ()
+    {
+        return $this->hasOne(MemberLocation::class, 'id', 'id')->with('location_info');
     }
 }

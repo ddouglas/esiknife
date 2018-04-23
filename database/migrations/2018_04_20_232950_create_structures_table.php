@@ -16,10 +16,10 @@ class CreateStructuresTable extends Migration
         Schema::create('structures', function (Blueprint $table) {
             $table->unsignedBigInteger('id');
             $table->string('name');
-            $table->unsignedInteger('solar_system_id');
-            $table->double('pos_x');
-            $table->double('pos_y');
-            $table->double('pos_z');
+            $table->unsignedInteger('solar_system_id')->nullable();
+            $table->double('pos_x')->nullable();
+            $table->double('pos_y')->nullable();
+            $table->double('pos_z')->nullable();
             $table->timestamp('cached_until')->nullable();
             $table->timestamps();
 

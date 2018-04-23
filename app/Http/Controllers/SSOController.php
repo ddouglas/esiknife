@@ -30,6 +30,7 @@ class SSOController extends Controller
         }
         $data = collect();
         $stateSession = Session::get(Request::get('state'));
+        Session::forget(Request::get('state'));
         //CSRF Passed, lets verify the Authorization Code now
         $verifyAuthCode = $this->dataCont->verifyAuthCode(Request::get('code'));
         if (!$verifyAuthCode->status) {

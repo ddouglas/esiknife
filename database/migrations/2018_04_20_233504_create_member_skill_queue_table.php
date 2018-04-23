@@ -15,12 +15,11 @@ class CreateMemberSkillQueueTable extends Migration
     {
         Schema::create('member_skill_queue', function (Blueprint $table) {
             $table->unsignedBigInteger('id');
-            $table->unsignedInteger('group_id');
-            $table->unsignedInteger('type_id');
             $table->unsignedInteger('queue_position');
+            $table->unsignedInteger('skill_id');
             $table->unsignedInteger('finished_level');
-            $table->unsignedInteger('starting_sp')->nullable();
-            $table->unsignedInteger('finishing_sp')->nullable();
+            $table->unsignedInteger('level_start_sp')->nullable();
+            $table->unsignedInteger('level_end_sp')->nullable();
             $table->unsignedInteger('training_start_sp')->nullable();
             $table->timestamp('start_date')->nullable();
             $table->timestamp('finish_date')->nullable();

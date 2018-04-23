@@ -44,7 +44,7 @@ return [
         'scope_map'=>[
             'readCharacterBookmarks' => "esi-bookmarks.read_character_bookmarks.v1",
             'readCharacterClones' => "esi-clones.read_clones.v1",
-            'readCharacterCloneImplants' => "esi-clones.read_implants.v1",
+            'readCharacterImplants' => "esi-clones.read_implants.v1",
             'readCharacterContracts' => "esi-contracts.read_character_contracts.v1",
             'readCharacterLocation' => "esi-location.read_location.v1",
             'readCharacterShip' => "esi-location.read_ship_type.v1",

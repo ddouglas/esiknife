@@ -4,8 +4,9 @@ namespace ESIK\Http\Controllers;
 
 use Carbon, DOMDocument, Request, Session;
 
-use ESIK\Jobs\ESI\{GetType};
-use ESIK\Models\ESI\{Character, Corporation, Alliance, Type};
+use ESIK\Jobs\ESI\{GetCharacter, GetSystem, GetType, GetStation, GetStructure};
+use ESIK\Models\{Member};
+use ESIK\Models\ESI\{Alliance, Character, Corporation, Station, Structure, System, Type};
 
 use Illuminate\Support\Collection;
 
@@ -200,6 +201,7 @@ class DataController extends Controller
         ];
     }
 
+
     // Method from the Character Skils Namepsace
 
     /**
@@ -208,21 +210,243 @@ class DataController extends Controller
     * @param ESIK\Models\Member $member Instance of Eloquent Member Model. This model contains the id and token we need to make the call.
     * @return mixed
     */
-    public function getMemberSkillz ($member)
+    public function getMemberBookmarks (Member $member)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdBookmarksFolders($member->id, $member->access_token);
+        if (!$request->status) {
+            return $request;
+        }
+        $response = collect($request->payload->response)->recursive();
+        $member->bookmarkFolders()->delete();
+        $member->bookmarkFolders()->createMany($response->toArray());
+
+        $request = $this->httpCont->getCharactersCharacterIdBookmarks($member->id, $member->access_token);
+        if (!$request->status) {
+            return $request;
+        }
+        $response = collect($request->payload->response)->recursive();
+        $itemTypeIds = $response->pluck('item.type_id')->unique()->reject(function ($item) {
+            return is_null($item);
+        })->values();
+
+        $knownTypes = Type::whereIn('id', $itemTypeIds->toArray())->get()->keyBy('id');
+
+        $now = now(); $x = 0;
+        $knownTypes->keys()->diff($itemTypeIds)->each(function ($type) use (&$now, &$x){
+            GetType::dispatch($type)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $locationIds = $response->pluck('location_id')->unique()->values();
+        $knownSystems = System::whereIn('id', $locationIds->toArray())->get()->keyBy('id');
+
+        $now = now(); $x = 0;
+        $knownSystems->keys()->diff($locationIds)->each(function ($system) use (&$now, &$x){
+            GetSystem::dispatch($system)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $creatorIds = $response->pluck('creator_id')->unique()->values();
+        $knownCreators = Character::whereIn('id', $creatorIds->toArray())->get()->keyBy('id');
+        $now = now(); $x = 0;
+        $knownCreators->keys()->diff($creatorIds)->each(function ($character) use (&$now, &$x) {
+            GetCharacter::dispatch($character)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $bookmarks = collect();
+        $response->each(function ($bookmark) use ($bookmarks) {
+            $bookmarks->put($bookmark->get('bookmark_id'), collect([
+                'bookmark_id' => $bookmark->get('bookmark_id'),
+                "folder_id" => $bookmark->get('folder_id'),
+                "label" => $bookmark->get('label'),
+                "notes" => $bookmark->get('notes'),
+                "location_id" => $bookmark->get('location_id'),
+                "creator_id" => $bookmark->get('creator_id'),
+                "created" => Carbon::parse($bookmark->get('created')),
+            ]));
+            if ($bookmark->has('item')) {
+                $bookmarks->get($bookmark->get('bookmark_id'))->put('item_id', $bookmark->get('item')->get('item_id'));
+                $bookmarks->get($bookmark->get('bookmark_id'))->put('item_type_id', $bookmark->get('item')->get('type_id'));
+            }
+            if ($bookmark->has('coordinates')) {
+                $bookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
+            }
+        });
+        $member->bookmarks()->delete();
+        $member->bookmarks()->createMany($bookmarks->toArray());
+
+        return $request;
+    }
+
+    // Method from the Character Skils Namepsace
+
+    public function getMemberClones(Member $member, Collection $scopes)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdClones($member->id, $member->access_token);
+        if (!$request->status) {
+            return $request;
+        }
+        $response = collect($request->payload->response)->recursive();
+        $deathClone = $response->get('home_location');
+
+        if ($deathClone->get('location_type') === "structure") {
+            GetStructure::dispatch($member, $deathClone->get('location_id'));
+        } elseif ($deathClone->get('location_type') === "station") {
+            GetStation::dispatch($deathClone->get('location_id'));
+        }
+
+        $member->fill([
+            'clone_location_id' => $deathClone->get('location_id'),
+            'clone_location_type' => $deathClone->get('location_type')
+        ]);
+        $member->save();
+
+        if ($response->get('jump_clones')->isNotEmpty()) {
+            $jumpClones = collect();
+            $response->get('jump_clones')->keyBy('jump_clone_id')->each(function ($clone) use ($member, $scopes, $jumpClones) {
+                $member->jumpClones()->updateOrCreate(['clone_id' => $clone->get('jump_clone_id')], [
+                    'location_id' => $clone->get('location_id'),
+                    'location_type' => $clone->get('location_type'),
+                    'implants' => $clone->get('implants')->toJson()
+                ]);
+                if ($clone->get('location_type') === "structure") {
+                    $structure = Structure::firstOrNew(['id' => $clone->get('location_id')]);
+                    if (!$structure->exists || $structure->name === "Unknown Structure ". $clone->get('location_id')) {
+                        if ($scopes->contains('esi-universe.read_structures.v1')) {
+                            GetStructure::dispatch($member, $clone->get('location_id'));
+                        } else {
+                            $structure->fill(['name' => "Unknown Structure " . $clone->get('location_id')]);
+                            $structure->save();
+                        }
+                    }
+                } elseif ($clone->get('location_type') === "station") {
+                    $station = Station::firstOrNew(['id' => $response->get('station_id')]);
+                    if (!$station->exists) {
+                        GetStation::dispatch($response->get('station_id'));
+                    }
+                }
+
+            });
+        }
+        abort(200);
+        return $request;
+    }
+
+    // Method from the Character Skils Namepsace
+
+    /**
+    * Fetches and Parses the current skills of the member
+    *
+    * @param ESIK\Models\Member $member Instance of Eloquent Member Model. This model contains the id and token we need to make the call.
+    * @return mixed
+    */
+    public function getMemberLocation (Member $member, Collection $scopes)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdLocation($member->id, $member->access_token);
+        if (!$request->status) {
+            return $request;
+        }
+        $response = collect($request->payload->response)->recursive();
+
+        $system = System::firstOrNew(['id' => $response->get('solar_system_id')]);
+        if (!$system->exists) {
+            GetSystem::dispatch($response->get('solar_system_id'));
+        }
+
+        // Query System ID for System Dat was successful, Set Member Location Data
+        $location = collect([
+            "solar_system_id" => $system->id,
+            "location_id" => null,
+            "location_type" => null
+        ]);
+
+        // Does the property station_data exists? If yes, character is currently in a Station or Outpost.
+        if ($response->has('station_id')) {
+            $station = Station::firstOrNew(['id' => $response->get('station_id')]);
+            if (!$station->exists) {
+                GetStation::dispatch($response->get('station_id'));
+            }
+            $location->put('location_id', $response->get('station_id'));
+            $location->put('location_type', "station");
+
+        } else if ($response->has('structure_id')) {
+            $structure = Structure::firstOrNew(['id' => $response->get('structure_id')]);
+            if (!$structure->exists || $structure->name === "Unknown Structure ". $response->get('structure_id')) {
+                if ($scopes->contains('esi-universe.read_structures.v1')) {
+                    GetStructure::dispatch($member, $response->get('structure_id'));
+                } else {
+                    $structure->fill(['name' => "Unknown Structure " . $structure->id]);
+                    $structure->save();
+                }
+            }
+            $location->put('location_id', $response->get('structure_id'));
+            $location->put('location_type', "structure");
+        } else {
+            $location->put('location_id', $response->get('solar_system_id'));
+            $location->put('location_type', "system");
+        }
+        $member->location()->updateOrCreate([], $location->toArray());
+
+        return $request;
+    }
+
+    /**
+    * Fetches and Parses the current skills of the member
+    *
+    * @param ESIK\Models\Member $member Instance of Eloquent Member Model. This model contains the id and token we need to make the call.
+    * @return mixed
+    */
+    public function getMemberShip (Member $member)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdShip($member->id, $member->access_token);
+        if (!$request->status) {
+            return $request;
+        }
+        $response = collect($request->payload->response)->recursive();
+        $shipTypeInfo = Type::where('id', $response->get('ship_type_id'))->first();
+        if (is_null($shipTypeInfo)) {
+            GetType::dispatch($response->get('ship_type_id'));
+        }
+
+        $member->ship()->updateOrCreate([], [
+            'type_id' => $response->get('ship_type_id'),
+            'item_id' => $response->get('ship_item_id'),
+            'name' => $response->get('ship_name')
+        ]);
+
+        return $request;
+    }
+
+    // Method from the Character Skils Namepsace
+
+    /**
+    * Fetches and Parses the current skills of the member
+    *
+    * @param ESIK\Models\Member $member Instance of Eloquent Member Model. This model contains the id and token we need to make the call.
+    * @return mixed
+    */
+    public function getMemberSkillz (Member $member)
     {
         $request = $this->httpCont->getCharactersCharacterIdSkillz($member->id, $member->access_token);
         if (!$request->status) {
             return $request;
         }
         $response = collect($request->payload->response)->recursive();
-        $skills = $response->get('skills')->recursive()->keyBy('skill_id');
+        $skills = $response->get('skills')->keyBy('skill_id');
         $skillIds = $skills->keys();
         $knownTypes = Type::whereIn('id', $skillIds->toArray())->get()->keyBy('id');
-
-        $diff = $skills->diffKeys($knownTypes);
-
         $now = now(); $x = 0;
-        $diff->each(function ($skill) use (&$now, &$x){
+        $skills->diffKeys($knownTypes)->each(function ($skill) use (&$now, &$x){
             GetType::dispatch($skill->get('skill_id'))->delay($now);
             if ($x%10==0) {
                 $now->addSecond();
@@ -238,41 +462,46 @@ class DataController extends Controller
         return $request;
     }
 
-    public function getMemberSkillqueue($member)
+    public function getMemberSkillqueue(Member $member)
     {
         $request = $this->httpCont->getCharactersCharacterIdSkillqueue($member->id, $member->access_token);
         if (!$request->status) {
             return $request;
         }
         $response = collect($request->payload->response)->recursive()->keyBy('queue_position');
-        dump($response);
-        abort(200);
-        $skillqueue = collect();
+        $skillIds = $response->pluck('skill_id')->unique()->values();
+        $knownTypes = Type::whereIn('id', $skillIds->toArray())->get();
+        $knownTypeIds = $knownTypes->pluck('id');
 
-        foreach($response as $queue_item) {
-            $type = Type::firstOrNew(['id' => $queue_item->skill_id]);
-            if (property_exists($queue_item, 'finish_date')) {
-                if (Carbon::parse($queue_item->finish_date)->lt(Carbon::now())) {
-                    continue;
-                }
+        $now = now(); $x = 0;
+        $skillIds->diff($knownTypeIds)->each(function ($skill) use (&$now, &$x){
+            GetType::dispatch($skill)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
             }
-            if (!$type->exists) {
-                GetType::dispatch($queue_item->skill_id);
+            $x++;
+        });
+
+        $skillQueue = collect();
+
+        $response->each(function ($queue_item) use ($skillQueue) {
+            if (property_exists($queue_item, 'finish_data') && Carbon::parse($queue_item->finish_date)->lt(Carbon::now())) {
+                return true;
             }
-            $skillqueue->put($queue_item->queue_position, collect([
-                'type_id' => $queue_item->skill_id,
-                'queue_position' => $queue_item->queue_position,
-                'finished_level' => $queue_item->finished_level,
-                'starting_sp' => $queue_item->level_start_sp,
-                'finishing_sp' => $queue_item->level_end_sp,
-                'training_start_sp' => $queue_item->training_start_sp,
-                'start_date' => property_exists($queue_item, 'start_date') ? $queue_item->start_date : null,
-                'finish_date' => property_exists($queue_item, 'finish_date') ? $queue_item->finish_date : null
+            $skillQueue->put($queue_item->get('queue_position'), collect([
+                'skill_id' => $queue_item->get('skill_id'),
+                'queue_position' => $queue_item->get('queue_position'),
+                'finished_level' => $queue_item->get('finished_level'),
+                'level_start_sp' => $queue_item->get('level_start_sp'),
+                'level_end_sp' => $queue_item->get('level_end_sp'),
+                'training_start_sp' => $queue_item->get('training_start_sp'),
+                'start_date' => $queue_item->has('start_date') ? Carbon::parse($queue_item->get('start_date')) : null,
+                'finish_date' => $queue_item->has('finish_date') ? Carbon::parse($queue_item->get('finish_date')) : null
             ]));
-        }
+        });
 
-        $member->skill_queue()->detach();
-        $member->skill_queue()->attach($skillqueue->toArray());
+        $member->skillQueue()->detach();
+        $member->skillQueue()->attach($skillQueue->toArray());
 
         return $request;
     }
@@ -285,7 +514,7 @@ class DataController extends Controller
     * @param ESIK\Models\Member $member Instance of Eloquent Member Model. This model contains the id and token we need to make the call.
     * @return mixed
     */
-    public function getMemberWallet($member)
+    public function getMemberWallet(Member $member)
     {
         $request = $this->httpCont->getCharactersCharacterIdWallet($member->id, $member->access_token);
         if (!$request->status) {
@@ -317,7 +546,10 @@ class DataController extends Controller
         if (!$structure->exists || $structure->cached_until < Carbon::now()) {
             $request = $this->httpCont->getUniverseStructuresStructureId($id, $member->access_token);
             if (!$request->status) {
-                $structure->fill(['name' => "Unknown Structure " . $structure->id])->save();
+                if (!$structure->exists) {
+                    $structure->fill(['name' => "Unknown Structure " . $structure->id]);
+                    $structure->save();
+                }
                 return $request;
             }
             $response = $request->payload->response;
@@ -328,7 +560,8 @@ class DataController extends Controller
                 'pos_y' => $response->position->y,
                 'pos_z' => $response->position->z,
                 'cached_until' => isset($responseHeaders['Expires']) ? Carbon::parse($responseHeaders['Expires'])->toDateTimeString() : Carbon::now()->addHour()->toDateTimeString()
-            ])->save();
+            ]);
+            $structure->save();
         }
         return (object)[
             'status' => true,

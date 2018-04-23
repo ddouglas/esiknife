@@ -16,8 +16,10 @@ class CreateMembersTable extends Migration
         Schema::create('members', function (Blueprint $table) {
             $table->unsignedBigInteger('id');
             $table->unsignedBigInteger('main')->nullable();
-            $table->string('email')->nullable();
-            $table->boolean('is_comms_officer')->default(0);
+            $table->float('wallet_balance', 17,2)->nullable();
+            $table->unsignedInteger('total_sp')->nullable();
+            $table->unsignedBigInteger('clone_location_id')->nullable();
+            $table->enum('clone_location_type', ['station', 'structure'])->nullable();
             $table->string('raw_hash');
             $table->string('hash', 64);
             $table->string('access_token')->nullable();

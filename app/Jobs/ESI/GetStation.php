@@ -10,7 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 
 use ESIK\Http\Controllers\DataController;
 
-class GetType implements ShouldQueue
+class GetStation implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -34,6 +34,6 @@ class GetType implements ShouldQueue
      */
     public function handle()
     {
-        return $this->dataCont->getType($this->id)->status;
+        return $this->dataCont->getStation($this->id)->status;
     }
 }

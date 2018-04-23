@@ -22,7 +22,8 @@ class CreateMemberBookmarksTable extends Migration
             $table->text('notes')->nullable();
             $table->unsignedInteger('location_id');
             $table->unsignedBigInteger('creator_id');
-            $table->json('item')->nullable();
+            $table->unsignedBigInteger('item_id')->nullable();
+            $table->unsignedBigInteger('item_type_id')->nullable();
             $table->json('coordinates')->nullable();
             $table->timestamps();
 
