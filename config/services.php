@@ -53,6 +53,20 @@ return [
             'readCharacterSkillQueue' => "esi-skills.read_skillqueue.v1",
             'readCharacterWallet' => "esi-wallet.read_character_wallet.v1",
             'readUniverseStructures' => "esi-universe.read_structures.v1",
+        ],
+        'dogma' => [
+            'attributes' => [
+                'skillz' => [
+                    'map' => [
+                        182 => 277,
+                        183 => 278,
+                        184 => 279,
+                        1285 => 1286,
+                        1289 => 1287,
+                        1290 => 1288
+                    ]
+                ]
+            ]
         ]
     ],
 

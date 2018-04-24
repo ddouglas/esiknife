@@ -23,6 +23,11 @@ class Type extends Model
         return $this->hasMany(TypeDogmaAttribute::class, 'type_id');
     }
 
+    public function skillAttributes()
+    {
+        return $this->hasMany(TypeDogmaAttribute::class, 'type_id')->whereIn('attribute_id', [182,183,184,1285,1289,1290,277,278,279,1286,1287,1288]);
+    }
+
     public function effects()
     {
         return $this->hasMany(TypeDogmaEffect::class, 'type_id');

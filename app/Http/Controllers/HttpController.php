@@ -457,6 +457,22 @@ class HttpController extends Controller
         ], 'get', config('services.eve.urls.esi'),"/v3/universe/types/{$id}/", []);
     }
 
+    public function getDogmaAttributesAttributeId ($id)
+    {
+        return $this->request([
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'get', config('services.eve.urls.esi'),"/v1/dogma/attributes/{$id}/", []);
+    }
+
+    public function getDogmaEffectsEffectId ($id)
+    {
+        return $this->request([
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'get', config('services.eve.urls.esi'),"/v2/dogma/effects/{$id}/", []);
+    }
+
     public function getUniverseGroupsGroupId ($id)
     {
         return $this->request([

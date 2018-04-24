@@ -4,6 +4,8 @@ namespace ESIK\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use ESIK\Models\ESI\System;
+
 class MemberLocation extends Model
 {
     protected $primaryKey = 'id';
@@ -14,5 +16,10 @@ class MemberLocation extends Model
     public function location_info ()
     {
         return $this->morphTo('location_info', 'location_type', 'location_id', 'id');
+    }
+
+    public function system ()
+    {
+        return $this->hasOne(System::class, 'id', 'solar_system_id');
     }
 }

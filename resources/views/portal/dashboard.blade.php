@@ -23,7 +23,9 @@
                             <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Race:</strong> {{ title_case(Auth::user()->info->race->name) }}</li>
                             <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Ancestry:</strong> {{ title_case(Auth::user()->info->ancestry->name) }}</li>
                             <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Bloodline:</strong> {{ title_case(Auth::user()->info->bloodline->name) }}</li>
-
+                            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterShip')))
+                                <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Ship:</strong> {{ Auth::user()->ship->name }} ({{ Auth::user()->ship->type->name }})</li>
+                            @endif
                         </ul>
                     </div>
                     <div class="col-lg-6">
@@ -33,6 +35,13 @@
                             <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Corporation:</strong> {{ Auth::user()->info->corporation->name }}</li>
                             @if (Auth::user()->info->alliance_id !== null)
                                 <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Alliance:</strong> {{ Auth::user()->info->alliance->name }}</li>
+                            @endif
+                            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterLocation')))
+                                @if ($scopes->contains(config('services.eve.scopes.readUniverseStructures')))
+                                    <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ Auth::user()->location->location_info->name }}</li>
+                                @else
+                                    <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ Auth::user()->location->system->name }}</li>
+                                @endif
                             @endif
                         </ul>
                     </div>

@@ -4,6 +4,8 @@ namespace ESIK\Http\Controllers;
 
 use Auth, Carbon, Request, Session, Validator;
 use ESIK\Models\Member;
+use ESIK\Models\SDE\Group;
+use ESIK\Models\ESI\Type;
 use ESIK\Http\Controllers\DataController;
 
 class PortalController extends Controller
@@ -23,23 +25,93 @@ class PortalController extends Controller
     public function skills ()
     {
         $skillz = collect();
-        $groups = collect();
-        Auth::user()->skillz->load('group')->each(function ($skill) use ($skillz, $groups) {
-            if (!$groups->has($skill->group_id)) {
-                $groups->put($skill->group_id, $skill->group);
-            }
+        Auth::user()->skillz->load('group')->each(function ($skill) use ($skillz) {
             if (!$skillz->has($skill->group_id)) {
                 $skillz->put($skill->group_id, collect([
                     'name' => $skill->group->name,
-                    'key' => strtolower(implode('_', explode(' ', $skill->group->name))),
                     'skills' => collect()
                 ]));
             }
             $skillz->get($skill->group_id)->get('skills')->put($skill->skill_id, $skill);
         });
         return view('portal.skillz', [
-            'skills' => $skillz,
-            'groups' => $groups
+            'skillz' => $skillz
+        ]);
+    }
+
+    public function bookmarks () {
+        Auth::user()->load('bookmarks.system', 'bookmarks.creator', 'bookmarks.type', 'bookmarkFolders');
+        return view('portal.bookmarks');
+    }
+
+    public function flyable ()
+    {
+        $skillz = Auth::user()->skillz->keyBy('id');
+        $shipGroups = Group::where('category_id', 6)->get()->pluck('id');
+        $ships = Type::whereIn('group_id', $shipGroups)->where('published', 1)->with('skillAttributes', 'group')->get()->keyBy('id');
+        $skillzAttributeMap = collect(config('services.eve.dogma.attributes.skillz.map'));
+        $flyable = collect();
+        $ships->each(function ($ship) use ($flyable, $skillz, $skillzAttributeMap) {
+            $ship->canFly = false;
+            $shipAttributes = $ship->skillAttributes->keyBy('attribute_id');
+
+            $skillzAttributeMap->each(function ($skillLevel, $skillId) use ($skillz, $shipAttributes, $ship) {
+                if ($shipAttributes->has($skillId) && $shipAttributes->has($skillLevel)) {
+                    $requiredSkill = (int)$shipAttributes->get($skillId)->value;
+                    $requiredSkillLevel = (int)$shipAttributes->get($skillLevel)->value;
+                    if ($skillz->has($requiredSkill) && $skillz->get($requiredSkill)->pivot->active_skill_level >= (int)$requiredSkillLevel) {
+                        $ship->canFly = true;
+                    } else {
+                        $ship->canFly = false;
+                        return false;
+                    }
+                }
+            });
+            if (!$flyable->has($ship->group_id)) {
+                $flyable->put($ship->group_id, collect([
+                    'name' => $ship->group->name,
+                    'key' => strtolower(implode('_', explode(' ', $ship->group->name))),
+                    'ships' => collect([
+                        'can' => collect(),
+                        'cant' => collect()
+                    ])
+                ]));
+            }
+            if ($ship->canFly) {
+                $flyable->get($ship->group_id)->get('ships')->get('can')->put($ship->id, $ship);
+            } else {
+                $flyable->get($ship->group_id)->get('ships')->get('cant')->put($ship->id, $ship);
+            }
+        });
+        return view('portal.flyable', [
+            'flyable' => $flyable
+        ]);
+    }
+
+    public function queue ()
+    {
+        $groupsTraining = collect();
+        $spTraining = collect();
+
+        Auth::user()->skillQueue->load('group')->each(function ($item) use ($spTraining, $groupsTraining) {
+            if (!$groupsTraining->has($item->group_id)) {
+                $item->training = 0;
+                $groupsTraining->put($item->group_id, $item);
+            }
+            $groupsTraining->get($item->group_id)->training = $groupsTraining->get($item->group_id)->training + 1;
+            if (!is_null($item->pivot->level_end_sp) && !is_null($item->pivot->training_start_sp)) {
+                $spTraining->push($item->pivot->level_end_sp - $item->pivot->training_start_sp);
+            }
+        });
+        $lastSkill = Auth::user()->skillQueue->last();
+        $queueComplete = "No Skills are currently training";
+        if (!is_null($lastSkill->pivot->finish_date)) {
+            $queueComplete = Carbon::parse($lastSkill->pivot->finish_date)->toDayDateTimeString();
+        }
+        return view('portal.queue', [
+            'groupsTraining' => $groupsTraining,
+            'spTraining' => $spTraining,
+            'queueComplete' => $queueComplete
         ]);
     }
 

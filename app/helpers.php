@@ -55,3 +55,29 @@ if (!function_exists('age')) {
         return trim($results);
     }
 }
+
+
+if (!function_exists('num2rom')) {
+    /**
+    * Takes in a number and returns a roman numeral.
+    *
+    * Stole it from https://stackoverflow.com/questions/14994941/numbers-to-roman-numbers-with-php
+    *
+    * @param int $number
+    * @return string $number
+    */
+    function num2rom(int $number) {
+        $map = array('M' => 1000, 'CM' => 900, 'D' => 500, 'CD' => 400, 'C' => 100, 'XC' => 90, 'L' => 50, 'XL' => 40, 'X' => 10, 'IX' => 9, 'V' => 5, 'IV' => 4, 'I' => 1);
+        $numeral = '';
+        while ($number > 0) {
+            foreach ($map as $roman => $int) {
+                if($number >= $int) {
+                    $number -= $int;
+                    $numeral .= $roman;
+                    break;
+                }
+            }
+        }
+        return $numeral;
+    }
+}

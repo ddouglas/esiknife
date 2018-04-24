@@ -10,4 +10,9 @@ class MemberBookmarkFolder extends Model
     protected $table = 'member_bookmark_folders';
     public $incrementing = false;
     protected static $unguarded = true;
+
+    public function bookmarks()
+    {
+        return $this->hasMany(MemberBookmark::class, 'folder_id', 'folder_id');
+    }
 }

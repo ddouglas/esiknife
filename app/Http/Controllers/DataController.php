@@ -27,7 +27,7 @@ class DataController extends Controller
     */
     public function verifyAuthCode(string $code)
     {
-        return $this->httpCont->oauthVerifyAuthCode($payload);
+        return $this->httpCont->oauthVerifyAuthCode($code);
     }
 
     /**
@@ -233,26 +233,72 @@ class DataController extends Controller
     public function getMemberBookmarks (Member $member)
     {
         $request = $this->httpCont->getCharactersCharacterIdBookmarksFolders($member->id, $member->access_token);
-        if (!$request->status) {
+        $status = $request->status;
+        $payload = $request->payload;
+        if (!$status) {
             return $request;
         }
-        $response = collect($request->payload->response)->recursive();
+        $response = collect($payload->response)->recursive();
         $member->bookmarkFolders()->delete();
         $member->bookmarkFolders()->createMany($response->toArray());
 
+        unset($status, $payload);
+
         $request = $this->httpCont->getCharactersCharacterIdBookmarks($member->id, $member->access_token);
-        if (!$request->status) {
+        $status = $request->status;
+        $payload = $request->payload;
+        if (!$status) {
             return $request;
         }
-        $response = collect($request->payload->response)->recursive();
+        $response = collect($payload->response)->recursive();
+
+        unset($status, $payload);
+
         $itemTypeIds = $response->pluck('item.type_id')->unique()->reject(function ($item) {
             return is_null($item);
         })->values();
+        $locationIds = $response->pluck('location_id')->unique()->values();
+        $creatorIds = $response->pluck('creator_id')->unique()->values();
+
+
+
+        $ids = $itemTypeIds->merge($locationIds)->merge($creatorIds);
+
+        $request = $this->postUniverseNames($ids);
+        $status = $request->status;
+        $payload = $request->payload;
+        if (!$status) {
+            return $request;
+        }
+
+        $types = collect(); $characters = collect(); $corporations = collect(); $regions = collect(); $constellations = collect(); $systems = collect();
+        $response = collect($payload->response)->recursive()->each(function ($item) use ($types, $characters, $corporations, $regions, $constellations, $systems) {
+            if ($item->get('category') === "character") {
+                $characters->put($item->get('id'), $item);
+            }
+            if ($item->get('category') === "corporation") {
+                $corporations->put($item->get('id'), $item);
+            }
+            if ($item->get('category') === "system") {
+                $systems->put($item->get('id'), $item);
+            }
+            if ($item->get('category') === "constellation") {
+                $constellations->put($item->get('id'), $item);
+            }
+            if ($item->get('category') === "regions") {
+                $regions->put($item->get('id'), $item);
+            }
+            if ($item->get('category') === "inventory_type") {
+                $types->put($item->get('id'), $item);
+            }
+        });
+
+        dd($types, $characters, $corporations, $regions, $constellations, $systems);
 
         $knownTypes = Type::whereIn('id', $itemTypeIds->toArray())->get()->keyBy('id');
 
         $now = now(); $x = 0;
-        $knownTypes->keys()->diff($itemTypeIds)->each(function ($type) use (&$now, &$x){
+        $itemTypeIds->diff($knownTypes->keys())->each(function ($type) use (&$now, &$x){
             GetType::dispatch($type)->delay($now);
             if ($x%10==0) {
                 $now->addSecond();
@@ -260,11 +306,11 @@ class DataController extends Controller
             $x++;
         });
 
-        $locationIds = $response->pluck('location_id')->unique()->values();
+
         $knownSystems = System::whereIn('id', $locationIds->toArray())->get()->keyBy('id');
 
         $now = now(); $x = 0;
-        $knownSystems->keys()->diff($locationIds)->each(function ($system) use (&$now, &$x){
+        $locationIds->diff($knownSystems->keys())->each(function ($system) use (&$now, &$x){
             GetSystem::dispatch($system)->delay($now);
             if ($x%10==0) {
                 $now->addSecond();
@@ -272,10 +318,10 @@ class DataController extends Controller
             $x++;
         });
 
-        $creatorIds = $response->pluck('creator_id')->unique()->values();
         $knownCreators = Character::whereIn('id', $creatorIds->toArray())->get()->keyBy('id');
+
         $now = now(); $x = 0;
-        $knownCreators->keys()->diff($creatorIds)->each(function ($character) use (&$now, &$x) {
+        $creatorIds->diff($knownCreators->keys())->each(function ($character) use (&$now, &$x) {
             GetCharacter::dispatch($character)->delay($now);
             if ($x%10==0) {
                 $now->addSecond();

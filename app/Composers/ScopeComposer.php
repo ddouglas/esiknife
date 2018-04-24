@@ -2,7 +2,7 @@
 
 namespace ESIK\Composers;
 
-use Auth;
+use Auth, Route;
 
 class ScopeComposer
 {
@@ -10,5 +10,6 @@ class ScopeComposer
         if (Auth::check()) {
             $view->with('scopes', Auth::user()->scopes);
         }
+        $view->with('currentRouteName', Route::currentRouteName());
     }
 }
