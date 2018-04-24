@@ -45,7 +45,6 @@ class Refresh extends Command
             if ($member->disabled) {
                 return true;
             }
-
             $this->ssoCont->refresh($member);
         });
     }

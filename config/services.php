@@ -20,6 +20,7 @@ return [
     ],
 
     'eve' => [
+        'userAgent' => "ESIKnife (ESIK) || David Davaham (David Douglas) || ddouglas@douglaswebdev.net",
         'sso' => [
             'id' => env('EVESSO_CLIENT_ID'),
             'secret' => env('EVESSO_CLIENT_SECRET'),
@@ -41,7 +42,7 @@ return [
                 'chrRaces'
             ]
         ],
-        'scope_map'=>[
+        'scopes'=>[
             'readCharacterBookmarks' => "esi-bookmarks.read_character_bookmarks.v1",
             'readCharacterClones' => "esi-clones.read_clones.v1",
             'readCharacterImplants' => "esi-clones.read_implants.v1",

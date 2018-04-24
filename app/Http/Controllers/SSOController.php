@@ -65,12 +65,7 @@ class SSOController extends Controller
 
     public function refresh(Member $member)
     {
-        $payload = collect([
-            'cid' => config('base.clientId'),
-            'cs' => config('base.clientSecret'),
-            'rt' => $member->refresh_token,
-        ]);
-		$postRefreshToken = $this->httpCont->postRefreshToken($payload);
+		$postRefreshToken = $this->httpCont->postRefreshToken($member->refresh_token);
         $status = $postRefreshToken->status;
         $payload = $postRefreshToken->payload;
 		if (!$status) {
@@ -93,12 +88,6 @@ class SSOController extends Controller
 
     public function revoke ($token, $type="refresh_token")
     {
-        $payload = collect([
-            'cid' => config('base.clientId'),
-            'cs' => config('base.clientSecret'),
-            'rt' => $token,
-            't' => $type
-        ]);
-        return $this->httpCont->postRevokeToken($payload);
+        return $this->httpCont->postRevokeToken($token, $type);
     }
 }

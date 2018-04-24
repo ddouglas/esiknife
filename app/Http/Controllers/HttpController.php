@@ -52,16 +52,16 @@ class HttpController extends Controller
         return $response;
     }
 
-    public function oauthVerifyAuthCode (Collection $payload)
+    public function oauthVerifyAuthCode (string $code)
     {
         return $this->request([
-            "Authorization" => "Basic ".base64_encode($payload->get('cid').":".$payload->get('cs')),
+            "Authorization" => "Basic ".base64_encode(config("services.eve.sso.id").":".config("services.eve.sso.secret")),
             "Content-Type" => "application/x-www-form-urlencoded",
             "Host" => "login.eveonline.com",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'post', config('services.eve.urls.sso'),"/oauth/token", [
             'grant_type' => "authorization_code",
-            'code' => $payload->get('c')
+            'code' => $code
         ]);
     }
 
@@ -70,33 +70,33 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ".$token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/verify/", []);
     }
 
-    public function postRefreshToken (Collection $payload)
+    public function postRefreshToken (string $token)
     {
         return $this->request([
-            "Authorization" => "Basic " . base64_encode($payload->get("cid").":".$payload->get("cs")),
+            "Authorization" => "Basic ".base64_encode(config("services.eve.sso.id").":".config("services.eve.sso.secret")),
             "Content-Type" => "application/json",
             "Host" => "login.eveonline.com",
-            "User-Agent" => config("base.userAgent")
+            "User-Agent" => config("services.eve.userAgent")
         ], 'post', config("services.eve.urls.sso"),"/oauth/token", json_encode([
             "grant_type" => "refresh_token",
-            "refresh_token" => $payload->get("rt")
+            "refresh_token" => $token
         ]));
     }
 
-    public function postRevokeToken (Collection $payload)
+    public function postRevokeToken (string $token, string $hint = "refresh_token")
     {
         return $this->request([
-            "Authorization" => "Basic " . base64_encode($payload->get("cid").":".$payload->get("cs")),
+            "Authorization" => "Basic ".base64_encode(config("services.eve.sso.id").":".config("services.eve.sso.secret")),
             "Content-Type" => "application/json",
             "Host" => "login.eveonline.com",
-            "User-Agent" => config("base.userAgent")
+            "User-Agent" => config("services.eve.userAgent")
         ], 'post', config("services.eve.urls.sso"),"/oauth/revoke", json_encode([
-            "token_type_hint" => $payload->get("t"),
-            "token" => $payload->get("rt")
+            "token_type_hint" => $hint,
+            "token" => $token
         ]));
     }
 
@@ -104,7 +104,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'), "/v4/characters/{$id}/", []);
     }
 
@@ -112,7 +112,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v4/corporations/{$id}/", []);
     }
 
@@ -120,7 +120,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v3/alliances/{$id}/", []);
     }
 
@@ -128,7 +128,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/status/", []);
     }
 
@@ -137,7 +137,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v2/characters/{$id}/bookmarks/", []);
     }
 
@@ -146,7 +146,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v2/characters/{$id}/bookmarks/folders/", []);
     }
 
@@ -155,7 +155,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v3/characters/{$id}/clones/", []);
     }
 
@@ -163,7 +163,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/corporationhistory/", []);
     }
 
@@ -172,7 +172,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/fittings/", []);
     }
 
@@ -181,7 +181,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'post', config('services.eve.urls.esi'),"/v1/characters/{$id}/fittings/", $payload);
     }
 
@@ -190,7 +190,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'delete', config('services.eve.urls.esi'),"/v1/characters/{$id}/fittings/{$fitting_id}/", []);
     }
 
@@ -204,7 +204,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/", $params);
     }
 
@@ -213,7 +213,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/lists/", []);
     }
 
@@ -222,7 +222,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v3/characters/{$id}/mail/labels/", []);
     }
 
@@ -231,7 +231,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/{$mailId}/", []);
     }
 
@@ -240,7 +240,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'post', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/", json_encode($payload));
     }
 
@@ -249,7 +249,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'put', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/{$mail_id}/", json_encode($payload));
     }
 
@@ -258,7 +258,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'delete', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/{$mail_id}/", []);
     }
 
@@ -267,7 +267,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/contacts/", []);
     }
 
@@ -276,7 +276,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/wallet/", []);
     }
 
@@ -285,7 +285,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v3/characters/{$id}/wallet/journal/", []);
     }
 
@@ -294,7 +294,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/wallet/transactions/", []);
     }
 
@@ -303,7 +303,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/contracts/", []);
     }
 
@@ -312,7 +312,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/contracts/$contractId/items/", []);
     }
 
@@ -321,7 +321,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/location/", []);
     }
 
@@ -330,7 +330,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/roles/", []);
     }
 
@@ -339,7 +339,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/ship/", []);
     }
 
@@ -348,7 +348,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v4/characters/{$id}/skills/", []);
     }
 
@@ -357,7 +357,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v2/characters/{$id}/skillqueue/", []);
     }
 
@@ -366,7 +366,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/attributes/", []);
     }
 
@@ -375,7 +375,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v2/corporations/{$id}/members/", []);
     }
 
@@ -383,13 +383,13 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/alliances/{$id}/corporations/", []);
     }
 
     public function getMarketStatJson ($params){
         return $this->request([
-            "User-Agent" => config('base.userAgent'),
+            "User-Agent" => config("services.eve.userAgent"),
             "Content-Type" => "application/json"
         ], 'get', config('base.marketerUrl'),'/marketstat/json', $params);
     }
@@ -399,7 +399,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'post', config('services.eve.urls.esi'),"/v1/ui/openwindow/contract/", [
             'contract_id' => $id,
         ]);
@@ -410,7 +410,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'post', config('services.eve.urls.esi'),"/v1/ui/openwindow/marketdetails/", [
             'type_id' => $id
         ]);
@@ -420,7 +420,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/universe/planets/{$id}/", []);
     }
 
@@ -428,7 +428,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v2/universe/stations/{$id}/", []);
     }
 
@@ -437,7 +437,7 @@ class HttpController extends Controller
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/universe/structures/{$id}/", []);
     }
 
@@ -445,7 +445,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v2/universe/systems/{$id}/", []);
     }
 
@@ -453,8 +453,16 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v3/universe/types/{$id}/", []);
+    }
+
+    public function getUniverseGroupsGroupId ($id)
+    {
+        return $this->request([
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'get', config('services.eve.urls.esi'),"/v1/universe/groups/{$id}/", []);
     }
 
     public function postUniverseNames ($ids)
@@ -462,7 +470,7 @@ class HttpController extends Controller
         return $this->request([
             "Content-Type" => "application/json",
             "Accept" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'post', config('services.eve.urls.esi'),"/v2/universe/names/", json_encode($ids));
     }
 
@@ -471,7 +479,7 @@ class HttpController extends Controller
         return $this->request([
             "Content-Type" => "application/json",
             "Accept" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'post', config('services.eve.urls.esi'),"/v1/universe/ids/", json_encode($names));
     }
 
@@ -479,35 +487,35 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.sde'),"/chrAncestries.json", []);
     }
     public function getChrBloodlines()
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.sde'),"/chrBloodlines.json", []);
     }
     public function getChrRaces()
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.sde'),"/chrRaces.json", []);
     }
     public function getInvCategories()
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.sde'),"/invCategories.json", []);
     }
     public function getInvGroups()
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.sde'),"/invGroups.json", []);
     }
 
@@ -515,7 +523,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.sde'),"/mapConstellations.json", []);
     }
 
@@ -523,7 +531,7 @@ class HttpController extends Controller
     {
         return $this->request([
             "Content-Type" => "application/json",
-            "User-Agent" => config('base.userAgent')
+            "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.sde'),"/mapRegions.json", []);
     }
 }

@@ -27,11 +27,6 @@ class DataController extends Controller
     */
     public function verifyAuthCode(string $code)
     {
-        $payload = collect([
-            "cid" => config("services.eve.sso.id"),
-            "cs" => config("services.eve.sso.secret"),
-            "c" => $code
-        ]);
         return $this->httpCont->oauthVerifyAuthCode($payload);
     }
 
@@ -470,7 +465,7 @@ class DataController extends Controller
         $skillIds = $skills->keys();
         $knownTypes = Type::whereIn('id', $skillIds->toArray())->get()->keyBy('id');
         $now = now(); $x = 0;
-        $skills->diffKeys($knownTypes)->each(function ($skill) use (&$now, &$x){
+        $skills->diffKeys($knownTypes)->each(function ($skill) use (&$now, &$x) {
             GetType::dispatch($skill->get('skill_id'))->delay($now);
             if ($x%10==0) {
                 $now->addSecond();
@@ -755,6 +750,11 @@ class DataController extends Controller
             'status' => true,
             'payload' => $type
         ];
+    }
+
+    public function getGroup($id)
+    {
+        return $this->httpCont->getUniverseGroupsGroupId($id);
     }
 
     // Methods related to importing the SDE from zzeve

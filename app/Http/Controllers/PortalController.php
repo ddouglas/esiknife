@@ -20,6 +20,29 @@ class PortalController extends Controller
         return view('portal.dashboard');
     }
 
+    public function skills ()
+    {
+        $skillz = collect();
+        $groups = collect();
+        Auth::user()->skillz->load('group')->each(function ($skill) use ($skillz, $groups) {
+            if (!$groups->has($skill->group_id)) {
+                $groups->put($skill->group_id, $skill->group);
+            }
+            if (!$skillz->has($skill->group_id)) {
+                $skillz->put($skill->group_id, collect([
+                    'name' => $skill->group->name,
+                    'key' => strtolower(implode('_', explode(' ', $skill->group->name))),
+                    'skills' => collect()
+                ]));
+            }
+            $skillz->get($skill->group_id)->get('skills')->put($skill->skill_id, $skill);
+        });
+        return view('portal.skillz', [
+            'skills' => $skillz,
+            'groups' => $groups
+        ]);
+    }
+
     public function welcome ()
     {
         if (Request::isMethod('post')) {
@@ -31,7 +54,7 @@ class PortalController extends Controller
             }
             $selected = collect(Request::get('scopes'))->keys();
             $authorized = $selected->map(function($scope) {
-                return config('services.eve.scope_map')[$scope];
+                return config('services.eve.scopes')[$scope];
             });
 
             $authorized = $authorized->sort()->values()->implode(' ');
