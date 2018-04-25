@@ -10,4 +10,9 @@ class Constellation extends Model
     protected $table = 'constellations';
     public $incrementing = false;
     protected static $unguarded = true;
+
+    public function location()
+    {
+        return $this->morphOn(MemberBookmark::class, 'location');
+    }
 }

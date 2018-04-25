@@ -26,7 +26,7 @@ class HttpController extends Controller
                 'url' => $curl->url,
                 'code' => $curl->httpStatusCode,
                 'headers' => (object)[
-                    'request' => collect($curl->requestHeaders)->toArray(),
+                    'request' => collect($curl->requestHeaders)->put('data', $data)->toArray(),
                     'response' => collect($curl->responseHeaders)->toArray()
                 ],
                 'response' => $curl->response
@@ -192,6 +192,15 @@ class HttpController extends Controller
             "Content-Type" => "application/json",
             "User-Agent" => config("services.eve.userAgent")
         ], 'delete', config('services.eve.urls.esi'),"/v1/characters/{$id}/fittings/{$fitting_id}/", []);
+    }
+
+    public function getCharactersCharacterIdImplants($id, $token)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/implants/", []);
     }
 
     public function getCharactersCharacterIdMail ($id, $token, $lmid = null)

@@ -5,7 +5,8 @@ namespace ESIK\Providers;
 use Illuminate\Support\{Collection, ServiceProvider};
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-use ESIK\Models\ESI\{Station, Structure, System};
+use ESIK\Models\ESI\{Station, Structure, System, Character, Corporation};
+use ESIK\Models\SDE\{Constellation, Region};
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,8 +19,13 @@ class AppServiceProvider extends ServiceProvider
     {
         Relation::morphMap([
             'system' => System::class,
+            'solar_system' => System::class,
             'station' => Station::class,
-            'structure' => Structure::class
+            'structure' => Structure::class,
+            'character' => Character::class,
+            'corporation' => Corporation::class,
+            'constellation' => Constellation::class,
+            'region' => Region::class
         ]);
     }
 

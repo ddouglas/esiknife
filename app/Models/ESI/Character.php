@@ -49,4 +49,9 @@ class Character extends Model
     {
         return $this->hasOne(Race::class, 'id', "race_id");
     }
+
+    public function creator()
+    {
+        return $this->morphOn(MemberBookmark::class, 'creator');
+    }
 }

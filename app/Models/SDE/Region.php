@@ -10,4 +10,9 @@ class Region extends Model
     protected $table = 'regions';
     public $incrementing = false;
     protected static $unguarded = true;
+
+    public function location()
+    {
+        return $this->morphOn(MemberBookmark::class, 'location');
+    }
 }

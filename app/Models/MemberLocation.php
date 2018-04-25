@@ -13,9 +13,9 @@ class MemberLocation extends Model
     public $incrementing = false;
     protected static $unguarded = true;
 
-    public function location_info ()
+    public function info ()
     {
-        return $this->morphTo('location_info', 'location_type', 'location_id', 'id');
+        return $this->morphTo('info', 'location_type', 'location_id', 'id');
     }
 
     public function system ()

@@ -15,6 +15,7 @@ Route::match(['GET', 'POST'], '/welcome', 'PortalController@welcome')->name('wel
 
 Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET'], '/bookmarks', 'PortalController@bookmarks')->name('bookmarks');
+    Route::match(['GET'], '/clones', 'PortalController@clones')->name('clones');
     Route::match(['GET'], '/dashboard', 'PortalController@dashboard')->name('dashboard');
     Route::match(['GET'], '/skills', 'PortalController@skills')->name('skillz');
     Route::match(['GET'], '/skills/flyable', 'PortalController@flyable')->name('skillz.flyable');

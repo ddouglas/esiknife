@@ -13,13 +13,23 @@ class Structure extends Model
     public $incrementing = false;
     protected static $unguarded = true;
 
-    public function location_info ()
+    public function info ()
     {
-        return $this->morphOne(MemberLocation::class);
+        return $this->morphOne(MemberLocation::class, 'info');
     }
 
-    public function clone_info ()
+    public function clone ()
     {
-        return $this->morphOne(MemberLocation::class);
+        return $this->morphOne(Member::class, "clone");
+    }
+
+    public function jumpClones ()
+    {
+        return $this->morphOne(MemberJumpClones::class, "location");
+    }
+
+    public function location()
+    {
+        return $this->morphOn(MemberBookmark::class, 'location');
     }
 }

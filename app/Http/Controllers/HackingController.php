@@ -19,7 +19,7 @@ class HackingController extends Controller
     {
         // $type = Type::where('name', "%Ares%")->first();
         // dd($type);
-        return $this->typesWithAttributesEffects(29990);
+        return $this->typesWithAttributesEffects(9942);
     }
 
     public function typesWithAttributesEffects ($type_id)

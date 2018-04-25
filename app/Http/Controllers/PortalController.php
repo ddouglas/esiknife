@@ -40,8 +40,20 @@ class PortalController extends Controller
     }
 
     public function bookmarks () {
-        Auth::user()->load('bookmarks.system', 'bookmarks.creator', 'bookmarks.type', 'bookmarkFolders');
+        Auth::user()->load('bookmarks', 'bookmarkFolders');
         return view('portal.bookmarks');
+    }
+
+    public function clones ()
+    {
+
+        if (Auth::user()->scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
+            Auth::user()->load('implants.attributes');
+        }
+        if (Auth::user()->scopes->contains(config('services.eve.scopes.readCharacterClones'))) {
+            Auth::user()->load('clone', 'jumpClones');
+        }
+        return view('portal.clones');
     }
 
     public function flyable ()
@@ -261,19 +273,19 @@ class PortalController extends Controller
                 }
             }
 
-            if ($scopes->contains('esi-location.read_location.v1')) {
-                $getMemberLocation = $this->dataCont->getMemberLocation($member, $scopes);
-                $status = $getMemberLocation->status;
-                $payload = $getMemberLocation->payload;
+            if ($scopes->contains("esi-clones.read_clones.v1")) {
+                $getMemberClones = $this->dataCont->getMemberClones($member, $scopes);
+                $status = $getMemberClones->status;
+                $payload = $getMemberClones->payload;
                 if (!$status) {
                     $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
 
-            if ($scopes->contains("esi-clones.read_clones.v1")) {
-                $getMemberClones = $this->dataCont->getMemberClones($member, $scopes);
-                $status = $getMemberClones->status;
-                $payload = $getMemberClones->payload;
+            if ($scopes->contains("esi-clones.read_implants.v1")) {
+                $getMemberImplants = $this->dataCont->getMemberImplants($member, $scopes);
+                $status = $getMemberImplants->status;
+                $payload = $getMemberImplants->payload;
                 if (!$status) {
                     $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }

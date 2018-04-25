@@ -10,4 +10,9 @@ class Corporation extends Model
     protected $table = 'corporations';
     public $incrementing = false;
     protected static $unguarded = true;
+
+    public function creator()
+    {
+        return $this->morphOn(MemberBookmark::class, 'creator');
+    }
 }

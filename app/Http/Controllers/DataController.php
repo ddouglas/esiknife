@@ -250,16 +250,13 @@ class DataController extends Controller
         if (!$status) {
             return $request;
         }
-        $response = collect($payload->response)->recursive();
-
+        $bookmarks = collect($payload->response)->recursive();
         unset($status, $payload);
-
-        $itemTypeIds = $response->pluck('item.type_id')->unique()->reject(function ($item) {
+        $itemTypeIds = $bookmarks->pluck('item.type_id')->unique()->reject(function ($item) {
             return is_null($item);
         })->values();
-        $locationIds = $response->pluck('location_id')->unique()->values();
-        $creatorIds = $response->pluck('creator_id')->unique()->values();
-
+        $locationIds = $bookmarks->pluck('location_id')->unique()->values();
+        $creatorIds = $bookmarks->pluck('creator_id')->unique()->values();
 
 
         $ids = $itemTypeIds->merge($locationIds)->merge($creatorIds);
@@ -271,86 +268,92 @@ class DataController extends Controller
             return $request;
         }
 
-        $types = collect(); $characters = collect(); $corporations = collect(); $regions = collect(); $constellations = collect(); $systems = collect();
-        $response = collect($payload->response)->recursive()->each(function ($item) use ($types, $characters, $corporations, $regions, $constellations, $systems) {
-            if ($item->get('category') === "character") {
-                $characters->put($item->get('id'), $item);
-            }
-            if ($item->get('category') === "corporation") {
-                $corporations->put($item->get('id'), $item);
-            }
-            if ($item->get('category') === "system") {
-                $systems->put($item->get('id'), $item);
-            }
-            if ($item->get('category') === "constellation") {
-                $constellations->put($item->get('id'), $item);
-            }
-            if ($item->get('category') === "regions") {
-                $regions->put($item->get('id'), $item);
-            }
-            if ($item->get('category') === "inventory_type") {
-                $types->put($item->get('id'), $item);
-            }
-        });
-
-        dd($types, $characters, $corporations, $regions, $constellations, $systems);
-
-        $knownTypes = Type::whereIn('id', $itemTypeIds->toArray())->get()->keyBy('id');
+        // $types = collect(); $characters = collect(); $corporations = collect(); $regions = collect(); $constellations = collect(); $systems = collect();
+        $dictionary = collect($payload->response)->recursive()->keyBy('id');
+        // ->each(function ($item) use ($types, $characters, $corporations, $regions, $constellations, $systems) {
+        //     if ($item->get('category') === "character") {
+        //         $characters->put($item->get('id'), $item);
+        //     }
+        //     if ($item->get('category') === "corporation") {
+        //         $corporations->put($item->get('id'), $item);
+        //     }
+        //     if ($item->get('category') === "system") {
+        //         $systems->put($item->get('id'), $item);
+        //     }
+        //     if ($item->get('category') === "constellation") {
+        //         $constellations->put($item->get('id'), $item);
+        //     }
+        //     if ($item->get('category') === "regions") {
+        //         $regions->put($item->get('id'), $item);
+        //     }
+        //     if ($item->get('category') === "inventory_type") {
+        //         $types->put($item->get('id'), $item);
+        //     }
+        // });
 
         $now = now(); $x = 0;
-        $itemTypeIds->diff($knownTypes->keys())->each(function ($type) use (&$now, &$x){
-            GetType::dispatch($type)->delay($now);
-            if ($x%10==0) {
-                $now->addSecond();
+        $characterIds = $dictionary->where('category', 'character')->pluck('id');
+        if ($characterIds->isNotEmpty()) {
+            $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
+            $characterIds->diff($knownCharacters->keys())->each(function ($character) use (&$now, &$x) {
+                GetCharacter::dispatch($character)->delay($now);
+                if ($x%10==0) {
+                    $now->addSecond();
+                }
+                $x++;
+            });
+        }
+
+        $corporationIds = $dictionary->where('category', 'corporation')->pluck('id');
+        if ($corporationIds->isNotEmpty()) {
+            $knownCorporations = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
+            $corporationIds->diff($knownCorporations->keys())->each(function ($corporation) use (&$now, &$x) {
+                GetCorporation::dispatch($corporation)->delay($now);
+                if ($x%10==0) {
+                    $now->addSecond();
+                }
+                $x++;
+            });
+        }
+
+        $systemIds = $dictionary->where('category', 'system')->pluck('id');
+        if ($systemIds->isNotEmpty()) {
+            $knownSystems = System::whereIn('id', $systemIds->toArray())->get()->keyBy('id');
+            $systemIds->diff($knownSystems->keys())->each(function ($system) use (&$now, &$x) {
+                GetSystem::dispatch($system)->delay($now);
+                if ($x%10==0) {
+                    $now->addSecond();
+                }
+                $x++;
+            });
+        }
+
+        $memBookmarks = collect();
+        $bookmarks->each(function ($bookmark) use ($memBookmarks,$dictionary) {
+            if (is_null($dictionary->get($bookmark->get('location_id')))) {
+                dd($dictionary->get($bookmark->get('location_id')), $bookmark);
             }
-            $x++;
-        });
-
-
-        $knownSystems = System::whereIn('id', $locationIds->toArray())->get()->keyBy('id');
-
-        $now = now(); $x = 0;
-        $locationIds->diff($knownSystems->keys())->each(function ($system) use (&$now, &$x){
-            GetSystem::dispatch($system)->delay($now);
-            if ($x%10==0) {
-                $now->addSecond();
-            }
-            $x++;
-        });
-
-        $knownCreators = Character::whereIn('id', $creatorIds->toArray())->get()->keyBy('id');
-
-        $now = now(); $x = 0;
-        $creatorIds->diff($knownCreators->keys())->each(function ($character) use (&$now, &$x) {
-            GetCharacter::dispatch($character)->delay($now);
-            if ($x%10==0) {
-                $now->addSecond();
-            }
-            $x++;
-        });
-
-        $bookmarks = collect();
-        $response->each(function ($bookmark) use ($bookmarks) {
-            $bookmarks->put($bookmark->get('bookmark_id'), collect([
+            $memBookmarks->put($bookmark->get('bookmark_id'), collect([
                 'bookmark_id' => $bookmark->get('bookmark_id'),
                 "folder_id" => $bookmark->get('folder_id'),
                 "label" => $bookmark->get('label'),
                 "notes" => $bookmark->get('notes'),
                 "location_id" => $bookmark->get('location_id'),
+                "location_type" => $dictionary->get($bookmark->get('location_id'))->get('category'),
                 "creator_id" => $bookmark->get('creator_id'),
+                "creator_type" => $dictionary->get($bookmark->get('creator_id'))->get('category'),
                 "created" => Carbon::parse($bookmark->get('created')),
             ]));
             if ($bookmark->has('item')) {
-                $bookmarks->get($bookmark->get('bookmark_id'))->put('item_id', $bookmark->get('item')->get('item_id'));
-                $bookmarks->get($bookmark->get('bookmark_id'))->put('item_type_id', $bookmark->get('item')->get('type_id'));
+                $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_id', $bookmark->get('item')->get('item_id'));
+                $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_type_id', $bookmark->get('item')->get('type_id'));
             }
             if ($bookmark->has('coordinates')) {
-                $bookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
+                $memBookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
             }
         });
         $member->bookmarks()->delete();
-        $member->bookmarks()->createMany($bookmarks->toArray());
-
+        $member->bookmarks()->createMany($memBookmarks->toArray());
         return $request;
     }
 
@@ -404,6 +407,31 @@ class DataController extends Controller
 
             });
         }
+        return $request;
+    }
+
+    public function getMemberImplants(Member $member, Collection $scopes)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdImplants($member->id, $member->access_token);
+
+        if (!$request->status) {
+            return $request;
+        }
+        $response = collect($request->payload->response)->recursive();
+
+        $knownImplants = Type::whereIn('id', $response->toArray())->get()->keyBy('id');
+
+        $now = now(); $x = 0;
+        $response->diff($knownImplants->keys())->each(function ($type) use (&$now, &$x) {
+            GetType::dispatch($type)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $member->implants()->detach();
+        $member->implants()->attach($response->toArray());
         return $request;
     }
 

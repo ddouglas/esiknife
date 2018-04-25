@@ -13,14 +13,16 @@ class MemberBookmark extends Model
     public $incrementing = false;
     protected static $unguarded = true;
 
-    public function system()
+    protected $with = ['location', 'creator', 'type'];
+
+    public function location()
     {
-        return $this->hasOne(System::class, 'id','location_id');
+        return $this->morphTo('location', 'location_type', 'location_id', 'id');
     }
 
     public function creator ()
     {
-        return $this->hasOne(Character::class, 'id', 'creator_id');
+        return $this->morphTo('creator', 'creator_type', 'creator_id', 'id');
     }
 
     public function type ()

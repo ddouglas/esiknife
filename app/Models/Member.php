@@ -62,16 +62,6 @@ class Member extends Authenticatable
         return $this->hasOne(Character::class, 'id', 'id');
     }
 
-    public function skillz()
-    {
-        return $this->belongsToMany(Type::class, 'member_skillz', 'id', 'skill_id')->withPivot('active_skill_level','trained_skill_level', 'skillpoints_in_skill');
-    }
-    public function skillQueue()
-    {
-        return $this->belongsToMany(Type::class, 'member_skill_queue', 'id', 'skill_id')->withPivot('queue_position', 'finished_level', 'level_start_sp', 'level_end_sp', 'training_start_sp', 'start_date', 'finish_date');
-        // return $this->belongsToMany(Type::class, 'member_skill_queue', 'id', 'skill_id')->withPivot('queue_position', 'finished_level', 'starting_sp', 'finishing_sp', 'training_start_sp', 'start_date', 'finish_date');
-    }
-
     public function bookmarks()
     {
         return $this->hasMany(MemberBookmark::class, 'id', 'id');
@@ -84,7 +74,12 @@ class Member extends Authenticatable
 
     public function clone()
     {
-        $this->morphTo('clone', 'clone_location_type', 'clone_location_id', 'id');
+        return $this->morphTo('clone', 'clone_location_type', 'clone_location_id', 'id');
+    }
+
+    public function implants()
+    {
+        return $this->belongsToMany(Type::class, 'member_implants', 'member_id', 'type_id');
     }
 
     public function jumpClones()
@@ -92,13 +87,23 @@ class Member extends Authenticatable
         return $this->hasMany(MemberJumpClone::class, 'id', 'id');
     }
 
+    public function location ()
+    {
+        return $this->hasOne(MemberLocation::class, 'id', 'id')->with('info');
+    }
+
     public function ship()
     {
         return $this->hasOne(MemberShip::class, 'id', 'id');
     }
 
-    public function location ()
+    public function skillz()
     {
-        return $this->hasOne(MemberLocation::class, 'id', 'id')->with('location_info');
+        return $this->belongsToMany(Type::class, 'member_skillz', 'id', 'skill_id')->withPivot('active_skill_level','trained_skill_level', 'skillpoints_in_skill');
+    }
+    public function skillQueue()
+    {
+        return $this->belongsToMany(Type::class, 'member_skill_queue', 'id', 'skill_id')->withPivot('queue_position', 'finished_level', 'level_start_sp', 'level_end_sp', 'training_start_sp', 'start_date', 'finish_date');
+        // return $this->belongsToMany(Type::class, 'member_skill_queue', 'id', 'skill_id')->withPivot('queue_position', 'finished_level', 'starting_sp', 'finishing_sp', 'training_start_sp', 'start_date', 'finish_date');
     }
 }

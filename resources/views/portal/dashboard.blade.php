@@ -38,7 +38,7 @@
                             @endif
                             @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterLocation')))
                                 @if ($scopes->contains(config('services.eve.scopes.readUniverseStructures')))
-                                    <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ Auth::user()->location->location_info->name }}</li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ Auth::user()->location->info->name }}</li>
                                 @else
                                     <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ Auth::user()->location->system->name }}</li>
                                 @endif
@@ -50,18 +50,18 @@
         </div>
         <div class="row mt-3">
             <div class="col-lg-12">
-                <ul class="nav nav-pills mb-3 justify-content-center" id="pills-tab" role="tablist">
+                <ul class="nav nav-pills mb-3  justify-content-center" id="pills-tab" role="tablist">
                   <li class="nav-item">
                     <a class="nav-link active" id="bioBodyTab" data-toggle="pill" href="#bioBody" role="tab" aria-controls="pills-home" aria-selected="true">Biography</a>
                   </li>
-                  <li class="nav-item">
+                  <li class="nav-item ml-2">
                     <a class="nav-link" id="corpHistoryTab" data-toggle="pill" href="#corpHistoryBody" role="tab" aria-controls="pills-profile" aria-selected="false">Corporation History</a>
                   </li>
                 </ul>
                 <div class="tab-content" id="pills-tabContent">
                   <div class="tab-pane fade show active text-center" id="bioBody" role="tabpanel">
                        <div class="col-lg-6 offset-lg-3">
-                            {!! Auth::user()->info->bio !!}
+                            {!! Auth::user()->info->bio ?: "This character does not have a bio set" !!}
                        </div>
                   </div>
                   <div class="tab-pane fade" id="corpHistoryBody" role="tabpanel">

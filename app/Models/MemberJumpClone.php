@@ -11,8 +11,10 @@ class MemberJumpClone extends Model
     public $incrementing = false;
     protected static $unguarded = true;
 
-    public function clone_info ()
+    protected $with = ['location'];
+
+    public function location ()
     {
-        return $this->morphTo('clone_info', 'location_type', 'location_id', 'id');
+        return $this->morphTo('location', 'location_type', 'location_id', 'id');
     }
 }

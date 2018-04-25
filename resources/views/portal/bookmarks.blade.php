@@ -20,7 +20,7 @@
                         </div>
                         <div class="card-body p-0">
                             <table class="table mb-0">
-                                @foreach (Auth::user()->bookmarks()->where('folder_id', $folder->folder_id)->with('system', 'creator', 'type')->get() as $bookmark)
+                                @foreach ($folder->bookmarks as $bookmark)
                                     <tr>
                                         <td>
                                             {{ $bookmark->label }}
@@ -29,7 +29,7 @@
                                             {{ $bookmark->notes }}
                                         </td>
                                         <td>
-                                            {{ !is_null($bookmark->system) ? $bookmark->system->name : "Unknown Location ". $bookmark->location_id }}
+                                            {{ !is_null($bookmark->location) ? $bookmark->location->name : "Unknown Location ". $bookmark->location_id }}
                                         </td>
                                         <td>
                                             {{ !is_null($bookmark->creator) ? $bookmark->creator->name : "Unknown Creator ". $bookmark->creator_id }}
