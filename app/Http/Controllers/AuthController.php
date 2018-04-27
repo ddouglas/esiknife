@@ -50,10 +50,10 @@ class AuthController extends Controller
 
             $member = Member::firstOrNew(['id' => $getMemberData->id]);
             if ($member->exists) {
-                Auth::login($member);
                 if ($member->disabled) {
                     return redirect(route('welcome', ['returning']));
                 } else {
+                    Auth::login($member);
                     if (Session::has('to')) {
                         $to = Session::get('to');
                         Session::forget('to');

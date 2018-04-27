@@ -219,34 +219,8 @@ class PortalController extends Controller
             $member->save();
             $alert = collect();
             $scopes = collect(json_decode($member->scopes, true));
-            if ($scopes->contains('esi-wallet.read_character_wallet.v1')) {
-                $getMemberWallet = $this->dataCont->getMemberWallet($member);
-                $status = $getMemberWallet->status;
-                $payload = $getMemberWallet->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
-            }
 
-            if ($scopes->contains('esi-skills.read_skills.v1')) {
-                $getMemberSkillz = $this->dataCont->getMemberSkillz($member);
-                $status = $getMemberSkillz->status;
-                $payload = $getMemberSkillz->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your skills right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
-            }
-
-            if ($scopes->contains('esi-skills.read_skillqueue.v1')) {
-                $getMemberSkillQueue = $this->dataCont->getMemberSkillqueue($member);
-                $status = $getMemberSkillQueue->status;
-                $payload = $getMemberSkillQueue->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your skills right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
-            }
-
-            if ($scopes->contains('esi-bookmarks.read_character_bookmarks.v1')) {
+            if ($scopes->contains(config('services.eve.scopes.readCharacterBookmarks'))) {
                 $getMemberBookmarks = $this->dataCont->getMemberBookmarks($member);
                 $status = $getMemberBookmarks->status;
                 $payload = $getMemberBookmarks->payload;
@@ -255,25 +229,7 @@ class PortalController extends Controller
                 }
             }
 
-            if ($scopes->contains('esi-location.read_ship_type.v1')) {
-                $getMemberShip = $this->dataCont->getMemberShip($member);
-                $status = $getMemberShip->status;
-                $payload = $getMemberShip->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
-            }
-
-            if ($scopes->contains('esi-location.read_location.v1')) {
-                $getMemberLocation = $this->dataCont->getMemberLocation($member, $scopes);
-                $status = $getMemberLocation->status;
-                $payload = $getMemberLocation->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
-            }
-
-            if ($scopes->contains("esi-clones.read_clones.v1")) {
+            if ($scopes->contains(config('services.eve.scopes.readCharacterClones'))) {
                 $getMemberClones = $this->dataCont->getMemberClones($member, $scopes);
                 $status = $getMemberClones->status;
                 $payload = $getMemberClones->payload;
@@ -282,10 +238,55 @@ class PortalController extends Controller
                 }
             }
 
-            if ($scopes->contains("esi-clones.read_implants.v1")) {
+            if ($scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
                 $getMemberImplants = $this->dataCont->getMemberImplants($member, $scopes);
                 $status = $getMemberImplants->status;
                 $payload = $getMemberImplants->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains(config('services.eve.scopes.readCharacterLocation'))) {
+                $getMemberLocation = $this->dataCont->getMemberLocation($member, $scopes);
+                $status = $getMemberLocation->status;
+                $payload = $getMemberLocation->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains(config('services.eve.scopes.readCharacterShip'))) {
+                $getMemberShip = $this->dataCont->getMemberShip($member);
+                $status = $getMemberShip->status;
+                $payload = $getMemberShip->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains(config('services.eve.scopes.readCharacterSkills'))) {
+                $getMemberSkillz = $this->dataCont->getMemberSkillz($member);
+                $status = $getMemberSkillz->status;
+                $payload = $getMemberSkillz->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your skills right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains(config('services.eve.scopes.readCharacterSkillQueue'))) {
+                $getMemberSkillQueue = $this->dataCont->getMemberSkillqueue($member);
+                $status = $getMemberSkillQueue->status;
+                $payload = $getMemberSkillQueue->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your skills right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains(config('services.eve.scopes.readCharacterWallet'))) {
+                $getMemberWallet = $this->dataCont->getMemberWallet($member);
+                $status = $getMemberWallet->status;
+                $payload = $getMemberWallet->payload;
                 if (!$status) {
                     $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }

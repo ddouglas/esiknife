@@ -32,16 +32,17 @@
                                         <input type="checkbox" id="readCharacterClones" name="scopes[readCharacterClones]" /> <span class="ml-2">Read Character Clones</span>
                                     </li>
                                 </label>
+                                <label for="readCharacterContracts" class="mb-0">
+                                    <li class="list-group-item py-auto">
+                                        <input type="checkbox" id="readCharacterContracts" name="scopes[readCharacterContracts]" /> <span class="ml-2">Read Character Contracts</span>
+                                    </li>
+                                </label>
                                 <label for="readCharacterImplants" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterImplants" name="scopes[readCharacterImplants]" /> <span class="ml-2">Read Character Implants</span>
                                     </li>
                                 </label>
-                                <label for="readCharacterContracts" class="mb-0">
-                                    <li class="list-group-item py-auto">
-                                        <input type="checkbox" id="readCharacterContracts" name="scopes[readCharacterContracts]" disabled /> <span class="ml-2">Read Character Contracts</span>
-                                    </li>
-                                </label>
+
                                 <label for="readCharacterLocation" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterLocation" name="scopes[readCharacterLocation]" /> <span class="ml-2">Read Character Location</span>
