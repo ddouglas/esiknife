@@ -4,12 +4,8 @@
 
 @section('content')
     <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <h1 class="text-center">Your Bookmarks</h1>
-                <hr />
-            </div>
-        </div>
+
+        @include('portal.extra.header')
         @include('portal.extra.nav')
         <div class="row">
             <div class="col-lg-6 offset-lg-3 col-md-12 offset-md-0">
