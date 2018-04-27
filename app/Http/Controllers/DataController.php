@@ -4,9 +4,10 @@ namespace ESIK\Http\Controllers;
 
 use Carbon, DOMDocument, Request, Session;
 
+use ESIK\Jobs\{ProcessContract};
 use ESIK\Jobs\ESI\{GetCharacter, GetCorporation, GetSystem, GetType, GetStation, GetStructure};
 use ESIK\Models\{Member};
-use ESIK\Models\ESI\{Alliance, Character, Corporation, Station, Structure, System, Type};
+use ESIK\Models\ESI\{Alliance, Character, Contract, Corporation, Station, Structure, System, Type};
 
 use Illuminate\Support\Collection;
 
@@ -268,28 +269,7 @@ class DataController extends Controller
             return $request;
         }
 
-        // $types = collect(); $characters = collect(); $corporations = collect(); $regions = collect(); $constellations = collect(); $systems = collect();
         $dictionary = collect($payload->response)->recursive()->keyBy('id');
-        // ->each(function ($item) use ($types, $characters, $corporations, $regions, $constellations, $systems) {
-        //     if ($item->get('category') === "character") {
-        //         $characters->put($item->get('id'), $item);
-        //     }
-        //     if ($item->get('category') === "corporation") {
-        //         $corporations->put($item->get('id'), $item);
-        //     }
-        //     if ($item->get('category') === "system") {
-        //         $systems->put($item->get('id'), $item);
-        //     }
-        //     if ($item->get('category') === "constellation") {
-        //         $constellations->put($item->get('id'), $item);
-        //     }
-        //     if ($item->get('category') === "regions") {
-        //         $regions->put($item->get('id'), $item);
-        //     }
-        //     if ($item->get('category') === "inventory_type") {
-        //         $types->put($item->get('id'), $item);
-        //     }
-        // });
 
         $now = now(); $x = 0;
         $characterIds = $dictionary->where('category', 'character')->pluck('id');
@@ -490,6 +470,80 @@ class DataController extends Controller
         }
         $member->location()->updateOrCreate([], $location->toArray());
 
+        return $request;
+    }
+
+    public function getMemberContracts(Member $member)
+    {
+        $getMemberContracts = $this->httpCont->getCharactersCharacterIdContracts($member->id, $member->access_token);
+        $status = $getMemberContracts->status;
+        $contractsPayload = $getMemberContracts->payload;
+        if (!$status) {
+            return $getMemberContracts;
+        }
+        $contracts = collect($contractsPayload->response)->recursive()->keyBy('contract_id');
+
+        $contractIds = $contracts->keys();
+        $knownContracts = Contract::whereIn('id', $contractIds)->get()->keyBy('id')->each(function ($knownContract) use ($contracts) {
+            $contract = $contracts->get($knownContract->id);
+            if ($knownContract->status !== $contract->get('status')) {
+                $knownContract->status = $contract->get('status');
+                $knownContract->save();
+            }
+        });
+        $now = now(); $x=0;
+        $contractIds->diff($knownContracts->keys())->each(function ($contractId) use ($member, $contracts, &$now, &$x) {
+            $contract = $contracts->get($contractId);
+            $create = Contract::create([
+                'id' => $contractId,
+                'issuer_id' => $contract->get('issuer_id'),
+                'issuer_corporation_id' => $contract->get('issuer_corporation_id'),
+                'assignee_id' => $contract->get('assignee_id'),
+                'acceptor_id' => $contract->get('acceptor_id'),
+                'title' => $contract->get('title'),
+                'type' => $contract->get('type'),
+                'status' => $contract->get('status'),
+                'availability' => $contract->get('availability'),
+                'for_corporation' => $contract->get('for_corporation'),
+                'days_to_complete' => $contract->get('days_to_complete'),
+                'collateral' => $contract->get('collateral'),
+                'price' => $contract->get('price'),
+                'reward' => $contract->get('reward'),
+                'volume' => $contract->get('volume'),
+                'start_location' => $contract->get('start_location_id'),
+                'end_location' => $contract->get('end_location_id'),
+                'date_accepted' => $contract->has('date_accepted') ? Carbon::parse($contract->get('date_accepted')) : null,
+                'date_completed' => $contract->has('date_completed') ? Carbon::parse($contract->get('date_completed')) : null,
+                'date_expired' => $contract->has('date_expired') ? Carbon::parse($contract->get('date_expired')) : null,
+                'date_issued' => $contract->has('date_issued') ? Carbon::parse($contract->get('date_issued')) : null
+            ]);
+            if ($create) {
+                ProcessContract::dispatch($member, $contract)->delay($now);
+            }
+        });
+        return $getMemberContracts;
+    }
+
+    public function getMemberContractItems(Member $member, int $contractId)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdContractsContractIdItems($member->id, $member->access_token, $contractId);
+        $status = $request->status;
+        $payload = $request->payload;
+        if (!$status) {
+            return $request;
+        }
+        $response = collect($payload->response)->recursive();
+        $response->pluck('type_id')->unique()->values()->each(function ($type) {
+            $getType = $this->getType($type);
+        });
+
+        $contract = Contract::find($contractId);
+        if (!is_null($contract)) {
+            return (object)[
+                'status' => false
+            ];
+        }
+        $contract->attach($response);
         return $request;
     }
 
@@ -792,7 +846,7 @@ class DataController extends Controller
                 $attributes = collect($response->dogma_attributes)->recursive();
                 $dbAttributes = $type->attributes()->whereIn('attribute_id', $attributes->pluck('attribute_id')->toArray())->get()->keyBy('attribute_id');
                 $attributes->each(function ($attribute) use ($dbAttributes, $type) {
-                    if (!$dbAttributes->has($attribute->get('attribute_id'))) {
+                    if (!$dbAttributes->has($attribute->get('attribute_id')) && is_int($attribute->get('value'))) {
                         $type->attributes()->create($attribute->toArray());
                     }
                 });
