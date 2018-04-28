@@ -271,15 +271,6 @@ class HttpController extends Controller
         ], 'delete', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/{$mail_id}/", []);
     }
 
-    public function getCharactersCharacterIdContacts ($id, $token)
-    {
-        return $this->request([
-            "Authorization" => "Bearer ". $token,
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/contacts/", []);
-    }
-
     public function getCharactersCharacterIdWallet ($id, $token)
     {
         return $this->request([
@@ -295,7 +286,7 @@ class HttpController extends Controller
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
             "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.esi'),"/v3/characters/{$id}/wallet/journal/", []);
+        ], 'get', config('services.eve.urls.esi'),"/v4/characters/{$id}/wallet/journal/", []);
     }
 
     public function getCharactersCharacterIdWalletTransactions ($id, $token)
@@ -305,6 +296,24 @@ class HttpController extends Controller
             "Content-Type" => "application/json",
             "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/wallet/transactions/", []);
+    }
+
+    public function getCharactersCharacterIdContacts ($id, $token)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'get', config('services.eve.urls.esi'),"/v2/characters/{$id}/contacts/", []);
+    }
+
+    public function getCharactersCharacterIdContactLabels ($id, $token)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/contacts/labels/", []);
     }
 
     public function getCharactersCharacterIdContracts ($id, $token)
@@ -522,6 +531,15 @@ class HttpController extends Controller
             "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.sde'),"/chrBloodlines.json", []);
     }
+
+    public function getChrFactions()
+    {
+        return $this->request([
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'get', config('services.eve.urls.sde'),"/chrFactions.json", []);
+    }
+
     public function getChrRaces()
     {
         return $this->request([

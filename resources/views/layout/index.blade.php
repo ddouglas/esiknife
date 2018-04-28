@@ -35,18 +35,23 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarResponsive">
-                    <ul class="navbar-nav ml-auto mr-3">
+                    <ul class="navbar-nav mr-auto ml-3">
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('home') }}">Home</a>
+                            <a class="nav-link" href="{{ route('home') }}">Homepage</a>
                         </li>
+                    </ul>
+                    <ul class="navbar-nav ml-auto mr-3">
+
                         @if(Auth::check())
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a>
+                            </li>
                             <li class="nav-item dropdown ml-3">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     Hello {{ collect(explode(' ', Auth::user()->info->name))->first() }} <b class="caret"></b>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                  {{-- <a class="dropdown-item" href="{{ route('mail.list') }}"> My Mail</a>
-                                  <a class="dropdown-item" href="{{ route('settings.index') }}"> My Settings</a> --}}
+                                  <a class="dropdown-item" href="{{ route('settings.index') }}"> My Settings</a>
                                   {{-- <a class="dropdown-item" href="#"> Alt Hotswap</a> --}}
                                   <div class="dropdown-divider"></div>
                                   <a class="dropdown-item" href="{{ route('auth.logout') }}"> Logout</a>

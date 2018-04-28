@@ -4,8 +4,8 @@ namespace ESIK\Http\Controllers;
 
 use Request, Session;
 use ESIK\Models\{Member};
-use ESIK\Models\ESI\{Type};
-use ESIK\Http\Controllers\HttpController;
+use ESIK\Jobs\ESI\GetCharacter;
+use ESIK\Models\ESI\{Contract,Type};
 
 class HackingController extends Controller
 {
@@ -13,13 +13,12 @@ class HackingController extends Controller
     {
         $this->httpCont = new HttpController;
         $this->dataCont = new DataController;
+        $this->ssoCont = new SSOController;
     }
 
     public function index()
     {
-        // $type = Type::where('name', "%Ares%")->first();
-        // dd($type);
-        return $this->typesWithAttributesEffects(9942);
+        GetCharacter::dispatch(95923084);
     }
 
     public function typesWithAttributesEffects ($type_id)

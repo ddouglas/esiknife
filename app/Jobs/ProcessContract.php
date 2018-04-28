@@ -10,7 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 
 use ESIK\Models\Member;
 use ESIK\Http\Controllers\DataController;
-use ESIK\Models\ESI\{Character, Corporation, Alliance, Station, Structure};
+use ESIK\Models\ESI\{Character, Contract, Corporation, Alliance, Station, Structure};
 use ESIK\Jobs\ESI\{GetCharacter, GetCorporation, GetAlliance, GetStation, GetStructure, GetContractItems};
 
 use Illuminate\Support\Collection;
@@ -41,6 +41,10 @@ class ProcessContract implements ShouldQueue
     public function handle()
     {
         $contract = $this->contract;
+        $dbContract = Contract::find($this->contract->get('contract_id'));
+        if (is_null($dbContract)) {
+            return false;
+        }
         $now = now(); $x = 0;
         $entities = $contract->filter(function ($entity, $key) {
             if (in_array($key, ['issuer_id', 'issuer_corporation_id', 'assignee_id', 'acceptor_id']) && $entity != 0) {
@@ -52,7 +56,14 @@ class ProcessContract implements ShouldQueue
         $pEStatus = $postEntities->status;
         $pEPayload = $postEntities->payload;
         if ($pEStatus) {
-            $pEResponse = collect($pEPayload->response);
+            $pEResponse = collect($pEPayload->response)->recursive()->keyBy('id');
+            if ($pEResponse->has($dbContract->assignee_id)) {
+                $dbContract->assignee_type = $pEResponse->get($dbContract->assignee_id)->get('category');
+            }
+            if ($pEResponse->has($dbContract->acceptor_id)) {
+                $dbContract->acceptor_type = $pEResponse->get($dbContract->acceptor_id)->get('category');
+            }
+
             $characterIds = $pEResponse->where('category', 'character')->pluck('id');
             $corporationIds = $pEResponse->where('category', 'corporation')->pluck('id');
             $allianceIds = $pEResponse->where('category', 'alliance')->pluck('id');
@@ -123,6 +134,7 @@ class ProcessContract implements ShouldQueue
             }
             $x++;
         });
+        $dbContract->save();
         GetContractItems::dispatch($this->member, $this->contract)->delay($now->addSeconds(10));
     }
 }

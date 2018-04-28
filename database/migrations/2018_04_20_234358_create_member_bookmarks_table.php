@@ -21,7 +21,7 @@ class CreateMemberBookmarksTable extends Migration
             $table->string('label');
             $table->text('notes')->nullable();
             $table->unsignedInteger('location_id');
-            $table->enum('location_type', ['system', 'constellation', 'region']);
+            $table->enum('location_type', ['solar_system', 'constellation', 'region']);
             $table->unsignedBigInteger('creator_id');
             $table->enum('creator_type', ['character', 'corporation']);
             $table->unsignedBigInteger('item_id')->nullable();

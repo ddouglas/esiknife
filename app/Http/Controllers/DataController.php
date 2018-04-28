@@ -4,10 +4,11 @@ namespace ESIK\Http\Controllers;
 
 use Carbon, DOMDocument, Request, Session;
 
-use ESIK\Jobs\{ProcessContract};
-use ESIK\Jobs\ESI\{GetCharacter, GetCorporation, GetSystem, GetType, GetStation, GetStructure};
+use ESIK\Jobs\{ProcessContract,ProcessMailHeader};
+use ESIK\Jobs\ESI\{GetCharacter, GetCorporation, GetAlliance, GetSystem, GetType, GetStation, GetStructure};
 use ESIK\Models\{Member};
-use ESIK\Models\ESI\{Alliance, Character, Contract, Corporation, Station, Structure, System, Type};
+use ESIK\Models\ESI\{Alliance, Character, Contract, Corporation, MailHeader, MailingList, Station, Structure, System, Type};
+use ESIK\Models\SDE\{Region, Constellation};
 
 use Illuminate\Support\Collection;
 
@@ -296,7 +297,7 @@ class DataController extends Controller
             });
         }
 
-        $systemIds = $dictionary->where('category', 'system')->pluck('id');
+        $systemIds = $dictionary->where('category', 'solar_system')->pluck('id');
         if ($systemIds->isNotEmpty()) {
             $knownSystems = System::whereIn('id', $systemIds->toArray())->get()->keyBy('id');
             $systemIds->diff($knownSystems->keys())->each(function ($system) use (&$now, &$x) {
@@ -311,7 +312,7 @@ class DataController extends Controller
         $memBookmarks = collect();
         $bookmarks->each(function ($bookmark) use ($memBookmarks,$dictionary) {
             if (is_null($dictionary->get($bookmark->get('location_id')))) {
-                dd($dictionary->get($bookmark->get('location_id')), $bookmark);
+                return true;
             }
             $memBookmarks->put($bookmark->get('bookmark_id'), collect([
                 'bookmark_id' => $bookmark->get('bookmark_id'),
@@ -379,12 +380,11 @@ class DataController extends Controller
                         }
                     }
                 } elseif ($clone->get('location_type') === "station") {
-                    $station = Station::firstOrNew(['id' => $response->get('station_id')]);
+                    $station = Station::firstOrNew(['id' => $clone->get('location_id')]);
                     if (!$station->exists) {
-                        GetStation::dispatch($response->get('station_id'));
+                        GetStation::dispatch($clone->get('location_id'));
                     }
                 }
-
             });
         }
         return $request;
@@ -473,6 +473,73 @@ class DataController extends Controller
         return $request;
     }
 
+    public function getMemberContacts(Member $member)
+    {
+        $labelRequest = $this->httpCont->getCharactersCharacterIdContactLabels($member->id, $member->access_token);
+        $status = $labelRequest->status;
+        $payload = $labelRequest->payload;
+        if (!$status) {
+            return $labelRequest;
+        }
+        $response = collect($payload->response)->recursive();
+        $member->contact_labels()->delete();
+        $member->contact_labels()->createMany($response->toArray());
+        unset($status, $payload);
+        $contactRequest = $this->httpCont->getcharactersCharacterIdContacts($member->id, $member->access_token);
+        $status = $contactRequest->status;
+        $payload = $contactRequest->payload;
+        if (!$status) {
+            return $contactRequest;
+        }
+        $contacts = collect();
+        $response = collect($payload->response)->recursive()->each(function ($contact) use ($contacts) {
+            $contacts->push([
+                'contact_id' => $contact->get('contact_id'),
+                'contact_type' => $contact->get('contact_type'),
+                'standing' => $contact->get('standing'),
+                'is_watched' => $contact->get('is_watched'),
+                'is_blocked' => $contact->get('is_blocked'),
+                'label_ids' => $contact->has('label_ids') ? $contact->get('label_ids')->toJson() : null
+            ]);
+        });
+        $nonfaction = $contacts->whereIn('contact_type', ['character', 'corporation', 'alliance']);
+        if ($nonfaction->isNotEmpty()) {
+            $characterIds = $nonfaction->where('contact_type', 'character')->pluck('contact_id');
+            $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
+            $now = now(); $x = 0;
+            $characterIds->diff($knownCharacters->keys())->each(function ($characterId) use (&$now, &$x) {
+                GetCharacter::dispatch($characterId)->delay($now);
+                if ($x%10==0) {
+                    $now->addSecond();
+                }
+                $x++;
+            });
+
+            $corporationIds = $nonfaction->where('contact_type', 'corporation')->pluck('contact_id');
+            $knownCorporations = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
+            $corporationIds->diff($knownCorporations->keys())->each(function ($corporationId) use (&$now, &$x) {
+                GetCorporation::dispatch($corporationId)->delay($now);
+                if ($x%10==0) {
+                    $now->addSecond();
+                }
+                $x++;
+            });
+
+            $allianceIds = $nonfaction->where('contact_type', 'alliance')->pluck('contact_id');
+            $knownAlliances = Alliance::whereIn('id', $allianceIds->toArray())->get()->keyBy('id');
+            $allianceIds->diff($knownAlliances->keys())->each(function ($allianceIds) use (&$now, &$x) {
+                GetAlliance::dispatch($allianceIds)->delay($now);
+                if ($x%10==0) {
+                    $now->addSecond();
+                }
+                $x++;
+            });
+        }
+        $member->contacts()->delete();
+        $member->contacts()->createMany($contacts->toArray());
+        return $contactRequest;
+    }
+
     public function getMemberContracts(Member $member)
     {
         $getMemberContracts = $this->httpCont->getCharactersCharacterIdContracts($member->id, $member->access_token);
@@ -499,7 +566,9 @@ class DataController extends Controller
                 'issuer_id' => $contract->get('issuer_id'),
                 'issuer_corporation_id' => $contract->get('issuer_corporation_id'),
                 'assignee_id' => $contract->get('assignee_id'),
+                'assignee_type' => null,
                 'acceptor_id' => $contract->get('acceptor_id'),
+                'acceptor_type' => null,
                 'title' => $contract->get('title'),
                 'type' => $contract->get('type'),
                 'status' => $contract->get('status'),
@@ -511,7 +580,9 @@ class DataController extends Controller
                 'reward' => $contract->get('reward'),
                 'volume' => $contract->get('volume'),
                 'start_location' => $contract->get('start_location_id'),
+                'start_location_type' => $contract->get('start_location_id') > 1000000000000 ? 'structure' : 'station',
                 'end_location' => $contract->get('end_location_id'),
+                'end_location_type' => $contract->get('end_location_id') > 1000000000000 ? 'structure' : 'station',
                 'date_accepted' => $contract->has('date_accepted') ? Carbon::parse($contract->get('date_accepted')) : null,
                 'date_completed' => $contract->has('date_completed') ? Carbon::parse($contract->get('date_completed')) : null,
                 'date_expired' => $contract->has('date_expired') ? Carbon::parse($contract->get('date_expired')) : null,
@@ -521,6 +592,7 @@ class DataController extends Controller
                 ProcessContract::dispatch($member, $contract)->delay($now);
             }
         });
+        $member->contracts()->attach($contractIds->diff($knownContracts->keys())->toArray());
         return $getMemberContracts;
     }
 
@@ -538,12 +610,309 @@ class DataController extends Controller
         });
 
         $contract = Contract::find($contractId);
-        if (!is_null($contract)) {
+        if (is_null($contract)) {
             return (object)[
                 'status' => false
             ];
         }
-        $contract->attach($response);
+        $contract->items()->attach($response);
+        return $request;
+    }
+
+    public function getMemberMailBody($member, $mailId)
+    {
+        $header = MailHeader::firstOrNew(['id' => $mailId]);
+        if ($header->body === null) {
+            $request = $this->httpCont->getCharactersCharacterIdMailMailId($member->id, $member->access_token, $mailId);
+            if (!$request->status) {
+                return $request;
+            }
+            $mailBody = $request->payload->response->body;
+            $dom = new DOMDocument('1.0');
+            libxml_use_internal_errors(true);
+
+            $tidy = tidy_parse_string("<pre>".$mailBody."</pre>", [
+                'doctype' => "omit",
+                'show-body-only' => true,
+                'wrap' => 0,
+            ]);
+            $mailBody = $tidy->value;
+            if (is_null($mailBody) || empty($mailBody)) {
+                die();
+            }
+            $mailBody = str_replace("<pre>", "", $mailBody);
+            $mailBody = str_replace("</pre>", "", $mailBody);
+            $dom->loadHtml(mb_convert_encoding($mailBody, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+            foreach ($dom->getElementsByTagName('font') as $anchor) {
+                if ($anchor->hasAttribute('size')) {
+                    $anchor->removeAttribute('size');
+                }
+                if ($anchor->hasAttribute('color')) {
+                    $anchor->removeAttribute('color');
+                }
+            }
+
+            $domAnchors = $dom->getElementsByTagName('a');
+            foreach ($domAnchors as $anchor) {
+                $href = explode(':', $anchor->getAttribute('href'));
+                if (!in_array($href[0], ['showinfo', 'fitting', 'killReport'])) {
+                    continue;
+                }
+                $type = $href[0];
+                $anchor->setAttribute('target', "_blank");
+                if ($type === "showinfo") {
+                    $target = $href[1];
+                    $target = explode("//", $href[1]);
+                    if (count($target) == 1) {
+                        // Show Info on an Item;
+                        $anchor->removeAttribute('href');
+                        $anchor->setAttribute('href', config('base.kmUrl'). "type/{$target[0]}");
+                        continue;
+                    }
+
+                    $targetType = (int)$target[0];
+                    $targetId = (int)$target[1];
+
+                    if ($targetType == 3) {
+                        $info = Region::find($targetId);
+                        if (is_null($info)) {
+                            $anchor->removeAttribute('href');
+                            $anchor->setAttribute('href', config('base.kmUrl'). "region/{$targetId}");
+                        } else {
+                            $anchor->removeAttribute('href');
+                            $anchor->setAttribute('href', config('base.dotlanUrl'). "map/". $info->nameDotlanFormat());
+                        }
+                        continue;
+                    }
+
+                    if ($targetType == 4) {
+                        $info = Constellation::find($targetId);
+                        if (is_null($info)) {
+                            $anchor->removeAttribute('href');
+                            $anchor->setAttribute('href', config('base.kmUrl'). "/constellation/{$targetId}");
+                        } else {
+                            $info->load('region');
+                            $anchor->setAttribute('href', config('base.dotlanUrl'). "map/". $info->region->nameDotlanFormat() . "/{$info->name}");
+                        }
+                        continue;
+                    }
+
+                    if ($targetType == 5) {
+                        $info = $this->getSystem($targetId);
+                        $status = $info->status;
+                        $payload = $info->payload;
+                        if (!$status) {
+                            if ($payload->code >= 400 && $payload->code < 500) {
+                                activity(__METHOD__)->withProperties($payload)->log($payload->message);
+                            }
+                            $anchor->removeAttribute('href');
+                            $anchor->setAttribute('href', config('base.kmUrl'). "system/{$targetId}");
+                        } else {
+                            $payload->load('constellation.region');
+                            $anchor->removeAttribute('href');
+                            $anchor->setAttribute('href', config('base.dotlanUrl'). "map/". $payload->constellation->region->nameDotlanFormat()."/".$payload->name);
+                        }
+                        continue;
+                    }
+
+                    $targetTypeData = $this->getType($targetType);
+                    $status = $targetTypeData->status;
+                    $payload = $targetTypeData->payload;
+                    if (!$status) {
+                        continue;
+                    }
+
+                    $payload->load('group');
+                    $targetGroup = $payload->group;
+                    if ($targetGroup->id == 1) {
+                        $anchor->removeAttribute('href');
+                        $anchor->setAttribute('href', config('base.kmUrl'). "character/{$targetId}/");
+                        continue;
+                    }
+
+                    if ($targetGroup->id == 2) {
+                        $anchor->removeAttribute('href');
+                        $anchor->setAttribute('href', config('base.kmUrl'). "corporation/{$targetId}/");
+                        continue;
+                    }
+
+                    if ($targetGroup->id == 15) {
+                        $station = $this->getStation($targetId);
+                        $status = $station->status;
+                        $payload = $station->payload;
+                        if (!$status) {
+                            if ($payload->code >= 400 && $payload->code < 500) {
+                                activity(__METHOD__)->withProperties($payload)->log($payload->message);
+                            }
+                            continue;
+                        }
+
+                        if (in_array($targetType, [21646,21644,21642,21645])) {
+                            $payload->load('system');
+                            $anchor->removeAttribute('href');
+                            $anchor->setAttribute('href', config('base.dotlanUrl'). "outpost/". $payload->system->name);
+                        } else {
+                            $anchor->removeAttribute('href');
+                            $anchor->setAttribute('href', config('base.dotlanUrl'). "station/". $payload->nameDotlanFormat());
+                        }
+                        continue;
+                    }
+
+                    if ($targetGroup->id == 19) {
+                        $anchor->removeAttribute('href');
+                        $anchor->setAttribute('href', config('base.kmUrl'). "faction/{$targetId}/");
+                        continue;
+                    }
+
+                    if ($targetGroup->id == 32) {
+                        $anchor->removeAttribute('href');
+                        $anchor->setAttribute('href', config('base.kmUrl'). "alliance/{$targetId}/");
+                        continue;
+                    }
+                    if ($targetGroup->category_id == 65) {
+                        $anchor->removeAttribute('href');
+                        $anchor->setAttribute('href', config('base.kmUrl'). "ship/{$targetType}/");
+                        continue;
+                    }
+                }
+
+                if ($type === "killReport") {
+                    $killId = $href[1];
+                    $anchor->removeAttribute('href');
+                    $anchor->setAttribute('href', config('base.kmUrl')."kill/{$killId}/");
+                    continue;
+                }
+
+                if ($type === "fitting") {
+                    unset($href[0]);
+                    $dna = implode(':', $href);
+                    $anchor->removeAttribute('href');
+                    $anchor->setAttribute('href', config('base.osmiumUrl') . "loadout/dna/{$dna}");
+                    continue;
+                }
+            }
+            $header->fill([
+                'body' => $dom->saveHTML()
+            ]);
+            $header->save();
+        }
+
+        return (object)[
+            'status' => true,
+            'payload' => $header
+        ];
+
+    }
+
+    public function getMemberMailLabels ($member)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdMailLabels($member->id, $member->access_token);
+        $status = $request->status;
+        $payload = $request->payload;
+        if (!$status) {
+            return $request;
+        }
+        $response = collect($payload->response)->recursive();
+        $member->mail_labels()->updateOrCreate([], [
+            'total_unread_count' => $response->get('total_unread_count'),
+            'labels' => $response->get('labels')->toJson()
+        ]);
+        return $request;
+    }
+
+    public function getMemberMailHeaders($member, $pages=1)
+    {
+        $headers = collect();
+        $last_mail_id=null;
+        for($x=1;$x<=$pages;$x++) {
+            $request = $this->httpCont->getCharactersCharacterIdMail($member->id, $member->access_token, $last_mail_id);
+            if (!$request->status) {
+                return $request;
+            }
+            $response = collect($request->payload->response)->recursive()->keyBy('mail_id');
+            if ($response->count() != 50) {
+                break;
+            }
+            $headers = $headers->merge($response);
+            $last_mail_id = $headers->last()->get('mail_id');
+            usleep(250000);
+        }
+        $now = now();
+        $recipients = collect();
+        $headers->chunk(25)->each(function($chunk) use(&$now, $member, &$recipients) {
+            $mail_ids = $chunk->pluck('mail_id');
+            $knownMails = MailHeader::whereIn('id', $mail_ids->toArray())->with('members')->get()->keyBy('id');
+            $attach = collect();
+            $chunk->each(function ($header) use ($knownMails, &$now, $member, $attach, &$recipients) {
+                if (!$knownMails->has($header->get('mail_id'))) {
+                    // Break Down the Header. Parse Sender and Recipients, dispatch Jobs to get Body
+                    $mailHeader = new MailHeader(['id' => $header->get('mail_id')]);
+                    $isCharacter = $this->getCharacter($header->get('from'));
+                    if ($isCharacter->status) {
+                        $mailHeader->fill(['sender_id' => $header->get('from'), 'sender_type' => "character"]);
+                    } else {
+                        $isMailingList = MailingList::firstOrNew(['id' => $header->get('from')]);
+                        if (!$isMailingList->exists) {
+                            $isMailingList->fill([
+                                'name' => "Unknown Mailing List ". $header->get('from')
+                            ]);
+                            $isMailingList->save();
+                        }
+                        $mailHeader->fill(["sender_id" => $header->get('from'), "sender_type" => "mailing_list", "is_on_mailing_list" => 1, "mailing_list_id" => $header->get('from')]);
+                    }
+                    $mailHeader->fill([
+                        'subject' => $header->get('subject'),
+                        'sent' => Carbon::parse($header->get('timestamp'))->toDateTimeString()
+                    ]);
+                    $mailHeader->save();
+                    $mailHeader->recipients()->createMany($header->get('recipients')->toArray());
+
+                    ProcessMailHeader::dispatch($member, $mailHeader, $header->get('recipients'))->delay($now);
+                    $now = $now->addSeconds(1);
+                }
+                $attach->put($header->get('mail_id'), [
+                    'labels' => $header->get('labels')->implode(','),
+                    'is_read' => $header->get('is_read'),
+                ]);
+            });
+
+            $member->mail()->syncWithoutDetaching($attach->toArray());
+        });
+
+        return (object)[
+            'status' => true,
+            'payload' => $headers
+        ];
+    }
+
+    public function getMemberMailingLists($member)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdMailLists($member->id, $member->access_token);
+        if (!$request->status) {
+            return $request;
+        }
+        $response = collect($request->payload->response)->keyBy('mailing_list_id');
+
+        $mailListIds = $response->keys();
+        $knownMLs = MailingList::whereIn('id', $mailListIds)->get()->keyBy('id');
+        foreach ($mailListIds as $key => $mailListId) {
+            if ($knownMLs->has($mailListId)) {
+                $mailingList = $knownMLs->get($mailListId);
+                if ($mailingList->name === "Unknown Mailing List ". $mailingList->id) {
+                    $mailingList->update([
+                        'name' => $response->get($mailListId)->name,
+                    ]);
+                }
+                $mailListIds->forget($key);
+            } else {
+                MailingList::create([
+                    'id' => $mailListId,
+                    'name' => $response->get($mailListId)->name
+                ]);
+
+            }
+        }
+        $member->mailing_lists()->attach($mailListIds->toArray());
         return $request;
     }
 
@@ -671,6 +1040,197 @@ class DataController extends Controller
         $member->wallet_balance = $request->payload->response;
         $member->save();
 
+        return $request;
+    }
+
+    public function getMemberWalletTransactions(Member $member)
+    {
+        $wTransactionRequest = $this->httpCont->getCharactersCharacterIdWalletTransactions($member->id, $member->access_token);
+        $status = $wTransactionRequest->status;
+        $wTransactionPayload = $wTransactionRequest->payload;
+        if (!$status) {
+            return $wTransactionRequest;
+        }
+        $wTransactionResponse = collect($wTransactionPayload->response)->recursive()->keyBy('transaction_id');
+
+        $transactionIds = $wTransactionResponse->keys();
+
+        $knownTransactions = $member->transactions()->whereIn('transaction_id', $transactionIds->toArray())->get()->keyBy('transaction_id');
+        $transactions = $transactionIds->diff($knownTransactions->keys());
+        $transactions = $wTransactionResponse->whereIn('transaction_id', $transactions);
+
+
+        $clients = $transactions->pluck('client_id');
+        $types = $transactions->pluck('type_id');
+
+        $ids = $clients->merge($types);
+        $pUNRequest = $this->postUniverseNames($ids);
+        $pUNStatus = $pUNRequest->status;
+        $pUNPayload = $pUNRequest->payload;
+        if (!$pUNStatus) {
+            return $pUNRequest;
+        }
+        $pUNResponse = collect($pUNPayload->response)->recursive()->keyBy('id');
+        $characterIds = $pUNResponse->where('category', 'character')->pluck('id')->unique()->values();
+        $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
+        $now = now(); $x = 0;
+        $characterIds->diff($knownCharacters->keys())->each(function ($characterId) use (&$now, &$x) {
+            GetCharacter::dispatch($characterId)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $corporationIds = $pUNResponse->where('category', 'corporation')->pluck('id')->unique()->values();
+        $knownCorporations = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
+        $corporationIds->diff($knownCorporations->keys())->each(function ($corporationId) use (&$now, &$x) {
+            GetCorporation::dispatch($corporationId)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $typeIds = $pUNResponse->where('category', 'inventory_type')->pluck('id')->unique()->values();
+        $knownTypes = Type::whereIn('id', $typeIds->toArray())->get()->keyBy('id');
+        $typeIds->diff($knownTypes->keys())->each(function ($typeId) use (&$now, &$x) {
+            GetType::dispatch($typeId)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $scopes = $member->scopes;
+        $locations = $transactions->pluck('location_id')->unique()->values()->each(function ($location) use ($scopes) {
+            if ($location > 1000000000000) {
+                $structure = Structure::find($location);
+                if (!is_null($structure)) {
+                    if ($structure->name === "Unknown Structure ". $location) {
+                        GetStructure::dispatch($member, $location)->delay($now);
+                        if ($x%10==0) {
+                            $now->addSecond();
+                        }
+                        $x++;
+                    }
+                } else {
+                    GetStructure::dispatch($member, $location)->delay($now);
+                    if ($x%10==0) {
+                        $now->addSecond();
+                    }
+                    $x++;
+                }
+
+            } else {
+                $station = Station::find($location);
+                if (is_null($station)) {
+                    GetStation::dispatch($location)->delay($now);
+                    if ($x%10==0) {
+                        $now->addSecond();
+                    }
+                    $x++;
+                }
+            }
+        });
+        $transactionIds = $transactions->keys();
+        $unknownTransactions = collect();
+        $transactionIds->diff($knownTransactions->keys())->each(function ($transactionId) use ($transactions, $unknownTransactions, $pUNResponse) {
+            $transaction = $transactions->get($transactionId);
+            $unknownTransactions->push([
+                'transaction_id' => $transaction->get('transaction_id'),
+                'client_id' => $transaction->get('client_id'),
+                'client_type' => $pUNResponse->has($transaction->get('client_id')) ? $pUNResponse->get($transaction->get('client_id'))->get('category') : null,
+                'is_buy' => $transaction->get('is_buy'),
+                'is_personal' => $transaction->get('is_personal'),
+                'journal_ref_id' => $transaction->get('journal_ref_id'),
+                'location_id' => $transaction->get('location_id'),
+                'location_type' => $transaction->get('location_id') > 1000000000000 ? "structure" : "station",
+                'quantity' => $transaction->get('quantity'),
+                'type_id' => $transaction->get('type_id'),
+                'unit_price' => $transaction->get('unit_price'),
+                'date' => Carbon::parse($transaction->get('date')),
+            ]);
+        });
+        $member->transactions()->createMany($unknownTransactions->toArray());
+        return $wTransactionRequest;
+    }
+
+    public function getMemberWalletJournals (Member $member)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdWalletJournal($member->id, $member->access_token);
+        $status = $request->status;
+        $payload = $request->payload;
+        if (!$status) {
+            return $request;
+        }
+
+        $response = collect($payload->response)->recursive()->keyBy('id');
+        $knownJournals = $member->journals()->whereIn('journal_id', $response->keys())->get()->keyBy('journal_id');
+
+        $esiJournals = $response->diffKeys($knownJournals);
+        if ($esiJournals->isEmpty()) {
+            return $request;
+        }
+
+        $firstPartyIds = $esiJournals->pluck('first_party_id');
+        $secondPartyIds = $esiJournals->pluck('second_party_id');
+        $partyIds = $firstPartyIds->merge($secondPartyIds)->unique()->reject(function($id) {
+            return is_null($id);
+        })->values()->push(500001);
+
+
+        $factionPartyIds = $partyIds->filter(function ($id, $key) use ($partyIds) {
+            if ($id >= 500000 && $id < 1000000) {
+                $partyIds->forget($key);
+                return true;
+            }
+        });
+
+        $postUniverseNamesRequest = $this->postUniverseNames($partyIds);
+        $postUniverseNamesStatus = $postUniverseNamesRequest->status;
+        $postUniverseNamesPayload = $postUniverseNamesRequest->payload;
+        if (!$status) {
+            return $postUniverseNamesRequest;
+        }
+        $postUniverseNamesResponse = collect($postUniverseNamesPayload->response)->recursive()->keyBy('id');
+
+        $journals = collect();
+        $esiJournals->each(function ($journal) use ($journals, $postUniverseNamesResponse)  {
+            $x = collect([
+                'journal_id' => $journal->get('id'),
+                'ref_type' => $journal->get('ref_type'),
+                'context_id' => $journal->get('context_id'),
+                'context_type' => $journal->get('context_id_type'),
+                'description' => $journal->get('description'),
+                'date' => Carbon::parse($journal->get('date')),
+                'reason' => $journal->get('reason'),
+                'first_party_id' => $journal->get('first_party_id'),
+                'second_party_id' => $journal->get('second_party_id'),
+                'amount' => $journal->get('amount'),
+                'balance' => $journal->get('balance'),
+                'tax' => $journal->get('tax'),
+                'tax_receiver_id' => $journal->get('tax_receiver_id')
+            ]);
+            if (!is_null($x->get('first_party_id'))) {
+                $id = $x->get('first_party_id');
+                if ($id >= 500000 && $id < 1000000) {
+                    $x->put('first_party_type', 'faction');
+                } else if ($postUniverseNamesResponse->has($id))  {
+                    $x->put('first_party_type', $postUniverseNamesResponse->get($id)->get('category'));
+                }
+            }
+            if (!is_null($x->get('second_party_id'))) {
+                $id = $x->get('second_party_id');
+                if ($id >= 500000 && $id < 1000000) {
+                    $x->put('second_party_type', 'faction');
+                } else if ($postUniverseNamesResponse->has($id))  {
+                    $x->put('second_party_type', $postUniverseNamesResponse->get($id)->get('category'));
+                }
+            }
+            $journals->push($x);
+        });
+        $member->journals()->createMany($journals->toArray());
         return $request;
     }
 
@@ -895,6 +1455,12 @@ class DataController extends Controller
     {
         return $this->httpCont->getChrBloodlines();
     }
+
+    public function getChrFactions()
+    {
+        return $this->httpCont->getChrFactions();
+    }
+
 
     public function getChrRaces()
     {

@@ -4,7 +4,8 @@ namespace ESIK\Models\ESI;
 
 use Illuminate\Database\Eloquent\Model;
 
-use ESIK\Models\MemberLocation;
+use ESIK\Models\{MemberLocation, MemberWalletTransaction};
+use ESIK\Models\ESI\Contract;
 
 class Structure extends Model
 {
@@ -28,8 +29,21 @@ class Structure extends Model
         return $this->morphOne(MemberJumpClones::class, "location");
     }
 
-    public function location()
+    public function bookmark_location()
     {
-        return $this->morphOn(MemberBookmark::class, 'location');
+        return $this->morphOne(MemberBookmark::class, 'location');
+    }
+
+    public function wallet_transactions_location()
+    {
+        return $this->morphOne(MemberWalletTransaction::class, 'location');
+    }
+
+    public function start_location () {
+        return $this->morphOne(Contract::class, 'start');
+    }
+
+    public function end_location () {
+        return $this->morphOne(Contract::class, 'end');
     }
 }

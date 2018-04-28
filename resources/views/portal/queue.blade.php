@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My Skill Queue')
+@section('title', 'My Skillqueue')
 
 @section('content')
     <div class="container">

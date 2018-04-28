@@ -27,16 +27,19 @@
                                         <input type="checkbox" id="readCharacterBookmarks" name="scopes[readCharacterBookmarks]" /> <span class="ml-2">Read Character Bookmarks</span>
                                     </li>
                                 </label>
+
                                 <label for="readCharacterClones" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterClones" name="scopes[readCharacterClones]" /> <span class="ml-2">Read Character Clones</span>
                                     </li>
                                 </label>
+
                                 <label for="readCharacterContracts" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterContracts" name="scopes[readCharacterContracts]" /> <span class="ml-2">Read Character Contracts</span>
                                     </li>
                                 </label>
+
                                 <label for="readCharacterImplants" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterImplants" name="scopes[readCharacterImplants]" /> <span class="ml-2">Read Character Implants</span>
@@ -48,37 +51,52 @@
                                         <input type="checkbox" id="readCharacterLocation" name="scopes[readCharacterLocation]" /> <span class="ml-2">Read Character Location</span>
                                     </li>
                                 </label>
+
                                 <label for="readCharacterSkills" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterSkills" name="scopes[readCharacterSkills]" /> <span class="ml-2">Read Character Skills</span>
                                     </li>
                                 </label>
+
                                 <label for="readCharacterSkillQueue" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterSkillQueue" name="scopes[readCharacterSkillQueue]" /> <span class="ml-2">Read Character Skill Queue</span>
                                     </li>
                                 </label>
-                                <label for="readCharacterWallet" class="mb-0">
-                                    <li class="list-group-item py-auto">
-                                        <input type="checkbox" id="readCharacterWallet" name="scopes[readCharacterWallet]" /> <span class="ml-2">Read Character Wallet</span>
-                                    </li>
-                                </label>
+
                                 <label for="readCharacterShip" class="mb-0">
                                     <li class="list-group-item py-auto ">
                                         <input type="checkbox" id="readCharacterShip" name="scopes[readCharacterShip]" /> <span class="ml-2">Read Character Ship</span>
                                     </li>
                                 </label>
 
-
-
+                                <label for="readCharacterWallet" class="mb-0">
+                                    <li class="list-group-item py-auto">
+                                        <input type="checkbox" id="readCharacterWallet" name="scopes[readCharacterWallet]" /> <span class="ml-2">Read Character Wallet</span>
+                                    </li>
+                                </label>
                             </ul>
                         </div>
                         <div class="col-lg-6">
                             <ul class="list-group">
                                 <li class="list-group-item text-center"><strong>Utility Classes</strong></li>
-                                <label for="readUniverseStructures">
+                                <label for="readUniverseStructures" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readUniverseStructures" name="scopes[readUniverseStructures]" /> <span class="ml-2">Read Structure Names</span>
+                                    </li>
+                                </label>
+                            </ul>
+                            <hr />
+                            <ul class="list-group">
+                                <li class="list-group-item text-center"><strong>Communications</strong></li>
+                                <label for="readCharacterContacts" class="mb-0">
+                                    <li class="list-group-item py-auto">
+                                        <input type="checkbox" id="readCharacterContacts" name="scopes[readCharacterContacts]" /> <span class="ml-2">Read Character Contacts & Standings</span>
+                                    </li>
+                                </label>
+                                <label for="readCharacterMails" class="mb-0">
+                                    <li class="list-group-item py-auto">
+                                        <input type="checkbox" id="readCharacterMails" name="scopes[readCharacterMails]" /> <span class="ml-2">Read Character Mails</span>
                                     </li>
                                 </label>
                             </ul>

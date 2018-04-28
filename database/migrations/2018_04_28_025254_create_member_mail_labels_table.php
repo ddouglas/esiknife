@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateMemberSkillzTable extends Migration
+class CreateMemberMailLabelsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,13 @@ class CreateMemberSkillzTable extends Migration
      */
     public function up()
     {
-        Schema::create('member_skillz', function (Blueprint $table) {
+        Schema::create('member_mail_labels', function (Blueprint $table) {
             $table->unsignedBigInteger('id');
-            $table->unsignedInteger('skill_id');
-            $table->unsignedTinyInteger('active_skill_level');
-            $table->unsignedTinyInteger('trained_skill_level');
-            $table->unsignedInteger('skillpoints_in_skill');
+            $table->unsignedInteger('total_unread_count');
+            $table->json('labels');
+            $table->timestamps();
 
-            $table->primary(['id', 'skill_id']);
+            $table->primary('id');
 
             $table->foreign('id')->references('id')->on('members')->onDelete('cascade')->onUpdate('cascade');
         });
@@ -33,6 +32,6 @@ class CreateMemberSkillzTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('member_skillzs');
+        Schema::dropIfExists('member_mail_labels');
     }
 }

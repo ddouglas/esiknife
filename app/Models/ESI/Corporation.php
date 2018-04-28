@@ -2,6 +2,7 @@
 
 namespace ESIK\Models\ESI;
 
+use ESIK\Models\MemberWalletTransaction;
 use Illuminate\Database\Eloquent\Model;
 
 class Corporation extends Model
@@ -14,5 +15,20 @@ class Corporation extends Model
     public function creator()
     {
         return $this->morphOn(MemberBookmark::class, 'creator');
+    }
+
+    public function assignee()
+    {
+        return $this->morphOne(Contract::class, 'assignee');
+    }
+
+    public function acceptor()
+    {
+        return $this->morphOne(Contract::class, 'acceptor');
+    }
+
+    public function wallet_transactions_client()
+    {
+        return $this->morphOne(MemberWalletTransaction::class, 'client');
     }
 }

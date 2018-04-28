@@ -4,15 +4,10 @@ namespace ESIK\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MemberContact extends Model
+class MemberMailLabel extends Model
 {
     protected $primaryKey = 'id';
-    protected $table = 'member_contacts';
+    protected $table = 'member_mail_labels';
     public $incrementing = false;
     protected static $unguarded = true;
-
-    public function info()
-    {
-        return $this->morphTo();
-    }
 }

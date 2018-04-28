@@ -2,7 +2,7 @@
 
 namespace ESIK\Models;
 
-use ESIK\Models\ESI\{Character, Type};
+use ESIK\Models\ESI\{Character, MailHeader, MailingList, Type, Contract};
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -77,6 +77,21 @@ class Member extends Authenticatable
         return $this->morphTo('clone', 'clone_location_type', 'clone_location_id', 'id');
     }
 
+    public function contacts()
+    {
+        return $this->hasMany(MemberContact::class, 'id', 'id');
+    }
+
+    public function contact_labels()
+    {
+        return $this->hasMany(MemberContactLabels::class, 'id', 'id');
+    }
+
+    public function contracts()
+    {
+        return $this->belongsToMany(Contract::class, 'member_contracts', 'member_id', 'contract_id');
+    }
+
     public function implants()
     {
         return $this->belongsToMany(Type::class, 'member_implants', 'member_id', 'type_id');
@@ -92,6 +107,21 @@ class Member extends Authenticatable
         return $this->hasOne(MemberLocation::class, 'id', 'id')->with('info');
     }
 
+    public function mail_labels()
+    {
+        return $this->hasOne(MemberMailLabel::class, 'id', 'id');
+    }
+
+    public function mailing_lists()
+    {
+        return $this->belongsToMany(MailingList::class, 'member_mailing_lists', 'member_id', 'mailing_list_id');
+    }
+
+    public function mail()
+    {
+        return $this->belongsToMany(MailHeader::class, 'member_mail_headers', 'member_id', 'mail_id')->withPivot('labels', 'is_read');
+    }
+
     public function ship()
     {
         return $this->hasOne(MemberShip::class, 'id', 'id');
@@ -104,6 +134,13 @@ class Member extends Authenticatable
     public function skillQueue()
     {
         return $this->belongsToMany(Type::class, 'member_skill_queue', 'id', 'skill_id')->withPivot('queue_position', 'finished_level', 'level_start_sp', 'level_end_sp', 'training_start_sp', 'start_date', 'finish_date');
-        // return $this->belongsToMany(Type::class, 'member_skill_queue', 'id', 'skill_id')->withPivot('queue_position', 'finished_level', 'starting_sp', 'finishing_sp', 'training_start_sp', 'start_date', 'finish_date');
+    }
+
+    public function transactions () {
+        return $this->hasMany(MemberWalletTransaction::class, 'id', 'id');
+    }
+
+    public function journals () {
+        return $this->hasMany(MemberWalletJournal::class, 'id', 'id');
     }
 }

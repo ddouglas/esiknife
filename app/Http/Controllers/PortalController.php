@@ -22,23 +22,6 @@ class PortalController extends Controller
         return view('portal.dashboard');
     }
 
-    public function skills ()
-    {
-        $skillz = collect();
-        Auth::user()->skillz->load('group')->each(function ($skill) use ($skillz) {
-            if (!$skillz->has($skill->group_id)) {
-                $skillz->put($skill->group_id, collect([
-                    'name' => $skill->group->name,
-                    'skills' => collect()
-                ]));
-            }
-            $skillz->get($skill->group_id)->get('skills')->put($skill->skill_id, $skill);
-        });
-        return view('portal.skillz', [
-            'skillz' => $skillz
-        ]);
-    }
-
     public function bookmarks () {
         Auth::user()->load('bookmarks', 'bookmarkFolders');
         return view('portal.bookmarks');
@@ -46,7 +29,6 @@ class PortalController extends Controller
 
     public function clones ()
     {
-
         if (Auth::user()->scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
             Auth::user()->load('implants.attributes');
         }
@@ -54,6 +36,28 @@ class PortalController extends Controller
             Auth::user()->load('clone', 'jumpClones');
         }
         return view('portal.clones');
+    }
+
+    public function contacts ()
+    {
+        dd("Hi");
+    }
+
+    public function contracts ()
+    {
+        Auth::user()->load('contracts', 'contracts.issuer.corporation', 'contracts.acceptor', 'contracts.assignee', 'contracts.start', 'contracts.end');
+        $contracts = Auth::user()->contracts()->paginate(25);
+        return view('portal.contracts.list', [
+            'contracts' => $contracts
+        ]);
+    }
+
+    public function contract ($id)
+    {
+        $contract = Auth::user()->contracts()->where('id', $id)->with('issuer.corporation', 'acceptor', 'assignee', 'start', 'end', 'items')->first();
+        return view('portal.contracts.view', [
+            'contract' => $contract
+        ]);
     }
 
     public function flyable ()
@@ -127,6 +131,40 @@ class PortalController extends Controller
         ]);
     }
 
+    public function skills ()
+    {
+        $skillz = collect();
+        Auth::user()->skillz->load('group')->each(function ($skill) use ($skillz) {
+            if (!$skillz->has($skill->group_id)) {
+                $skillz->put($skill->group_id, collect([
+                    'name' => $skill->group->name,
+                    'skills' => collect()
+                ]));
+            }
+            $skillz->get($skill->group_id)->get('skills')->put($skill->skill_id, $skill);
+        });
+        return view('portal.skillz', [
+            'skillz' => $skillz
+        ]);
+    }
+
+    public function wallet_transaction ()
+    {
+        $transactions = Auth::user()->transactions()->paginate(25);
+        return view('portal.wallet.transactions', [
+            'transactions' => $transactions
+        ]);
+    }
+
+    public function wallet_journal ()
+    {
+        $journal = Auth::user()->journals()->orderby('date', 'desc')->paginate(25);
+        return view('portal.wallet.journals', [
+            'journal' => $journal
+        ]);
+    }
+
+
     public function welcome ()
     {
         if (Request::isMethod('post')) {
@@ -154,7 +192,9 @@ class PortalController extends Controller
             $ssoUrl = config("services.eve.urls.sso")."/oauth/authorize?response_type=code&redirect_uri=" . route(config('services.eve.sso.callback')) . "&client_id=".config('services.eve.sso.id')."&state={$state_hash}&scope=".$authorized;
             return redirect($ssoUrl);
         }
-
+        if (Auth::check()) {
+            return redirect(route('dashboard'));
+        }
         if (Request::has('state')) {
             $ssoResponse = Session::get(Request::get('state'));
             // Session::forget(Request::get('state'));
@@ -234,7 +274,25 @@ class PortalController extends Controller
                 $status = $getMemberClones->status;
                 $payload = $getMemberClones->payload;
                 if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                    $alert->push("Unfortunately we were unable to query your clones right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains(config('services.eve.scopes.readCharacterContacts'))) {
+                $getMemberContacts = $this->dataCont->getMemberContacts($member);
+                $status = $getMemberContacts->status;
+                $payload = $getMemberContacts->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your contacts right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
+
+            if ($scopes->contains(config('services.eve.scopes.readCharacterContracts'))) {
+                $getMemberContracts = $this->dataCont->getMemberContracts($member, $scopes);
+                $status = $getMemberContracts->status;
+                $payload = $getMemberContracts->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your contracts right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
 
@@ -243,7 +301,7 @@ class PortalController extends Controller
                 $status = $getMemberImplants->status;
                 $payload = $getMemberImplants->payload;
                 if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                    $alert->push("Unfortunately we were unable to query your implants right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
 
@@ -252,16 +310,38 @@ class PortalController extends Controller
                 $status = $getMemberLocation->status;
                 $payload = $getMemberLocation->payload;
                 if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                    $alert->push("Unfortunately we were unable to query your location right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
 
+            if ($scopes->contains(config('services.eve.scopes.readCharacterMails'))) {
+                $getMemberMailLabels = $this->dataCont->getMemberMailLabels($member);
+                $status = $getMemberMailLabels->status;
+                $payload = $getMemberMailLabels->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your mail labels right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+
+                $getMemberMailingLists = $this->dataCont->getMemberMailingLists($member);
+                $status = $getMemberMailingLists->status;
+                $payload = $getMemberMailingLists->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your mailing lists right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+
+                $getMemberMailHeaders = $this->dataCont->getMemberMailHeaders($member);
+                $status = $getMemberMailHeaders->status;
+                $payload = $getMemberMailHeaders->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your mail headers right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
             if ($scopes->contains(config('services.eve.scopes.readCharacterShip'))) {
                 $getMemberShip = $this->dataCont->getMemberShip($member);
                 $status = $getMemberShip->status;
                 $payload = $getMemberShip->payload;
                 if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                    $alert->push("Unfortunately we were unable to query your ship right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
 
@@ -279,7 +359,7 @@ class PortalController extends Controller
                 $status = $getMemberSkillQueue->status;
                 $payload = $getMemberSkillQueue->payload;
                 if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your skills right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                    $alert->push("Unfortunately we were unable to query your skill queue right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
 
@@ -289,6 +369,22 @@ class PortalController extends Controller
                 $payload = $getMemberWallet->payload;
                 if (!$status) {
                     $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+
+                unset($status, $payload);
+                $getMemberWalletTransaction = $this->dataCont->getMemberWalletTransactions($member);
+                $status = $getMemberWalletTransaction->status;
+                $payload = $getMemberWalletTransaction->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your wallet transaction right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+
+                unset($status, $payload);
+                $getMemberWalletJournals = $this->dataCont->getMemberWalletJournals($member);
+                $status = $getMemberWalletJournals->status;
+                $payload = $getMemberWalletJournals->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your wallet transaction right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
                 }
             }
             if (!Auth::check()) {

@@ -1,13 +1,13 @@
 <?php
 
-namespace ESIK\Models;
+namespace ESIK\Models\SDE;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MemberWalletTransactions extends Model
+class Faction extends Model
 {
     protected $primaryKey = 'id';
-    protected $table = 'member_wallet_transactions';
+    protected $table = 'factions';
     public $incrementing = false;
     protected static $unguarded = true;
 }

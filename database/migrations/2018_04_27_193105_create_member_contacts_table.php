@@ -16,15 +16,16 @@ class CreateMemberContactsTable extends Migration
         Schema::create('member_contacts', function (Blueprint $table) {
             $table->unsignedBigInteger('id');
             $table->unsignedBigInteger('contact_id');
-            $table->string('contact_type');
-            $table->float('standing', 3, 1);
-            $table->boolean('is_watched')->nullable();
-            $table->boolean('is_blocked')->nullable();
-            $table->integer('label_id');
-            $table->timestamps();
+            $table->enum('contact_type', ['character', 'corporation', 'alliance', 'faction']);
+            $table->json('label_ids')->nullable();
+            $table->float('standing');
+            $table->boolean('is_blocked')->default(0)->nullable();
+            $table->boolean('is_watched')->default(0)->nullable();
 
             $table->primary(['id', 'contact_id']);
-            
+
+            $table->timestamps();
+
             $table->foreign('id')->references('id')->on('members')->onUpdate('cascade')->onDelete('cascade');
         });
     }

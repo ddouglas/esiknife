@@ -38,8 +38,12 @@ class Import extends Command
      */
     public function handle()
     {
+        $count = count(config('services.eve.sde.import'));
+        $x = 1;
         foreach (config('services.eve.sde.import') as $type) {
             SdeController::{$type}();
+            dump("{$x} of {$count} imported successfully");
+            $x++;
             sleep(5);
         }
         return true;

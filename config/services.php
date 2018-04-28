@@ -39,15 +39,17 @@ return [
             'import' => [
                 'invGroups','invCategories','mapRegions',
                 'mapConstellations', 'chrAncestries', 'chrBloodlines',
-                'chrRaces'
+                'chrRaces', 'chrFactions'
             ]
         ],
         'scopes'=>[
             'readCharacterBookmarks' => "esi-bookmarks.read_character_bookmarks.v1",
             'readCharacterClones' => "esi-clones.read_clones.v1",
-            'readCharacterImplants' => "esi-clones.read_implants.v1",
+            'readCharacterContacts' => "esi-characters.read_contacts.v1",
             'readCharacterContracts' => "esi-contracts.read_character_contracts.v1",
+            'readCharacterImplants' => "esi-clones.read_implants.v1",
             'readCharacterLocation' => "esi-location.read_location.v1",
+            'readCharacterMails' => "esi-mail.read_mail.v1",
             'readCharacterShip' => "esi-location.read_ship_type.v1",
             'readCharacterSkills' => "esi-skills.read_skills.v1",
             'readCharacterSkillQueue' => "esi-skills.read_skillqueue.v1",

@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'Default Layout')
+@section('title', 'My Skills')
 
 @section('content')
     <div class="container">
