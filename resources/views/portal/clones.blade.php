@@ -1,15 +1,10 @@
 @extends('layout.index')
 
-@section('title', 'Clones')
+@section('title', 'My Clones')
 
 @section('content')
     <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <h1 class="text-center">Jump Clones</h1>
-                <hr />
-            </div>
-        </div>
+        @include('portal.extra.header')
         @include('portal.extra.nav')
         <div class="row">
             <div class="col-lg-4 offset-lg-2 col-md-6">

@@ -4,7 +4,6 @@
 
 @section('content')
     <div class="container">
-
         @include('portal.extra.header')
         @include('portal.extra.nav')
         <div class="row">

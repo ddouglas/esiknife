@@ -5,15 +5,33 @@
                 <a class="nav-link {{ $currentRouteName === 'dashboard' ? 'active' : null }}" href="{{ route('dashboard') }}">Overview</a>
             </li>
 
+            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterAssets')))
+                <li class="nav-item ml-2">
+                    <a class="nav-link {{ $currentRouteName === 'assets' ? 'active' : null }}" href="{{ route('assets') }}">Assets</a>
+                </li>
+            @endif
+
             @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterBookmarks')))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ $currentRouteName === 'bookmarks' ? 'active' : null }}" href="{{ route('bookmarks') }}">Bookmarks</a>
                 </li>
             @endif
 
-            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterImplants')) || $scopes->contains(config('services.eve.scopes.readCharacterClones'))))
+            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterClones')) || $scopes->contains(config('services.eve.scopes.readCharacterImplants')) ))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ $currentRouteName === 'clones' ? 'active' : null }}" href="{{ route('clones') }}">Clones & Implants</a>
+                </li>
+            @endif
+
+            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterContacts'))))
+                <li class="nav-item ml-2">
+                    <a class="nav-link {{ $currentRouteName === 'contacts' ? 'active' : null }}" href="{{ route('contacts') }}">Contacts</a>
+                </li>
+            @endif
+
+            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterMails'))))
+                <li class="nav-item ml-2">
+                    <a class="nav-link {{ $currentRouteName === 'mails' ? 'active' : null }}" href="{{ route('mails') }}">Evemail</a>
                 </li>
             @endif
 

@@ -10,4 +10,9 @@ class Faction extends Model
     protected $table = 'factions';
     public $incrementing = false;
     protected static $unguarded = true;
+
+    public function contact_info()
+    {
+        return $this->morphOne(MemberContact::class, 'info');
+    }
 }

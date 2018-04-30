@@ -10,9 +10,6 @@ use ESIK\Http\Controllers\DataController;
 
 class PortalController extends Controller
 {
-
-    public $dataCont;
-
     public function __construct()
     {
         $this->dataCont = new DataController;
@@ -21,6 +18,33 @@ class PortalController extends Controller
     {
         return view('portal.dashboard');
     }
+
+    // public function assets()
+    // {
+    //     $dbAssets = Auth::user()->assets->keyBy('item_id');
+    //     $assets = collect();
+    //     $locations = collect();
+    //     $dbAssets->each(function ($dbAsset) use (&$dbAssets,&$assets, $locations) {
+    //         // Check if Location ID is another Asset
+    //         if ($dbAssets->has($dbAsset->location_id) && $asset->has($dbAsset->location_id)) {
+    //             // This means that teh current asset {$asset} that we are on right now is a child of another asset
+    //             $locationAsset = $dbAssets->get($dbAsset->location_id);
+    //             if (!$locationAsset->has('contents')) {
+    //                 $locationAsset->put('contents', collect());
+    //             }
+    //             $locationAsset->get('contents')->put($dbAsset->item_id, $dbAsset);
+    //             $dbAssets->forget($dbAsset->item_id);
+    //             // if (!$assets->has($locationAsset->item_id)) {
+    //             //     $assets->put($locationAsset->item_id, $locationAsset);
+    //             // }
+    //         } else {
+    //             // dd($dbAsset);
+    //         }
+    //     });
+    //
+    //
+    //     dd($dbAssets);
+    // }
 
     public function bookmarks () {
         Auth::user()->load('bookmarks', 'bookmarkFolders');
@@ -40,7 +64,8 @@ class PortalController extends Controller
 
     public function contacts ()
     {
-        dd("Hi");
+        Auth::user()->load('contacts.info', 'contact_labels');
+        return view('portal.contacts');
     }
 
     public function contracts ()
@@ -99,8 +124,44 @@ class PortalController extends Controller
                 $flyable->get($ship->group_id)->get('ships')->get('cant')->put($ship->id, $ship);
             }
         });
-        return view('portal.flyable', [
+        return view('portal.skillz.flyable', [
             'flyable' => $flyable
+        ]);
+    }
+
+    public function mails()
+    {
+        $mails = Auth::user()->mail();
+        if (Request::has('label')) {
+            $label = Request::get('label');
+            $mails = $mails->whereRaw("FIND_IN_SET('" . $label . "', member_mail_headers.labels)");
+        } elseif (Request::has('ml')) {
+            $mailing_list_id = Request::get('ml');
+            $mails->where('mailing_list_id', $mailing_list_id);
+        }
+        if (Request::has('unread')) {
+            $mails = $mails->where('member_mail_headers.is_read', NULL);
+        }
+        $mails = $mails->orderby('sent', 'desc')->with('sender')->paginate(50);
+        return view('portal.mail.list', [
+           'mails' => $mails
+       ]);
+    }
+
+    public function mail($id)
+    {
+        $mail = Auth::user()->mail()->where('id', $id)->with('recipients', 'sender')->first();
+        if (is_null($mail)) {
+            Session::flash('alert', [
+                "header" => "Invalid Mail ID",
+                'message' => "That mail id either does not exist or is not associated with this character.",
+                'type' => 'danger',
+                'close' => 1
+            ]);
+            return redirect(route('mail.welcome'));
+        }
+        return view ('portal.mail.view', [
+            'mail' => $mail
         ]);
     }
 
@@ -119,12 +180,15 @@ class PortalController extends Controller
                 $spTraining->push($item->pivot->level_end_sp - $item->pivot->training_start_sp);
             }
         });
-        $lastSkill = Auth::user()->skillQueue->last();
         $queueComplete = "No Skills are currently training";
-        if (!is_null($lastSkill->pivot->finish_date)) {
-            $queueComplete = Carbon::parse($lastSkill->pivot->finish_date)->toDayDateTimeString();
+        if (Auth::user()->skillQueue->isNotEmpty()) {
+            $lastSkill = Auth::user()->skillQueue->last();
+
+            if (!is_null($lastSkill->pivot->finish_date)) {
+                $queueComplete = Carbon::parse($lastSkill->pivot->finish_date)->toDayDateTimeString();
+            }
         }
-        return view('portal.queue', [
+        return view('portal.skillz.queue', [
             'groupsTraining' => $groupsTraining,
             'spTraining' => $spTraining,
             'queueComplete' => $queueComplete
@@ -143,12 +207,12 @@ class PortalController extends Controller
             }
             $skillz->get($skill->group_id)->get('skills')->put($skill->skill_id, $skill);
         });
-        return view('portal.skillz', [
+        return view('portal.skillz.list', [
             'skillz' => $skillz
         ]);
     }
 
-    public function wallet_transaction ()
+    public function wallet_transactions ()
     {
         $transactions = Auth::user()->transactions()->paginate(25);
         return view('portal.wallet.transactions', [
@@ -259,6 +323,15 @@ class PortalController extends Controller
             $member->save();
             $alert = collect();
             $scopes = collect(json_decode($member->scopes, true));
+
+            if ($scopes->contains(config('services.eve.scopes.readCharacterAssets'))) {
+                $getMemberAssets = $this->dataCont->getMemberAssets ($member);
+                $status = $getMemberAssets->status;
+                $payload = $getMemberAssets->payload;
+                if (!$status) {
+                    $alert->push("Unfortunately we were unable to query your bookmarks right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
+                }
+            }
 
             if ($scopes->contains(config('services.eve.scopes.readCharacterBookmarks'))) {
                 $getMemberBookmarks = $this->dataCont->getMemberBookmarks($member);

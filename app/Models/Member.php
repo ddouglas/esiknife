@@ -62,6 +62,11 @@ class Member extends Authenticatable
         return $this->hasOne(Character::class, 'id', 'id');
     }
 
+    public function assets()
+    {
+        return $this->hasMany(MemberAsset::class, 'id', 'id');
+    }
+
     public function bookmarks()
     {
         return $this->hasMany(MemberBookmark::class, 'id', 'id');

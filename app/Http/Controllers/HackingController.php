@@ -5,7 +5,7 @@ namespace ESIK\Http\Controllers;
 use Request, Session;
 use ESIK\Models\{Member};
 use ESIK\Jobs\ESI\GetCharacter;
-use ESIK\Models\ESI\{Contract,Type};
+use ESIK\Models\ESI\{MailRecipient};
 
 class HackingController extends Controller
 {
@@ -18,7 +18,8 @@ class HackingController extends Controller
 
     public function index()
     {
-        GetCharacter::dispatch(95923084);
+        $recipient = MailRecipient::where(['mail_id' => 370314718, 'recipient_id' => 99007723])->with('info')->first();
+        dd($recipient);
     }
 
     public function typesWithAttributesEffects ($type_id)

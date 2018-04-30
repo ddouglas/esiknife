@@ -24,7 +24,10 @@
                             <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Ancestry:</strong> {{ title_case(Auth::user()->info->ancestry->name) }}</li>
                             <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Bloodline:</strong> {{ title_case(Auth::user()->info->bloodline->name) }}</li>
                             @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterShip')))
-                                <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Ship:</strong> {{ Auth::user()->ship->name }} ({{ Auth::user()->ship->type->name }})</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <strong>Current Ship:</strong>
+                                    {{ Auth::user()->ship->name }} ({{ !is_null(Auth::user()->ship->type) ? !is_null(Auth::user()->ship->type->name) : !is_null(Auth::user()->ship->type_id) }})
+                                </li>
                             @endif
                         </ul>
                     </div>
@@ -38,7 +41,7 @@
                             @endif
                             @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterLocation')))
                                 @if ($scopes->contains(config('services.eve.scopes.readUniverseStructures')))
-                                    <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ Auth::user()->location->info->name }}</li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ !is_null(Auth::user()->location->info) ? Auth::user()->location->info->name : "Unknown Location ". Auth::user()->location->location_id }}</li>
                                 @else
                                     <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ Auth::user()->location->system->name }}</li>
                                 @endif
@@ -73,10 +76,10 @@
                                       <li class="list-group-item">
                                           <div class="media">
                                               <div class="float-left">
-                                                  <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation->id }}_64.png" />
+                                                  <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation_id }}_64.png" />
                                               </div>
                                               <div class="media-body ml-2">
-                                                  <h5 class="mt-0">{{ $corp->corporation->name }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
+                                                  <h5 class="mt-0">{{ !is_null($corp->corporation) ? $corp->corporation->name : "Unknown Corp ". $corp->corporation_id }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
                                                   <p>
                                                       @if ($corpHistory->has($key - 1))
                                                           Left {{ age($corp->start_date, $corpHistory->get($key - 1)->start_date) }} later on {{ $corpHistory->get($key - 1)->start_date->toDateString() }}<br />

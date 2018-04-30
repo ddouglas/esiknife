@@ -52,6 +52,11 @@ class Contract extends Model
         return $this->hasOne(Character::class, 'id', 'issuer_id');
     }
 
+    public function issuer_corp()
+    {
+        return $this->hasOne(Corporation::class, 'id', 'issuer_corporation_id');
+    }
+
     public function items()
     {
         return $this->belongsToMany(Type::class, 'contract_items', 'id', 'type_id')->withPivot('record_id', 'quantity', 'is_singleton', 'is_included');

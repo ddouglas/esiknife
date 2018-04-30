@@ -20,7 +20,7 @@ class MailHeader extends Model
         return $this->belongsToMany(MailHeader::class, 'member_mail_headers', 'mail_id', 'member_id')->withPivot(['labels', 'is_read']);
     }
 
-    public function recipients()
+    public function recipients ()
     {
         return $this->hasMany(MailRecipient::class, 'mail_id', 'id')->with('info');
     }

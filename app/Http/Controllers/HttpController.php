@@ -132,6 +132,35 @@ class HttpController extends Controller
         ], 'get', config('services.eve.urls.esi'),"/v1/status/", []);
     }
 
+    public function getCharacterCharacterIdAssets(int $id, string $token, int $page)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'get', config('services.eve.urls.esi'),"/v3/characters/{$id}/assets/", [
+            'page' => $page
+        ]);
+    }
+
+    public function postCharactersCharacterIdAssetsLocations(int $id, string $token, array $ids)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'post', config('services.eve.urls.esi'),"/v2/characters/{$id}/assets/locations/", json_encode($ids));
+    }
+
+    public function postCharactersCharacterIdAssetsNames(int $id, string $token, array $ids)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'post', config('services.eve.urls.esi'),"/v1/characters/{$id}/assets/names/", json_encode($ids));
+    }
+
     public function getCharactersCharacterIdBookmarks($id, $token)
     {
         return $this->request([
@@ -174,24 +203,6 @@ class HttpController extends Controller
             "Content-Type" => "application/json",
             "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/fittings/", []);
-    }
-
-    public function postCharactersCharacterIdFittings ($id, $token, $payload)
-    {
-        return $this->request([
-            "Authorization" => "Bearer ". $token,
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'post', config('services.eve.urls.esi'),"/v1/characters/{$id}/fittings/", $payload);
-    }
-
-    public function deleteCharactersCharacterIdFittings ($id, $token, $fitting_id)
-    {
-        return $this->request([
-            "Authorization" => "Bearer ". $token,
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'delete', config('services.eve.urls.esi'),"/v1/characters/{$id}/fittings/{$fitting_id}/", []);
     }
 
     public function getCharactersCharacterIdImplants($id, $token)
@@ -242,33 +253,6 @@ class HttpController extends Controller
             "Content-Type" => "application/json",
             "User-Agent" => config("services.eve.userAgent")
         ], 'get', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/{$mailId}/", []);
-    }
-
-    public function postCharactersCharacterIdMailMail($id, $token, $payload)
-    {
-        return $this->request([
-            "Authorization" => "Bearer ". $token,
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'post', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/", json_encode($payload));
-    }
-
-    public function putCharactersCharacterIdMailMailId(int $id, string $token, int $mail_id, array $payload)
-    {
-        return $this->request([
-            "Authorization" => "Bearer ". $token,
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'put', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/{$mail_id}/", json_encode($payload));
-    }
-
-    public function deleteCharactersCharacterIdMailMailId(int $id, string $token, int $mail_id)
-    {
-        return $this->request([
-            "Authorization" => "Bearer ". $token,
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'delete', config('services.eve.urls.esi'),"/v1/characters/{$id}/mail/{$mail_id}/", []);
     }
 
     public function getCharactersCharacterIdWallet ($id, $token)
@@ -410,17 +394,6 @@ class HttpController extends Controller
             "User-Agent" => config("services.eve.userAgent"),
             "Content-Type" => "application/json"
         ], 'get', config('base.marketerUrl'),'/marketstat/json', $params);
-    }
-
-    public function postUIOpenwindowContract ($id, $token)
-    {
-        return $this->request([
-            "Authorization" => "Bearer ". $token,
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'post', config('services.eve.urls.esi'),"/v1/ui/openwindow/contract/", [
-            'contract_id' => $id,
-        ]);
     }
 
     public function postUIOpenwindowMarketDetails ($id, $token)

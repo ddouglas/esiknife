@@ -6,7 +6,7 @@ use Carbon, DOMDocument, Request, Session;
 
 use ESIK\Jobs\{ProcessContract,ProcessMailHeader};
 use ESIK\Jobs\ESI\{GetCharacter, GetCorporation, GetAlliance, GetSystem, GetType, GetStation, GetStructure};
-use ESIK\Models\{Member};
+use ESIK\Models\{Member, MemberAsset};
 use ESIK\Models\ESI\{Alliance, Character, Contract, Corporation, MailHeader, MailingList, Station, Structure, System, Type};
 use ESIK\Models\SDE\{Region, Constellation};
 
@@ -220,6 +220,143 @@ class DataController extends Controller
         return (object)[
             'status' => true,
             'payload' => $alliance
+        ];
+    }
+
+    public function getMemberAssets (Member $member)
+    {
+        $assets = collect();
+        $currentPage = 1;
+        $numPages = 0;
+        while (true) {
+            $request = $this->httpCont->getCharacterCharacterIdAssets($member->id, $member->access_token, $currentPage);
+            $status = $request->status;
+            $payload = $request->payload;
+            if (!$status) {
+                return $request;
+            }
+            $response = collect($payload->response)->recursive();
+            $assets = $assets->merge($response);
+            $requestHeaders = collect($payload->headers->response);
+            if ($requestHeaders->has('X-Pages')) {
+                $numOfPages = $requestHeaders->get('X-Pages');
+            } else {
+                break;
+            }
+            if ($currentPage == $numOfPages) {
+                break;
+            }
+            $currentPage++;
+        }
+
+        $assets = $assets->keyBy('item_id');
+        $typeIds = $assets->pluck('type_id')->unique()->values();
+        $knownTypes = Type::whereIn('id', $typeIds->toArray())->get()->keyBy('id');
+        $now = now(); $x = 0;
+        $typeIds->diff($knownTypes->keys())->each(function ($typeId) use (&$now, &$x) {
+            GetType::dispatch($typeId)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $stationIds = $assets->where('location_type', 'station')->pluck('location_id')->unique()->values();
+        $knownStations = Station::whereIn('id', $stationIds->toArray())->get()->keyBy('id');
+        $stationIds->diff($knownStations->keys())->each(function ($stationId) use (&$now, &$x) {
+            GetStation::dispatch($stationId)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $systemIds = $assets->where('location_type', 'solar_system')->pluck('location_id')->unique()->values();
+        $knownSystems = System::whereIn('id', $systemIds->toArray())->get()->keyBy('id');
+        $systemIds->diff($knownSystems->keys())->each(function ($systemId) use (&$now, &$x) {
+            GetSystem::dispatch($systemId)->delay($now);
+            if ($x%10==0) {
+                $now->addSecond();
+            }
+            $x++;
+        });
+
+        $assetsToUpdate = collect();
+        $assets->chunk(50)->each(function ($assetItemChunk) use ($member, &$assetsToUpdate) {
+            $assetItemChunk = $assetItemChunk->keyBy('item_id');
+            $knownItems = $member->assets()->whereIn('item_id', $assetItemChunk->keys())->get()->keyBy('item_id');
+
+            $postNames = $this->postAssetNames($member, $assetItemChunk->keys());
+            $pNStatus = $postNames->status;
+            $pNPayload = $postNames->payload;
+
+            $assetItemChunk->each(function ($item) use ($member,$knownItems, $assetItemChunk, &$assetsToUpdate, $pNPayload, $pNStatus) {
+
+                if ($knownItems->has($item->get('item_id'))) {
+                    $knownItem = $knownItems->get($item->get('item_id'));
+                    $diffAssoc = $item->diffAssoc($knownItem);
+                    if ($diffAssoc->isNotEmpty()) {
+                        $assetsToUpdate->put($item->get('item_id'), $diffAssoc);
+                    }
+                } else {
+                    if ($pNStatus && $pNPayload->has($item->get('item_id'))) {
+                        $item->put('name', $pNPayload->get($item->get('item_id'))->get('name'));
+                    }
+                    $assetsToUpdate->put($item->get('item_id'), $item);
+                }
+            });
+        });
+
+        if ($assetsToUpdate->isNotEmpty()) {
+            $assetsToUpdate->each(function ($asset, $item_id) use ($member) {
+                MemberAsset::updateOrCreate(['id' => $member->id,'item_id' => $item_id], $asset->toArray());
+            });
+        }
+        $member->assets()->chunk(100, function ($knownAssetChunk) use ($assets, $member) {
+            $knownAssetChunk->each(function ($knownAsset) use ($assets, $member) {
+                if (!$assets->has($knownAsset->item_id)) {
+                    $member->assets()->where('item_id', $knownAsset->item_id)->delete();
+                }
+            });
+        });
+
+        return (object)[
+            'status' => true,
+            'payload' => $assets
+        ];
+    }
+
+    public function postAssetLocations(Member $member, Collection $ids)
+    {
+        $request = $this->httpCont->postCharactersCharacterIdAssetsLocations($member->id, $member->access_token, $ids->toArray());
+        $status = $request->status;
+        $payload = $request->payload;
+        if (!$status) {
+            return $request;
+        }
+        $response = collect($payload->response)->recursive()->keyBy('item_id');
+
+        return (object)[
+            'status' => true,
+            'payload' => $response
+        ];
+    }
+
+    public function postAssetNames(Member $member, Collection $ids)
+    {
+        $request = $this->httpCont->postCharactersCharacterIdAssetsNames($member->id, $member->access_token, $ids->toArray());
+        $status = $request->status;
+        $payload = $request->payload;
+        if (!$status) {
+            return $request;
+        }
+        $response = collect($payload->response)->recursive()->reject(function ($item) {
+            return $item->get('name') === "None";
+        })->keyBy('item_id');
+
+        return (object)[
+            'status' => true,
+            'payload' => $response
         ];
     }
 
@@ -666,7 +803,7 @@ class DataController extends Controller
                     if (count($target) == 1) {
                         // Show Info on an Item;
                         $anchor->removeAttribute('href');
-                        $anchor->setAttribute('href', config('base.kmUrl'). "type/{$target[0]}");
+                        $anchor->setAttribute('href', config('services.eve.urls.km'). "type/{$target[0]}");
                         continue;
                     }
 
@@ -677,10 +814,10 @@ class DataController extends Controller
                         $info = Region::find($targetId);
                         if (is_null($info)) {
                             $anchor->removeAttribute('href');
-                            $anchor->setAttribute('href', config('base.kmUrl'). "region/{$targetId}");
+                            $anchor->setAttribute('href', config('services.eve.urls.km'). "region/{$targetId}");
                         } else {
                             $anchor->removeAttribute('href');
-                            $anchor->setAttribute('href', config('base.dotlanUrl'). "map/". $info->nameDotlanFormat());
+                            $anchor->setAttribute('href', config('services.eve.urls.dotlan'). "map/". $info->nameDotlanFormat());
                         }
                         continue;
                     }
@@ -689,10 +826,10 @@ class DataController extends Controller
                         $info = Constellation::find($targetId);
                         if (is_null($info)) {
                             $anchor->removeAttribute('href');
-                            $anchor->setAttribute('href', config('base.kmUrl'). "/constellation/{$targetId}");
+                            $anchor->setAttribute('href', config('services.eve.urls.km'). "/constellation/{$targetId}");
                         } else {
                             $info->load('region');
-                            $anchor->setAttribute('href', config('base.dotlanUrl'). "map/". $info->region->nameDotlanFormat() . "/{$info->name}");
+                            $anchor->setAttribute('href', config('services.eve.urls.dotlan'). "map/". $info->region->nameDotlanFormat() . "/{$info->name}");
                         }
                         continue;
                     }
@@ -706,11 +843,11 @@ class DataController extends Controller
                                 activity(__METHOD__)->withProperties($payload)->log($payload->message);
                             }
                             $anchor->removeAttribute('href');
-                            $anchor->setAttribute('href', config('base.kmUrl'). "system/{$targetId}");
+                            $anchor->setAttribute('href', config('services.eve.urls.km'). "system/{$targetId}");
                         } else {
                             $payload->load('constellation.region');
                             $anchor->removeAttribute('href');
-                            $anchor->setAttribute('href', config('base.dotlanUrl'). "map/". $payload->constellation->region->nameDotlanFormat()."/".$payload->name);
+                            $anchor->setAttribute('href', config('services.eve.urls.dotlan'). "map/". $payload->constellation->region->nameDotlanFormat()."/".$payload->name);
                         }
                         continue;
                     }
@@ -726,13 +863,13 @@ class DataController extends Controller
                     $targetGroup = $payload->group;
                     if ($targetGroup->id == 1) {
                         $anchor->removeAttribute('href');
-                        $anchor->setAttribute('href', config('base.kmUrl'). "character/{$targetId}/");
+                        $anchor->setAttribute('href', config('services.eve.urls.km'). "character/{$targetId}/");
                         continue;
                     }
 
                     if ($targetGroup->id == 2) {
                         $anchor->removeAttribute('href');
-                        $anchor->setAttribute('href', config('base.kmUrl'). "corporation/{$targetId}/");
+                        $anchor->setAttribute('href', config('services.eve.urls.km'). "corporation/{$targetId}/");
                         continue;
                     }
 
@@ -750,28 +887,28 @@ class DataController extends Controller
                         if (in_array($targetType, [21646,21644,21642,21645])) {
                             $payload->load('system');
                             $anchor->removeAttribute('href');
-                            $anchor->setAttribute('href', config('base.dotlanUrl'). "outpost/". $payload->system->name);
+                            $anchor->setAttribute('href', config('services.eve.urls.dotlan'). "outpost/". $payload->system->name);
                         } else {
                             $anchor->removeAttribute('href');
-                            $anchor->setAttribute('href', config('base.dotlanUrl'). "station/". $payload->nameDotlanFormat());
+                            $anchor->setAttribute('href', config('services.eve.urls.dotlan'). "station/". $payload->nameDotlanFormat());
                         }
                         continue;
                     }
 
                     if ($targetGroup->id == 19) {
                         $anchor->removeAttribute('href');
-                        $anchor->setAttribute('href', config('base.kmUrl'). "faction/{$targetId}/");
+                        $anchor->setAttribute('href', config('services.eve.urls.km'). "faction/{$targetId}/");
                         continue;
                     }
 
                     if ($targetGroup->id == 32) {
                         $anchor->removeAttribute('href');
-                        $anchor->setAttribute('href', config('base.kmUrl'). "alliance/{$targetId}/");
+                        $anchor->setAttribute('href', config('services.eve.urls.km'). "alliance/{$targetId}/");
                         continue;
                     }
                     if ($targetGroup->category_id == 65) {
                         $anchor->removeAttribute('href');
-                        $anchor->setAttribute('href', config('base.kmUrl'). "ship/{$targetType}/");
+                        $anchor->setAttribute('href', config('services.eve.urls.km'). "ship/{$targetType}/");
                         continue;
                     }
                 }
@@ -779,7 +916,7 @@ class DataController extends Controller
                 if ($type === "killReport") {
                     $killId = $href[1];
                     $anchor->removeAttribute('href');
-                    $anchor->setAttribute('href', config('base.kmUrl')."kill/{$killId}/");
+                    $anchor->setAttribute('href', config('services.eve.urls.km')."kill/{$killId}/");
                     continue;
                 }
 
@@ -1103,7 +1240,7 @@ class DataController extends Controller
         });
 
         $scopes = $member->scopes;
-        $locations = $transactions->pluck('location_id')->unique()->values()->each(function ($location) use ($scopes) {
+        $transactions->pluck('location_id')->unique()->values()->each(function ($location) use ($member, $scopes, &$now, &$x) {
             if ($location > 1000000000000) {
                 $structure = Structure::find($location);
                 if (!is_null($structure)) {
@@ -1121,7 +1258,6 @@ class DataController extends Controller
                     }
                     $x++;
                 }
-
             } else {
                 $station = Station::find($location);
                 if (is_null($station)) {

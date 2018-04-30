@@ -35,7 +35,10 @@
                             [Corp Ticker] Issued By
                         </th>
                         <td>
-                            [{{ $contract->issuer->corporation->ticker }}] {{ $contract->issuer->name }}
+                            @if (!is_null($contract->issuer_corp))
+                                [{{ $contract->issuer_corp->ticker }}]
+                            @endif
+                            {{ !is_null($contract->issuer) ? $contract->issuer->name : "Unknown Character ". $contract->issuer_id }}
                         </td>
                     </tr>
                     <tr>
@@ -97,7 +100,7 @@
                             Start System / Station / Structure
                         </th>
                         <td>
-                            {{ $contract->start->name }}
+                            {{ !is_null($contract->start) ? $contract->start->name : "Unknown Location ". $contract->start_location }}
                         </td>
                     </tr>
                     <tr>
@@ -105,7 +108,7 @@
                             End System / Station / Structure
                         </th>
                         <td>
-                            {{ $contract->end->name }}
+                            {{ !is_null($contract->end) ? $contract->end->name : "Unknown Location ". $contract->end_location }}
                         </td>
                     </tr>
                 </table>

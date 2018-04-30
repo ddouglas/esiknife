@@ -64,4 +64,9 @@ class Handler extends ExceptionHandler
         Session::put('to', $request->fullUrl());
         return redirect(route('auth.login'));
     }
+
+    // protected function renderExceptionWithWhoops(Exception $e)
+    // {
+    //     return $this->renderExceptionWithSymfony($e, config('app.debug'));
+    // }
 }

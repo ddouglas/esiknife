@@ -31,4 +31,14 @@ class Corporation extends Model
     {
         return $this->morphOne(MemberWalletTransaction::class, 'client');
     }
+
+    public function contact_info()
+    {
+        return $this->morphOne(MemberContact::class, 'info');
+    }
+
+    public function mail_recipient ()
+    {
+        return $this->morphOne(MailRecipient::class, 'info');
+    }
 }

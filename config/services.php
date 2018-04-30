@@ -43,6 +43,7 @@ return [
             ]
         ],
         'scopes'=>[
+            'readCharacterAssets' => "esi-assets.read_assets.v1",
             'readCharacterBookmarks' => "esi-bookmarks.read_character_bookmarks.v1",
             'readCharacterClones' => "esi-clones.read_clones.v1",
             'readCharacterContacts' => "esi-characters.read_contacts.v1",

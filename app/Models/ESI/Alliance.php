@@ -20,4 +20,14 @@ class Alliance extends Model
     {
         return $this->morphOne(Contract::class, 'acceptor');
     }
+
+    public function mail_recipient ()
+    {
+        return $this->morphOne(MailRecipient::class, 'info');
+    }
+
+    public function contact_info()
+    {
+        return $this->morphOne(MemberContact::class, 'info');
+    }
 }

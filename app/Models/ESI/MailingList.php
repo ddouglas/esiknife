@@ -10,4 +10,9 @@ class MailingList extends Model
     protected $table = 'mailing_lists';
     public $incrementing = false;
     protected static $unguarded = true;
+
+    public function mail_recipient ()
+    {
+        return $this->morphOne(MailRecipient::class, 'info');
+    }
 }

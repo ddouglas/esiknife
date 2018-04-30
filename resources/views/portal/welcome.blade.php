@@ -22,6 +22,12 @@
                         <div class="col-md-6">
                             <ul class="list-group">
                                 <li class="list-group-item text-center"><strong>Private Information</strong></li>
+                                <label for="readCharacterAssets" class="mb-0">
+                                    <li class="list-group-item py-auto">
+                                        <input type="checkbox" id="readCharacterAssets" name="scopes[readCharacterAssets]" /> <span class="ml-2">Read Character Assets</span>
+                                    </li>
+                                </label>
+
                                 <label for="readCharacterBookmarks" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterBookmarks" name="scopes[readCharacterBookmarks]" /> <span class="ml-2">Read Character Bookmarks</span>
@@ -79,15 +85,6 @@
                         </div>
                         <div class="col-lg-6">
                             <ul class="list-group">
-                                <li class="list-group-item text-center"><strong>Utility Classes</strong></li>
-                                <label for="readUniverseStructures" class="mb-0">
-                                    <li class="list-group-item py-auto">
-                                        <input type="checkbox" id="readUniverseStructures" name="scopes[readUniverseStructures]" /> <span class="ml-2">Read Structure Names</span>
-                                    </li>
-                                </label>
-                            </ul>
-                            <hr />
-                            <ul class="list-group">
                                 <li class="list-group-item text-center"><strong>Communications</strong></li>
                                 <label for="readCharacterContacts" class="mb-0">
                                     <li class="list-group-item py-auto">
@@ -97,6 +94,15 @@
                                 <label for="readCharacterMails" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterMails" name="scopes[readCharacterMails]" /> <span class="ml-2">Read Character Mails</span>
+                                    </li>
+                                </label>
+                            </ul>
+                            <hr />
+                            <ul class="list-group">
+                                <li class="list-group-item text-center"><strong>Utility Classes</strong></li>
+                                <label for="readUniverseStructures" class="mb-0">
+                                    <li class="list-group-item py-auto">
+                                        <input type="checkbox" id="readUniverseStructures" name="scopes[readUniverseStructures]" /> <span class="ml-2">Read Structure Names</span>
                                     </li>
                                 </label>
                             </ul>

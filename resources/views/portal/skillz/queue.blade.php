@@ -4,12 +4,7 @@
 
 @section('content')
     <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <h1 class="text-center">Your Skill Queue</h1>
-                <hr />
-            </div>
-        </div>
+        @include('portal.extra.header')
         @include('portal.extra.nav')
         <div class="row">
             <div class="col-lg-4">

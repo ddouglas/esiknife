@@ -1,21 +1,14 @@
 @extends('layout.index')
 
-@section('title', 'Default Layout')
+@section('title', 'Flyable Ships')
 
 @section('content')
     <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <h1 class="text-center">Flyable Ship</h1>
-                <hr />
-            </div>
-        </div>
+        @include('portal.extra.header')
         @include('portal.extra.nav')
+        @include('portal.skillz.extra.nav')
         <div class="row">
-            <div class="col-lg-3">
-                @include('portal.extra.skillz_nav')
-            </div>
-            <div class="col-lg-9">
+            <div class="col-lg-12">
                 @foreach ($flyable as $value)
                     <h3 class="text-center">
                         <div class="float-right  mb-2">

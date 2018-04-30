@@ -13,6 +13,6 @@ class MemberContact extends Model
 
     public function info()
     {
-        return $this->morphTo();
+        return $this->morphTo('info', 'contact_type', 'contact_id', 'id');
     }
 }

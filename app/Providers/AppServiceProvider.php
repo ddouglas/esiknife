@@ -5,7 +5,7 @@ namespace ESIK\Providers;
 use Illuminate\Support\{Collection, ServiceProvider};
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-use ESIK\Models\ESI\{Station, Structure, System, Character, Corporation};
+use ESIK\Models\ESI\{Alliance, Station, Structure, System, Character, Corporation};
 use ESIK\Models\SDE\{Constellation, Region};
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
             'solar_system' => System::class,
             'station' => Station::class,
             'structure' => Structure::class,
+            'alliance' => Alliance::class,
             'character' => Character::class,
             'corporation' => Corporation::class,
             'constellation' => Constellation::class,

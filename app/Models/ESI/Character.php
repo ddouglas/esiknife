@@ -71,6 +71,16 @@ class Character extends Model
         return $this->morphTo(MailHeader::class, 'sender');
     }
 
+    public function mail_recipient ()
+    {
+        return $this->morphOne(MailRecipient::class, 'info');
+    }
+
+    public function contact_info()
+    {
+        return $this->morphOne(MemberContact::class, 'info');
+    }
+
     public function wallet_transactions_client()
     {
         return $this->morphOne(MemberWalletTransaction::class, 'client');
