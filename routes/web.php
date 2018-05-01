@@ -34,8 +34,11 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET'], '/wallet/transactions', 'PortalController@wallet_transactions')->name('wallet.transactions');
     Route::match(['GET'], '/wallet/journal', 'PortalController@wallet_journal')->name('wallet.journal');
 
+    Route::match(['GET', 'POST'], '/access', 'PortalController@access')->name('access');
+
     Route::match(['GET'], '/settings', 'SettingController@index')->name('settings.index');
     Route::match(['GET', 'DELETE'], '/settings/token', 'SettingController@token')->name('settings.token');
+
 });
 
 

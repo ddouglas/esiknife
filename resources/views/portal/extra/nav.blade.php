@@ -58,6 +58,10 @@
                     <a class="nav-link {{ $currentRouteName === 'wallet.transactions' || $currentRouteName === 'wallet.journal' ? 'active' : null }}" href="{{ route('wallet.transactions') }}">Wallet</a>
                 </li>
             @endif
+
+            <li class="nav-item ml-2">
+                <a class="nav-link {{ $currentRouteName === 'access' ? 'active' : null }}" href="{{ route('access') }}">Share My Data</a>
+            </li>
         </ul>
         <hr />
     </div>

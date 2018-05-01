@@ -6,19 +6,19 @@
     <div class="container">
         @include('portal.extra.header')
         @include('portal.extra.nav')
-        <div class="col-lg-4 offset-lg-4">
-            <div class="list-group">
+        <div class="row">
+
                 @foreach (Auth::user()->contacts as $contact)
                 @if ($contact->standing == 10)
-                    <a class="list-group-item list-group-item-secondary" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    <a class="list-group-item list-group-item-secondary col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
                 @elseif ($contact->standing == 5)
-                    <a class="list-group-item list-group-item-info" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    <a class="list-group-item list-group-item-info col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
                 @elseif ($contact->standing == 0)
-                    <a class="list-group-item list-group-item-default" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    <a class="list-group-item list-group-item-default col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
                 @elseif ($contact->standing == -5)
-                    <a class="list-group-item list-group-item-warning" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    <a class="list-group-item list-group-item-warning col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
                 @elseif ($contact->standing == -10)
-                    <a class="list-group-item list-group-item-danger" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    <a class="list-group-item list-group-item-danger col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
                 @endif
                         <div class="media">
                             @if($contact->contact_type === "character")
@@ -39,7 +39,7 @@
                         </div>
                     </a>
                 @endforeach
-            </div>
+            
         </div>
     </div>
 @endsection

@@ -62,6 +62,16 @@ class Member extends Authenticatable
         return $this->hasOne(Character::class, 'id', 'id');
     }
 
+    public function accessor()
+    {
+        return $this->belongsToMany(Member::class, 'member_accesses', 'member_id', 'accessor_id')->withPivot('does_expire', 'expires', 'access');
+    }
+
+    public function accessee()
+    {
+        return $this->belongsToMany(Member::class, 'member_accesses', 'accessor_id', 'member_id')->withPivot('does_expire', 'expires', 'access');
+    }
+
     public function assets()
     {
         return $this->hasMany(MemberAsset::class, 'id', 'id');

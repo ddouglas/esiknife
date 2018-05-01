@@ -58,7 +58,7 @@
                     <a class="nav-link active" id="bioBodyTab" data-toggle="pill" href="#bioBody" role="tab" aria-controls="pills-home" aria-selected="true">Biography</a>
                   </li>
                   <li class="nav-item ml-2">
-                    <a class="nav-link" id="corpHistoryTab" data-toggle="pill" href="#corpHistoryBody" role="tab" aria-controls="pills-profile" aria-selected="false">Corporation History</a>
+                    <a class="nav-link" id="corpHistoryTab" data-toggle="pill" href="#corpHistoryBody2" role="tab" aria-controls="pills-profile" aria-selected="false">Corporation History</a>
                   </li>
                 </ul>
                 <div class="tab-content" id="pills-tabContent">
@@ -94,6 +94,33 @@
                                   @endforeach
                               </ul>
                           @endif
+                      </div>
+                  </div>
+                  <div class="tab-pane fade" id="corpHistoryBody2" role="tabpanel">
+                    <div class="row">
+                    @if (Auth::user()->info->corporationHistory->isNotEmpty())
+                    <?php $corpHistory = Auth::user()->info->corporationHistory->sortByDesc('record_id')->values(); ?>
+                         @foreach($corpHistory as $key=>$corp)
+                         <div class="list-group-item col-lg-4">
+                              <div class="media">
+                                  <div class="float-left">
+                                      <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation_id }}_64.png" />
+                                  </div>
+                                  <div class="media-body ml-2">
+                                      <h5 class="mt-0">{{ !is_null($corp->corporation) ? $corp->corporation->name : "Unknown Corp ". $corp->corporation_id }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
+                                      <p>
+                                          @if ($corpHistory->has($key - 1))
+                                              Left {{ age($corp->start_date, $corpHistory->get($key - 1)->start_date) }} later on {{ $corpHistory->get($key - 1)->start_date->toDateString() }}<br />
+                                          @else
+                                              Been in for {{ age($corp->start_date, now()) }} <br />
+                                          @endif
+                                          Started on {{ $corp->start_date->toDateString() }}
+                                      </p>
+                                  </div>
+                              </div>
+                          </div>
+                          @endforeach
+                      @endif
                       </div>
                   </div>
                 </div>
