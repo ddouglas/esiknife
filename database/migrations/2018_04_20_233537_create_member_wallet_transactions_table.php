@@ -22,7 +22,7 @@ class CreateMemberWalletTransactionsTable extends Migration
             $table->boolean('is_personal');
             $table->unsignedBigInteger('journal_ref_id');
             $table->unsignedBigInteger('location_id');
-            $table->enum('location_id', ['station', 'structure']);
+            $table->enum('location_type', ['station', 'structure']);
             $table->integer('quantity');
             $table->integer('type_id');
             $table->float('unit_price',17,2);
