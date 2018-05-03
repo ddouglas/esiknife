@@ -17,6 +17,7 @@ class CreateMemberAssetsTable extends Migration
             $table->unsignedBigInteger('id');
             $table->unsignedBigInteger('item_id');
             $table->unsignedInteger('type_id');
+            $table->string('name');
             $table->unsignedInteger('quantity');
             $table->unsignedBigInteger('location_id');
             $table->enum('location_type',['station', 'solar_system', 'other']);

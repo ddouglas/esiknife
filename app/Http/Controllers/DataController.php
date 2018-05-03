@@ -1395,10 +1395,16 @@ class DataController extends Controller
             $request = $this->httpCont->getUniverseStructuresStructureId($id, $member->access_token);
             if (!$request->status) {
                 if (!$structure->exists) {
+
                     $structure->fill(['name' => "Unknown Structure " . $structure->id]);
-                    $structure->save();
+
                 }
-                return $request;
+                $structure->fill(['cached_until' => now()->addDay()]);
+                $structure->save();
+                return (object)[
+                    'status' => false,
+                    'payload' => $structure
+                ];
             }
             $response = $request->payload->response;
             $structure->fill([

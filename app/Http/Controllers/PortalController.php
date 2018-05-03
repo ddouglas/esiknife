@@ -5,7 +5,7 @@ namespace ESIK\Http\Controllers;
 use Auth, Carbon, Input, Request, Session, Validator;
 use ESIK\Models\Member;
 use ESIK\Models\SDE\Group;
-use ESIK\Models\ESI\Type;
+use ESIK\Models\ESI\{Station, System,Type};
 use ESIK\Http\Controllers\DataController;
 
 class PortalController extends Controller
@@ -151,32 +151,68 @@ class PortalController extends Controller
         return view('portal.access');
     }
 
-    // public function assets()
-    // {
-    //     $dbAssets = Auth::user()->assets->keyBy('item_id');
-    //     $assets = collect();
-    //     $locations = collect();
-    //     $dbAssets->each(function ($dbAsset) use (&$dbAssets,&$assets, $locations) {
-    //         // Check if Location ID is another Asset
-    //         if ($dbAssets->has($dbAsset->location_id) && $asset->has($dbAsset->location_id)) {
-    //             // This means that teh current asset {$asset} that we are on right now is a child of another asset
-    //             $locationAsset = $dbAssets->get($dbAsset->location_id);
-    //             if (!$locationAsset->has('contents')) {
-    //                 $locationAsset->put('contents', collect());
-    //             }
-    //             $locationAsset->get('contents')->put($dbAsset->item_id, $dbAsset);
-    //             $dbAssets->forget($dbAsset->item_id);
-    //             // if (!$assets->has($locationAsset->item_id)) {
-    //             //     $assets->put($locationAsset->item_id, $locationAsset);
-    //             // }
-    //         } else {
-    //             // dd($dbAsset);
-    //         }
-    //     });
-    //
-    //
-    //     dd($dbAssets);
-    // }
+    public function assets()
+    {
+        $dbAssets = Auth::user()->assets->keyBy('item_id')->toArray();
+        $dbAssets = collect($dbAssets)->recursive();
+        $assets = collect();
+        $locations = collect();
+        $dbAssets->each(function ($dbAsset) use (&$dbAssets,&$assets, $locations) {
+            if ($dbAssets->has($dbAsset->get('location_id'))) {
+
+                $locationAsset = $dbAssets->get($dbAsset->get('location_id'));
+                if (!$locationAsset->has('contents')) {
+                    $locationAsset->put('contents', collect());
+                }
+                $locationAsset->get('contents')->put($dbAsset->get('item_id'), $dbAsset);
+            }
+            if (!$dbAssets->has($dbAsset->get('location_id'))) {
+                $locations->push($dbAsset->get('location_id'));
+            }
+        });
+        $locations = $locations->unique()->values();
+        $systems = $locations->filter(function ($location) {
+            return $location >= 30000000 && $location < 32000000;
+        });
+        $stations = $locations->filter(function ($location) {
+            return $location >= 60000000 && $location < 64000000;
+        });
+        $structures = $locations->filter(function ($location) {
+            return $location >= 1000000000000 && $location < 2000000000000;
+        });
+        // $structures->each(function ($structureId) use ($dbAssets)  {
+        //     dump($dbAssets->where('location_id', $structureId));
+        // });
+
+        // $structures->each(function ($id) {
+        //     dump($this->dataCont->getStructure(Auth::user(), $id));
+        //     usleep(50000);
+        // });
+
+        System::whereIn('id', $systems->toArray())->get()->each(function ($systemInfo) use ($assets, $dbAssets) {
+            $assets->put($systemInfo->id, collect([
+                'info' => $systemInfo,
+                'assets' => $dbAssets->where('location_id', $systemInfo->id)
+            ]));
+        });
+
+        Station::whereIn('id', $stations->toArray())->get()->each(function ($stationInfo) use ($assets, $dbAssets) {
+            $assets->put($stationInfo->id, collect([
+                'info' => $stationInfo,
+                'assets' => $dbAssets->where('location_id', $stationInfo->id)
+            ]));
+        });
+
+        $structures->each(function ($structureId) use ($assets, $dbAssets) {
+            $structureInfo = $this->dataCont->getStructure(Auth::user(), $structureId);
+            $assets->put($structureId, collect([
+                'info' => $structureInfo->payload,
+                'assets' => $dbAssets->where('location_id',$structureId)
+            ]));
+        });
+
+        dd($assets);
+    }
 
     public function bookmarks () {
         Auth::user()->load('bookmarks', 'bookmarkFolders');
