@@ -30,7 +30,7 @@
                     @foreach($mails as $mail)
                         <tr>
                             <td>
-                                <a href="{{ route('mail', ['id' => $mail->id]) }}">{{ $mail->sent->toDateString() }}</a>
+                                {{ $mail->sent->toDateString() }}
                             </td>
                             <td>
                                 {{ $mail->pivot->labels }}
@@ -39,7 +39,7 @@
                                 {{ !is_null($mail->sender) ? $mail->sender->name : "Unknown Sender " . $mail->sender_id }}
                             </td>
                             <td>
-                                {{ str_limit($mail->subject, 50) }}
+                                <a href="{{ route('mail', ['id' => $mail->id]) }}">{{ str_limit($mail->subject, 50) }}</a>
                             </td>
                             <td>
                                 {{ $mail->pivot->is_read ? "" : "Not" }} Read
