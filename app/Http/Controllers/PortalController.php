@@ -180,14 +180,6 @@ class PortalController extends Controller
         $structures = $locations->filter(function ($location) {
             return $location >= 1000000000000 && $location < 2000000000000;
         });
-        // $structures->each(function ($structureId) use ($dbAssets)  {
-        //     dump($dbAssets->where('location_id', $structureId));
-        // });
-
-        // $structures->each(function ($id) {
-        //     dump($this->dataCont->getStructure(Auth::user(), $id));
-        //     usleep(50000);
-        // });
 
         System::whereIn('id', $systems->toArray())->get()->each(function ($systemInfo) use ($assets, $dbAssets) {
             $assets->put($systemInfo->id, collect([
@@ -207,11 +199,15 @@ class PortalController extends Controller
             $structureInfo = $this->dataCont->getStructure(Auth::user(), $structureId);
             $assets->put($structureId, collect([
                 'info' => $structureInfo->payload,
-                'assets' => $dbAssets->where('location_id',$structureId)
+                'assets' => $dbAssets->where('location_id', $structureId)
             ]));
         });
 
-        dd($assets);
+        $assets = $assets->sortBy('info.name');
+
+        return view('portal.assets', [
+            'assets' => $assets
+        ]);
     }
 
     public function bookmarks () {

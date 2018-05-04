@@ -12,13 +12,13 @@ class MemberAsset extends Model
     protected $table = 'member_assets';
     public $incrementing = false;
     protected static $unguarded = true;
-    
+
     protected $casts = [
         'is_singleton' => 'boolean',
     ];
 
     protected $with = [
-        'type'
+        'type.group'
     ];
 
     public function member()
