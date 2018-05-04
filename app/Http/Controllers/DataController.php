@@ -398,8 +398,7 @@ class DataController extends Controller
         $creatorIds = $bookmarks->pluck('creator_id')->unique()->values();
 
 
-        $ids = $itemTypeIds->merge($locationIds)->merge($creatorIds);
-
+        $ids = $itemTypeIds->merge($locationIds)->merge($creatorIds)->unique()->values();
         $request = $this->postUniverseNames($ids);
         $status = $request->status;
         $payload = $request->payload;
@@ -1198,7 +1197,7 @@ class DataController extends Controller
 
 
         $clients = $transactions->pluck('client_id');
-        $types = $transactions->pluck('type_id');
+        $types = $transactions->pluck('type_id')->unique()->values();
 
         $ids = $clients->merge($types);
         $pUNRequest = $this->postUniverseNames($ids);
