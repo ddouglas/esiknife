@@ -1,18 +1,18 @@
 <?php
 
-namespace ESIK\Console\Commands\SDE;
+namespace ESIK\Console\Commands\Import;
 
 use Illuminate\Console\Command;
-use ESIK\Http\Controllers\SdeController;
+use ESIK\Http\Controllers\SDEController;
 
-class Import extends Command
+class SDE extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'sde:import';
+    protected $signature = 'import:sde';
 
     /**
      * The console command description.
@@ -38,13 +38,9 @@ class Import extends Command
      */
     public function handle()
     {
-        $count = count(config('services.eve.sde.import'));
-        $x = 1;
         foreach (config('services.eve.sde.import') as $type) {
-            SdeController::{$type}();
-            dump("{$x} of {$count} imported successfully");
-            $x++;
-            sleep(5);
+            SDEController::{$type}();
+            sleep(2);
         }
         return true;
     }

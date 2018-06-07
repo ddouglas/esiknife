@@ -47,24 +47,37 @@ class Ships extends Command
     {
         $shipGroups = Group::where('category_id', 6)->where('published', 1)->get();
         if ($shipGroups->count() < 43) {
-            dd("To few groups for operation");
+            dd("43 groups are suppose to be in the database to conduct this operation. Please run Import:SDE before runnig this command.");
         }
-        $now = now(); $x = 0;
-        $shipGroups->each(function ($group) use (&$now, &$x) {
+
+        $types = collect();
+        $shipGroups->each(function ($group) use (&$types) {
             $groupRequest = $this->dataCont->getGroup($group->id);
             $status = $groupRequest->status;
             $payload = $groupRequest->payload;
             if (!$status) {
                 return true;
             }
-            $response = collect($payload->response)->recursive();
-            $response->get('types')->each(function ($type) use (&$now, &$x) {
-                GetType::dispatch($type)->delay($now);
-                if ($x%10==0) {
-                    $now->addSecond();
-                }
-                $x++;
-            });
+            $types = $types->merge(collect($payload->response->types));
+        });
+        $count = $types->count();
+        $now = now(); $x = 1;
+        $types->each(function ($type) use ($count, &$now, &$x) {
+            $getType = $this->dataCont->getType($type);
+            $status = $getType->status;
+            $payload = $getType->payload;
+            if (!$status) {
+                dump($payload->message);
+                return true;
+            }
+            if ($payload->wasRecentlyCreated) {
+                dump($payload->name. " added to the database");
+            }
+            dump(round(($x / $count), 2) * 100 . "% complete. " . ($count - $x) . " records left");
+            if ($x%5==0) {
+                sleep(1);
+            }
+            $x++;
         });
 
     }
