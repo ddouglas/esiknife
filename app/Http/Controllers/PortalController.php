@@ -380,7 +380,7 @@ class PortalController extends Controller
             $scopes = collect(json_decode($member->scopes, true));
 
             if ($scopes->contains(config('services.eve.scopes.readCharacterAssets'))) {
-                $getMemberAssets = $this->dataCont->getMemberAssets ($member);
+                $getMemberAssets = $this->dataCont->getMemberAssets($member);
                 $status = $getMemberAssets->status;
                 $payload = $getMemberAssets->payload;
                 if (!$status) {
