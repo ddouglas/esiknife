@@ -22,17 +22,19 @@ class SettingController extends Controller
     public function token ()
     {
         if (Request::isMethod('delete')) {
-            $revoke = $this->ssoCont->revoke(Auth::user()->refresh_token);
-            $status = $revoke->status;
-            $payload = $revoke->payload;
-            if (!$status) {
-                Session::flash('alert', [
-                    'name' => "Unable to delete tokem",
-                    'message' => "We are unable to revoke your token at this time due to invalid response from CCP. Please try again in a few moments.",
-                    'type' => "danger",
-                    'close' => 1
-                ]);
-                return redirect(route('settings.token'));
+            if (!is_null(Auth::user()->refresh_token)) {
+                $revoke = $this->ssoCont->revoke(Auth::user()->refresh_token);
+                $status = $revoke->status;
+                $payload = $revoke->payload;
+                if (!$status) {
+                    Session::flash('alert', [
+                        'name' => "Unable to delete tokem",
+                        'message' => "We are unable to revoke your token at this time due to invalid response from CCP. Please try again in a few moments.",
+                        'type' => "danger",
+                        'close' => 1
+                    ]);
+                    return redirect(route('settings.token'));
+                }
             }
             Auth::user()->update([
                 'disabled' => 1,
