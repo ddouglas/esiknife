@@ -15,7 +15,7 @@ Route::group(['middleware' => ['guest']], function () {
     Route::match(['GET', 'POST'], '/welcome', 'PortalController@welcome')->name('welcome');
 });
 
-Route::group(['middleware' => ['auth']], function () {
+Route::group(['middleware' => ['auth', 'authorized']], function () {
 
     Route::match(['GET'], '/dashboard', 'PortalController@dashboard')->name('dashboard');
     Route::match(['GET'], '/settings', 'SettingController@index')->name('settings.index');
