@@ -59,7 +59,7 @@ class AuthController extends Controller
                         Session::forget('to');
                         return redirect($to);
                     } else {
-                        return redirect(route('dashboard'));
+                        return redirect(route('overview'));
                     }
                 }
             } else {
