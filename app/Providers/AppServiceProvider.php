@@ -2,6 +2,8 @@
 
 namespace ESIK\Providers;
 
+use View;
+
 use Illuminate\Support\{Collection, ServiceProvider};
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -28,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
             'constellation' => Constellation::class,
             'region' => Region::class
         ]);
+
+        View::composer('*', \ESIK\Composers\ScopeComposer::class);
     }
 
     /**
