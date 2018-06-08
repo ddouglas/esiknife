@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', Auth::user()->info->name . "'s ESIKnife Dashboard")
+@section('title', Auth::user()->info->name . " Dashboard")
 
 @section('content')
     <div class="container">
@@ -10,121 +10,66 @@
                 <hr />
             </div>
         </div>
-        @include('portal.extra.nav')
         <div class="row">
-            <div class="col-lg-3">
-                <img src="{{ config('services.eve.urls.img') }}/Character/{{ Auth::user()->id }}_512.jpg" class="img-fluid rounded mx-auto d-block" />
-            </div>
-            <div class="col-lg-9">
-                <div class="row">
-                    <div class="col-lg-6">
-                        <ul class="list-group">
-                            <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Gender:</strong> {{ title_case(Auth::user()->info->gender) }}</li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Race:</strong> {{ title_case(Auth::user()->info->race->name) }}</li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Ancestry:</strong> {{ title_case(Auth::user()->info->ancestry->name) }}</li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Bloodline:</strong> {{ title_case(Auth::user()->info->bloodline->name) }}</li>
-                            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterShip')))
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <strong>Current Ship:</strong>
-                                    {{ Auth::user()->ship->name }} ({{ !is_null(Auth::user()->ship->type) ? Auth::user()->ship->type->name : Auth::user()->ship->type_id }})
-                                </li>
-                            @endif
-                        </ul>
-                    </div>
-                    <div class="col-lg-6">
-                        <ul class="list-group">
-                            <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Birthday:</strong> {{ Auth::user()->info->birthday->toDateString() }}</li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Age:</strong> {{ age(Auth::user()->info->birthday, now()) }}</li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Corporation:</strong> {{ Auth::user()->info->corporation->name }}</li>
-                            @if (Auth::user()->info->alliance_id !== null)
-                                <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Alliance:</strong> {{ Auth::user()->info->alliance->name }}</li>
-                            @endif
-                            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterLocation')))
-                                @if ($scopes->contains(config('services.eve.scopes.readUniverseStructures')))
-                                    <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ !is_null(Auth::user()->location->info) ? Auth::user()->location->info->name : "Unknown Location ". Auth::user()->location->location_id }}</li>
-                                @else
-                                    <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ Auth::user()->location->system->name }}</li>
-                                @endif
-                            @endif
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <p>
+                Below is a list of character that you are authorized to access. Including your own character. To view the character, click the eye.
+            </p>
         </div>
-        <div class="row mt-3">
-            <div class="col-lg-12">
-                <ul class="nav nav-pills mb-3  justify-content-center" id="pills-tab" role="tablist">
-                  <li class="nav-item">
-                    <a class="nav-link active" id="bioBodyTab" data-toggle="pill" href="#bioBody" role="tab" aria-controls="pills-home" aria-selected="true">Biography</a>
-                  </li>
-                  <li class="nav-item ml-2">
-                    <a class="nav-link" id="corpHistoryTab" data-toggle="pill" href="#corpHistoryBody2" role="tab" aria-controls="pills-profile" aria-selected="false">Corporation History</a>
-                  </li>
+        <div class="row">
+            <div class="col-8">
+                <h3>Your Character</h3>
+                <hr />
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <div class="float-right">
+                            <a href="{{ route('overview', ['id' => Auth::user()->id]) }}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                        </div>
+                        <div class="media mt-0">
+                            <img src="{{ config('services.eve.urls.img') }}/Character/{{ Auth::user()->id }}_64.jpg" class="rounded img-fluid mr-3" />
+                            <div class="media-body align-center">
+                                <h4>{{ Auth::user()->info->name }}</h4>
+                                <p>
+                                    {{ Auth::user()->info->corporation->name }} / @if(!is_null(Auth::user()->info->alliance)) {{ Auth::user()->info->alliance->name }} @endif
+                                </p>
+                            </div>
+                        </div>
+                    </li>
                 </ul>
-                <div class="tab-content" id="pills-tabContent">
-                  <div class="tab-pane fade show active text-center" id="bioBody" role="tabpanel">
-                       <div class="col-lg-6 offset-lg-3">
-                            {!! Auth::user()->info->bio ?: "This character does not have a bio set" !!}
-                       </div>
-                  </div>
-                  <div class="tab-pane fade" id="corpHistoryBody" role="tabpanel">
-                      <div class="col-lg-6 offset-lg-3">
-                          @if (Auth::user()->info->corporationHistory->isNotEmpty())
-                              <ul class="list-group">
-                                  <?php $corpHistory = Auth::user()->info->corporationHistory->sortByDesc('record_id')->values(); ?>
-                                  @foreach($corpHistory as $key=>$corp)
-                                      <li class="list-group-item">
-                                          <div class="media">
-                                              <div class="float-left">
-                                                  <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation_id }}_64.png" />
-                                              </div>
-                                              <div class="media-body ml-2">
-                                                  <h5 class="mt-0">{{ !is_null($corp->corporation) ? $corp->corporation->name : "Unknown Corp ". $corp->corporation_id }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
-                                                  <p>
-                                                      @if ($corpHistory->has($key - 1))
-                                                          Left {{ age($corp->start_date, $corpHistory->get($key - 1)->start_date) }} later on {{ $corpHistory->get($key - 1)->start_date->toDateString() }}<br />
-                                                      @else
-                                                          Been in for {{ age($corp->start_date, now()) }} <br />
-                                                      @endif
-                                                      Started on {{ $corp->start_date->toDateString() }}
-                                                  </p>
-                                              </div>
-                                          </div>
-                                      </li>
-                                  @endforeach
-                              </ul>
-                          @endif
-                      </div>
-                  </div>
-                  <div class="tab-pane fade" id="corpHistoryBody2" role="tabpanel">
-                    <div class="row">
-                    @if (Auth::user()->info->corporationHistory->isNotEmpty())
-                    <?php $corpHistory = Auth::user()->info->corporationHistory->sortByDesc('record_id')->values(); ?>
-                         @foreach($corpHistory as $key=>$corp)
-                         <div class="list-group-item col-lg-4">
-                              <div class="media">
-                                  <div class="float-left">
-                                      <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation_id }}_64.png" />
-                                  </div>
-                                  <div class="media-body ml-2">
-                                      <h5 class="mt-0">{{ !is_null($corp->corporation) ? $corp->corporation->name : "Unknown Corp ". $corp->corporation_id }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
-                                      <p>
-                                          @if ($corpHistory->has($key - 1))
-                                              Left {{ age($corp->start_date, $corpHistory->get($key - 1)->start_date) }} later on {{ $corpHistory->get($key - 1)->start_date->toDateString() }}<br />
-                                          @else
-                                              Been in for {{ age($corp->start_date, now()) }} <br />
-                                          @endif
-                                          Started on {{ $corp->start_date->toDateString() }}
-                                      </p>
-                                  </div>
-                              </div>
-                          </div>
-                          @endforeach
-                      @endif
-                      </div>
-                  </div>
-                </div>
             </div>
         </div>
+        @if (Auth::user()->accessee->isNotEmpty())
+            <div class="row">
+                <div class="col-8">
+                    <hr />
+                    <h3>Character You Are Authorized to Access</h3>
+                    <hr />
+                    <ul class="list-group">
+                        @foreach (Auth::user()->accessee as $accessee)
+                            <li class="list-group-item">
+                                <div class="float-right">
+                                    <a href="{{ route('overview', ['member' => $accessee->id]) }}" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                </div>
+                                <div class="media mt-0">
+                                    <img src="{{ config('services.eve.urls.img') }}/Character/{{ $accessee->id }}_64.jpg" class="rounded img-fluid mr-3" />
+                                    <div class="media-body align-center">
+                                        <h4>{{ $accessee->info->name }}</h4>
+                                        <p>
+                                            {{ $accessee->info->corporation->name }} / @if(!is_null($accessee->info->alliance)) {{ $accessee->info->alliance->name }} @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
     </div>
 @endsection
