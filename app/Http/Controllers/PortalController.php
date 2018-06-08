@@ -14,17 +14,25 @@ class PortalController extends Controller
     {
         $this->dataCont = new DataController;
     }
+
     public function dashboard ()
     {
+        Auth::user()->load('accessee.info');
         return view('portal.dashboard');
     }
 
+    public function overview ($member)
     {
+        $member = Member::findOrFail($member);
+        return view('portal.overview', [
+            'member' => $member
+        ]);
     }
 
-    public function assets()
+    public function assets ($member)
     {
-        $dbAssets = Auth::user()->assets->keyBy('item_id')->toArray();
+        $member = Member::findOrFail($member);
+        $dbAssets = $member->assets->keyBy('item_id')->toArray();
         $dbAssets = collect($dbAssets)->recursive();
         $assets = collect();
         $locations = collect();
@@ -66,8 +74,8 @@ class PortalController extends Controller
             ]));
         });
 
-        $structures->each(function ($structureId) use ($assets, $dbAssets) {
-            $structureInfo = $this->dataCont->getStructure(Auth::user(), $structureId);
+        $structures->each(function ($structureId) use ($assets, $dbAssets, $member) {
+            $structureInfo = $this->dataCont->getStructure($member, $structureId);
             $assets->put($structureId, collect([
                 'info' => $structureInfo->payload,
                 'assets' => $dbAssets->where('location_id', $structureId)
@@ -78,54 +86,61 @@ class PortalController extends Controller
 
         return view('portal.assets', [
             'assets' => $assets
-        ]);
+        ])->withMember($member);
     }
 
-    public function bookmarks () {
-        Auth::user()->load('bookmarks', 'bookmarkFolders');
-        return view('portal.bookmarks');
+    public function bookmarks ($member) {
+        $member = Member::findOrFail($member);
+        $member->load('bookmarks', 'bookmarkFolders');
+        return view('portal.bookmarks')->withMember($member);
     }
 
-    public function clones ()
+    public function clones ($member)
     {
-        if (Auth::user()->scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
-            Auth::user()->load('implants.attributes');
+        $member = Member::findOrFail($member);
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
+            $member->load('implants.attributes');
         }
-        if (Auth::user()->scopes->contains(config('services.eve.scopes.readCharacterClones'))) {
-            Auth::user()->load('clone', 'jumpClones');
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterClones'))) {
+            $member->load('clone', 'jumpClones');
         }
-        return view('portal.clones');
+        return view('portal.clones')->withMember($member);
     }
 
-    public function contacts ()
+    public function contacts ($member)
     {
-        Auth::user()->load('contacts.info', 'contact_labels');
-        return view('portal.contacts');
+        $member = Member::findOrFail($member);
+        $member->load('contacts.info', 'contact_labels');
+        return view('portal.contacts')->withMember($member);
     }
 
-    public function contracts ()
+    public function contracts ($member)
     {
-        Auth::user()->load('contracts', 'contracts.issuer.corporation', 'contracts.acceptor', 'contracts.assignee', 'contracts.start', 'contracts.end');
-        $contracts = Auth::user()->contracts()->paginate(25);
+        $member = Member::findOrFail($member);
+        $member->load('contracts', 'contracts.issuer.corporation', 'contracts.acceptor', 'contracts.assignee', 'contracts.start', 'contracts.end');
+        $contracts = $member->contracts()->paginate(25);
         return view('portal.contracts.list', [
             'contracts' => $contracts
-        ]);
+        ])->withMember($member);
     }
 
-    public function contract ($id)
+    public function contract ($member, $contract_id)
     {
-        $contract = Auth::user()->contracts()->where('id', $id)->with('issuer.corporation', 'acceptor', 'assignee', 'start', 'end', 'items')->first();
+        $member = Member::findOrFail($member);
+        $contract = $member->contracts()->where('id', $contract_id)->with('issuer.corporation', 'acceptor', 'assignee', 'start', 'end', 'items')->first();
         return view('portal.contracts.view', [
             'contract' => $contract
-        ]);
+        ])->withMember($member);
     }
 
-    public function flyable ()
+    public function flyable ($member)
     {
-        $skillz = Auth::user()->skillz->keyBy('id');
+        $member = Member::findOrFail($member);
+        $skillz = $member->skillz->keyBy('id');
         $shipGroups = Group::where('category_id', 6)->get()->pluck('id');
         $ships = Type::whereIn('group_id', $shipGroups)->where('published', 1)->with('skillAttributes', 'group')->get()->keyBy('id');
         $skillzAttributeMap = collect(config('services.eve.dogma.attributes.skillz.map'));
+
         $flyable = collect();
         $ships->each(function ($ship) use ($flyable, $skillz, $skillzAttributeMap) {
             $ship->canFly = false;
@@ -161,12 +176,13 @@ class PortalController extends Controller
         });
         return view('portal.skillz.flyable', [
             'flyable' => $flyable
-        ]);
+        ])->withMember($member);
     }
 
-    public function mails()
+    public function mails ($member)
     {
-        $mails = Auth::user()->mail();
+        $member = Member::findOrFail($member);
+        $mails = $member->mail();
         if (Request::has('label')) {
             $label = Request::get('label');
             $mails = $mails->whereRaw("FIND_IN_SET('" . $label . "', member_mail_headers.labels)");
@@ -180,12 +196,13 @@ class PortalController extends Controller
         $mails = $mails->orderby('sent', 'desc')->with('sender')->paginate(50);
         return view('portal.mail.list', [
            'mails' => $mails
-       ]);
+       ])->withMember($member);
     }
 
-    public function mail($id)
+    public function mail ($member, $id)
     {
-        $mail = Auth::user()->mail()->where('id', $id)->with('recipients', 'sender')->first();
+        $member = Member::findOrFail($member);
+        $mail = $member->mail()->where('id', $id)->with('recipients', 'sender')->first();
         if (is_null($mail)) {
             Session::flash('alert', [
                 "header" => "Invalid Mail ID",
@@ -197,15 +214,16 @@ class PortalController extends Controller
         }
         return view ('portal.mail.view', [
             'mail' => $mail
-        ]);
+        ])->withMember($member);
     }
 
-    public function queue ()
+    public function queue ($member)
     {
+        $member = Member::findOrFail($member);
         $groupsTraining = collect();
         $spTraining = collect();
 
-        Auth::user()->skillQueue->load('group')->each(function ($item) use ($spTraining, $groupsTraining) {
+        $member->skillQueue->load('group')->each(function ($item) use ($spTraining, $groupsTraining) {
             if (!$groupsTraining->has($item->group_id)) {
                 $item->training = 0;
                 $groupsTraining->put($item->group_id, $item);
@@ -216,8 +234,8 @@ class PortalController extends Controller
             }
         });
         $queueComplete = "No Skills are currently training";
-        if (Auth::user()->skillQueue->isNotEmpty()) {
-            $lastSkill = Auth::user()->skillQueue->last();
+        if ($member->skillQueue->isNotEmpty()) {
+            $lastSkill = $member->skillQueue->last();
 
             if (!is_null($lastSkill->pivot->finish_date)) {
                 $queueComplete = Carbon::parse($lastSkill->pivot->finish_date)->toDayDateTimeString();
@@ -227,15 +245,14 @@ class PortalController extends Controller
             'groupsTraining' => $groupsTraining,
             'spTraining' => $spTraining,
             'queueComplete' => $queueComplete
-        ]);
+        ])->withMember($member);
     }
 
-
-
-    public function skills ()
+    public function skills ($member)
     {
+        $member = Member::findOrFail($member);
         $skillz = collect();
-        Auth::user()->skillz->load('group')->each(function ($skill) use ($skillz) {
+        $member->skillz->load('group')->each(function ($skill) use ($skillz) {
             if (!$skillz->has($skill->group_id)) {
                 $skillz->put($skill->group_id, collect([
                     'name' => $skill->group->name,
@@ -246,23 +263,25 @@ class PortalController extends Controller
         });
         return view('portal.skillz.list', [
             'skillz' => $skillz
-        ]);
+        ])->withMember($member);
     }
 
-    public function wallet_transactions ()
+    public function wallet_transactions ($member)
     {
-        $transactions = Auth::user()->transactions()->paginate(25);
+        $member = Member::findOrFail($member);
+        $transactions = $member->transactions()->paginate(25);
         return view('portal.wallet.transactions', [
             'transactions' => $transactions
-        ]);
+        ])->withMember($member);
     }
 
-    public function wallet_journal ()
+    public function wallet_journal ($member)
     {
-        $journal = Auth::user()->journals()->orderby('date', 'desc')->paginate(25);
+        $member = Member::findOrFail($member);
+        $journal = $member->journals()->orderby('date', 'desc')->paginate(25);
         return view('portal.wallet.journals', [
             'journal' => $journal
-        ]);
+        ])->withMember($member);
     }
 
     public function welcome ()
@@ -502,26 +521,5 @@ class PortalController extends Controller
             return redirect(route('dashboard'));
         }
         return view('portal.welcome');
-    }
-
-    public function search($term) {
-        $getSearch = $this->dataCont->getSearch("character", $term);
-        $status = $getSearch->status;
-        $payload = $getSearch->payload;
-
-        if (!$status) {
-            return $getSearch;
-        }
-
-        $results = collect($payload->response)->recursive();
-        if ($results->has('character')) {
-            $names = $this->dataCont->postUniverseNames($results->get('character'));
-            return $names;
-        } else {
-            return (object)[
-                'status' => false,
-                'payload' => collect()
-            ];
-        }
     }
 }
