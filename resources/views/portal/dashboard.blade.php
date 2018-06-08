@@ -26,7 +26,7 @@
                             @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterShip')))
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <strong>Current Ship:</strong>
-                                    {{ Auth::user()->ship->name }} ({{ !is_null(Auth::user()->ship->type) ? !is_null(Auth::user()->ship->type->name) : !is_null(Auth::user()->ship->type_id) }})
+                                    {{ Auth::user()->ship->name }} ({{ !is_null(Auth::user()->ship->type) ? Auth::user()->ship->type->name : Auth::user()->ship->type_id }})
                                 </li>
                             @endif
                         </ul>
