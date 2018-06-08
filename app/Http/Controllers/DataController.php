@@ -1521,51 +1521,56 @@ class DataController extends Controller
         ];
     }
 
-    public function getType($id, $fresh=false)
+    public function getType (int $id, $ane=false)
     {
         $type = Type::firstOrNew(['id'=>$id]);
-        if (!$type->exists || $type->attributes->isEmpty() || $type->effects->isEmpty()) {
+        if (!$type->exists || ($ane && ($type->attributes()->count() == 0 || $type->effects()->count() == 0))) {
             $request = $this->httpCont->getUniverseTypesTypeId($id);
             if (!$request->status) {
                 return $request;
             }
-            $response = $request->payload->response;
+            $response = collect($request->payload->response)->recursive();
             $type->fill([
-                'name' => $response->name,
-                'description' => $response->description,
-                'published' => $response->published,
-                'group_id' => $response->group_id,
-                'volume' => $response->volume
+                'name' => $response->get('name'),
+                'description' => $response->get('description'),
+                'published' => $response->get('published'),
+                'group_id' => $response->get('group_id'),
+                'volume' => $response->get('volume')
             ]);
             $type->save();
 
-            if (property_exists($response, 'dogma_effects')) {
-                $effects = collect($response->dogma_effects)->recursive();
+            if ($response->has('dogma_effects')) {
+                $effects = $response->get('dogma_effects');
                 $dbEffects = $type->effects()->whereIn('effect_id', $effects->pluck('effect_id')->toArray())->get()->keyBy('effect_id');
-                $effects->each(function ($effect) use ($dbEffects, $type) {
+                $missingEffects = collect();
+                $effects->each(function ($effect) use ($dbEffects, $type, $missingEffects) {
                     if (!$dbEffects->has($effect->get('effect_id'))) {
-                        $type->effects()->create($effect->toArray());
+                        $missingEffects->push($effect->toArray());
                     }
                 });
+                $type->effects()->createMany($missingEffects->toArray());
             }
-            if (property_exists($response, 'dogma_attributes')) {
-                $attributes = collect($response->dogma_attributes)->recursive();
+            if ($response->has('dogma_attributes')) {
+                $attributes = $response->get('dogma_attributes');
                 $dbAttributes = $type->attributes()->whereIn('attribute_id', $attributes->pluck('attribute_id')->toArray())->get()->keyBy('attribute_id');
-                $attributes->each(function ($attribute) use ($dbAttributes, $type) {
-                    if (!$dbAttributes->has($attribute->get('attribute_id')) && is_int($attribute->get('value'))) {
-                        $type->attributes()->create($attribute->toArray());
+                $missingAttributes = collect();
+                $attributes->each(function ($attribute) use ($dbAttributes, $type, $missingAttributes) {
+                    if (!$dbAttributes->has($attribute->get('attribute_id'))) {
+                        $attribute->toArray();
+                        $missingAttributes->push($attribute->toArray());
                     }
                 });
-
-                $typeDogma = $attributes->whereIn('attribute_id', config('base.defaults.dogma.skillz.all'))->keyBy('attribute_id');
+                $type->attributes()->createMany($missingAttributes->toArray());
+                $typeDogma = $attributes->whereIn('attribute_id', config('services.eve.attributes.skillz.all'))->keyBy('attribute_id');
                 $typeSkillz = collect();
-                collect(config('base.defaults.dogma.skillz.mapping'))->each(function ($level, $skill) use ($typeDogma, $typeSkillz) {
+                collect(config('services.eve.attributes.skillz.mapping'))->each(function ($level, $skill) use ($typeDogma, $typeSkillz) {
                     if ($typeDogma->has($skill) && $typeDogma->has($level)) {
                         $skillId = (int)$typeDogma->get($skill)->get('value');
                         $skillLvl = (int)$typeDogma->get($level)->get('value');
                         $dogmaSkill = Type::firstOrNew(['id' => $skillId]);
                         if (!$dogmaSkill->exists) {
-                            GetType::dispatch($skillId);
+                            dump("Dispatch Skill with ID ". $skillId);
+                            // GetType::dispatch($skillId);
                         }
                         $typeSkillz->push(collect([
                             'id' => $skillId,
