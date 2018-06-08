@@ -49,20 +49,22 @@ class Ships extends Command
         if ($shipGroups->count() < 43) {
             dd("43 groups are suppose to be in the database to conduct this operation. Please run Import:SDE before runnig this command.");
         }
-
+        $bar = $this->output->createProgressBar($shipGroups->count());
         $types = collect();
-        $shipGroups->each(function ($group) use (&$types) {
+        $shipGroups->each(function ($group) use (&$types, &$bar) {
             $groupRequest = $this->dataCont->getGroup($group->id);
             $status = $groupRequest->status;
             $payload = $groupRequest->payload;
             if (!$status) {
                 return true;
             }
+            $bar->advance();
             $types = $types->merge(collect($payload->response->types));
         });
         $count = $types->count();
         $now = now(); $x = 1;
-        $types->each(function ($type) use ($count, &$now, &$x) {
+        $bar = $this->output->createProgressBar($count);
+        $types->each(function ($type) use ($count, &$now, &$x, $bar) {
             $getType = $this->dataCont->getType($type);
             $status = $getType->status;
             $payload = $getType->payload;
@@ -70,10 +72,7 @@ class Ships extends Command
                 dump($payload->message);
                 return true;
             }
-            if ($payload->wasRecentlyCreated) {
-                dump($payload->name. " added to the database");
-            }
-            dump(round(($x / $count), 2) * 100 . "% complete. " . ($count - $x) . " records left");
+            $bar->advance();
             if ($x%5==0) {
                 sleep(1);
             }
