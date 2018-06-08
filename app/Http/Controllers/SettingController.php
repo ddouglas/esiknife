@@ -2,14 +2,16 @@
 
 namespace ESIK\Http\Controllers;
 
-use Auth, Request, Session;
-use ESIK\Http\Controllers\SSOController;
+use Auth, Request, Session, Validator;
+use ESIK\Models\Member;
+use ESIK\Http\Controllers\{DataController, SSOController};
 
 class SettingController extends Controller
 {
     public function __construct()
     {
         $this->ssoCont = new SSOController;
+        $this->dataCont = new DataController;
     }
 
     public function index ()
@@ -79,7 +81,7 @@ class SettingController extends Controller
                                 ]);
                                 return redirect(route('access'));
                             }
-                            return view('portal.access', [
+                            return view('settings.access', [
                                 'results' => collect($payload->response)->recursive()
                             ]);
                         }
@@ -179,10 +181,28 @@ class SettingController extends Controller
                 }
             }
         }
-
         Auth::user()->load('accessor', 'accessee');
         return view('settings.access');
     }
+    public function search($term) {
+        $getSearch = $this->dataCont->getSearch("character", $term);
+        $status = $getSearch->status;
+        $payload = $getSearch->payload;
 
+        if (!$status) {
+            return $getSearch;
+        }
+
+        $results = collect($payload->response)->recursive();
+        if ($results->has('character')) {
+            $names = $this->dataCont->postUniverseNames($results->get('character'));
+            return $names;
+        } else {
+            return (object)[
+                'status' => false,
+                'payload' => collect()
+            ];
+        }
+    }
 
 }
