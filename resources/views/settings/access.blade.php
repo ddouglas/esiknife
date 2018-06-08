@@ -58,11 +58,6 @@
                                                             </li>
                                                         @endforeach
                                                     </ul>
-                                                    {{-- @foreach (json_decode($accessor->pivot->access, true) as $key => $scope)
-                                                    <label for="access[{{ $accessor->id }}][{{ $key }}]">
-                                                        <input type="checkbox" name="access[{{ $accessor->id }}][{{ $scope }}]" id="access[{{ $accessor->id }}][{{ $key }}]" checked /> {{ $scope }}
-                                                    </label>
-                                                    @endforeach --}}
                                                 </div>
                                             </div>
                                         </td>
