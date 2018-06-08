@@ -72,15 +72,13 @@
 
                         </table>
                     </div>
-                    @if (!is_null(Auth::user()->access_token) && !is_null(Auth::user()->refresh_token) && !is_null(Auth::user()->scopes))
-                        <div class="card-footer text-center">
-                            <form action="{{ route('settings.token') }}" method="post">
-                                {{ csrf_field() }}
-                                @method('DELETE')
-                                <button type="submit" name="action" value="delete" class="btn btn-danger">Delete My Token</button>
-                            </form>
-                        </div>
-                    @endif
+                    <div class="card-footer text-center">
+                        <form action="{{ route('settings.token') }}" method="post">
+                            {{ csrf_field() }}
+                            @method('DELETE')
+                            <button type="submit" name="action" value="delete" class="btn btn-danger">Delete My Token</button>
+                        </form>
+                    </div>
 
                 </div>
             </div>
