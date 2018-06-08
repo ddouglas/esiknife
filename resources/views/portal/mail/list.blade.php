@@ -39,7 +39,7 @@
                                 {{ !is_null($mail->sender) ? $mail->sender->name : "Unknown Sender " . $mail->sender_id }}
                             </td>
                             <td>
-                                <a href="{{ route('mail', ['id' => $mail->id]) }}">{{ str_limit($mail->subject, 50) }}</a>
+                                <a href="{{ route('mail', ['member' => $member->id, 'mail_id' => $mail->id]) }}">{{ str_limit($mail->subject, 50) }}</a>
                             </td>
                             <td>
                                 {{ $mail->pivot->is_read ? "" : "Not" }} Read

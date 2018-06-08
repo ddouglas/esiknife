@@ -10,8 +10,6 @@
       border: 1px solid black;
     }
 
-
-
     /*
     tbody:hover td[rowspan], tr:hover td {
        background: red;
@@ -79,7 +77,7 @@
                         <tbody>
                             <tr>
                                 <td rowspan="2" class="align-middle">
-                                    <a href="{{ route('contract.view', ['id' => $contract->id]) }}">{{ $contract->id }}</a>
+                                    <a href="{{ route('contract.view', ['member' => $member->id, 'contract_id' => $contract->id]) }}">{{ $contract->id }}</a>
                                 </td>
                                 <td>
                                     {{ $contract->type }}
