@@ -35,11 +35,9 @@ class Handler extends ExceptionHandler
      * @param  \Exception  $exception
      * @return void
      */
-    public function report(Exception $e)
+    public function report(Exception $exception)
     {
-        // parent::report($exception);
-
-        Log::error('['.$e->getCode().'] "'.$e->getMessage().'" on line '.$e->getTrace()[0]['line'].' of file '.$e->getTrace()[0]['file']);
+        parent::report($exception);
     }
 
     /**
