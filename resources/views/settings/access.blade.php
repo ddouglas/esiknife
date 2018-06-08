@@ -5,7 +5,6 @@
 @section('content')
     <div class="container">
         @include('portal.extra.header')
-        @include('portal.extra.nav')
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -27,7 +26,7 @@
                         Characters Who Can See My Data
                     </div>
                     <div class="card-body p-0">
-                        <form action="{{ route('access', ['scope' => "accessor"]) }}" method="post">
+                        <form action="{{ route('settings.access', ['scope' => "accessor"]) }}" method="post">
                             <table class="table table-bordered m-0">
                                 @forelse (Auth::user()->accessor as $accessor)
                                     <tr>
@@ -49,11 +48,21 @@
                                                     <p>
                                                         This accessor can view data related to the following scopes. Uncheck to remove access:
                                                     </p>
-                                                    @foreach (json_decode($accessor->pivot->access, true) as $key => $scope)
-                                                        <label for="access[{{ $accessor->id }}][{{ $key }}]">
-                                                            <input type="checkbox" name="access[{{ $accessor->id }}][{{ $scope }}]" id="access[{{ $accessor->id }}][{{ $key }}]" checked /> {{ $scope }}
-                                                        </label>
-                                                    @endforeach
+                                                    <?php $accessorScopes = collect(json_decode($accessor->pivot->access, true)); ?>
+                                                    <ul class="list-unstyled">
+                                                        @foreach(Auth::user()->scopes as $key => $appScope)
+                                                            <li>
+                                                                <label for="access[{{ $accessor->id }}][{{ $key }}]">
+                                                                    <input type="checkbox" name="access[{{ $accessor->id }}][{{ $appScope }}]" id="access[{{ $accessor->id }}][{{ $key }}]" @if ($accessorScopes->containsStrict($appScope)){{ "checked" }}@endif /> {{ $appScope }}
+                                                                </label>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                    {{-- @foreach (json_decode($accessor->pivot->access, true) as $key => $scope)
+                                                    <label for="access[{{ $accessor->id }}][{{ $key }}]">
+                                                        <input type="checkbox" name="access[{{ $accessor->id }}][{{ $scope }}]" id="access[{{ $accessor->id }}][{{ $key }}]" checked /> {{ $scope }}
+                                                    </label>
+                                                    @endforeach --}}
                                                 </div>
                                             </div>
                                         </td>
@@ -94,7 +103,7 @@
                                     @endforeach
                                     <tr>
                                         <td class="text-center">
-                                            <a href="{{ route('access') }}" class="btn btn-danger">Clear Results</a>
+                                            <a href="{{ route('settings.access') }}" class="btn btn-danger">Clear Results</a>
                                         </td>
                                     </tr>
                                 @endif
@@ -109,7 +118,7 @@
                         Characters Whose Data I Can See
                     </div>
                     <div class="card-body p-0">
-                        <form action="{{ route('access', ['scope' => "accessee"]) }}" method="post">
+                        <form action="{{ route('settings.access', ['scope' => "accessee"]) }}" method="post">
                             <table class="table table-bordered m-0">
                                 @forelse (Auth::user()->accessee as $accessee)
                                     <tr>
