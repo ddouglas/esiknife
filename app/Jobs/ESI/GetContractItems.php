@@ -9,25 +9,24 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 use ESIK\Models\Member;
+use ESIK\Traits\Trackable;
 use ESIK\Http\Controllers\DataController;
-
-use Illuminate\Support\Collection;
 
 class GetContractItems implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Trackable;
 
-    public $member, $contract, $dataCont;
+    public $memberId, $contractId, $dataCont;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(Member $member, Collection $contract)
+    public function __construct(int $memberId, int $contractId)
     {
-        $this->member = $member;
-        $this->contract = $contract;
+        $this->memberId = $member;
+        $this->contractId = $contractId;
         $this->dataCont = new DataController;
     }
 
@@ -38,6 +37,12 @@ class GetContractItems implements ShouldQueue
      */
     public function handle()
     {
-        return $this->dataCont->getMemberContractItems($this->member, $this->contract->get('contract_id'))->status;
+        $member = Member::findOrFail($this->memberId);
+        $getMemberContractItems = $this->dataCont->getMemberContractItems($member, $this->contractId);
+        $status = $getMemberContractItems->status;
+        $payload = $getMemberContractItems->payload;
+        if (!$status) {
+            throw new \Exception($payload->message, 1);
+        }
     }
 }

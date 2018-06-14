@@ -8,11 +8,12 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
+use ESIK\Traits\Trackable;
 use ESIK\Http\Controllers\DataController;
 
 class GetCorporation implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Trackable;
 
     public $id, $dataCont;
 
@@ -25,6 +26,8 @@ class GetCorporation implements ShouldQueue
     {
         $this->id = $id;
         $this->dataCont = new DataController();
+        $this->prepareStatus();
+        $this->setInput(['id' => $this->id]);
     }
 
     /**
@@ -34,6 +37,11 @@ class GetCorporation implements ShouldQueue
      */
     public function handle()
     {
-        return $this->dataCont->getCorporation($this->id)->status;
+        $getCorporation = $this->dataCont->getCorporation($this->id);
+        $status = $getCorporation->status;
+        $payload = $getCorporation->payload;
+        if (!$status) {
+            throw new \Exception($payload->message, 1);
+        }
     }
 }

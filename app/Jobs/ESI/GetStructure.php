@@ -9,24 +9,27 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 use ESIK\Models\Member;
+use ESIK\Traits\Trackable;
 use ESIK\Http\Controllers\DataController;
 
 class GetStructure implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Trackable;
 
-    public $member, $id, $dataCont;
+    public $memberId, $id, $dataCont;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(Member $member, int $id)
+    public function __construct(int $memberId, int $id)
     {
-        $this->member = $member;
+        $this->memberId = $memberId;
         $this->id = $id;
         $this->dataCont = new DataController();
+        $this->prepareStatus();
+        $this->setInput(['memberId' => $memberId, 'id' => $id]);
     }
 
     /**
@@ -36,6 +39,12 @@ class GetStructure implements ShouldQueue
      */
     public function handle()
     {
-        return $this->dataCont->getStructure($this->member, $this->id)->status;
+        $member = Member::findOrFail($this->id);
+        $getStructure = $this->dataCont->getStructure($this->memberId, $this->id);
+        $status = $getStructure->status;
+        $payload = $getStructure->payload;
+        if (!$status) {
+            throw new \Exception($payload->message, 1);
+        }
     }
 }

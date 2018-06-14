@@ -8,11 +8,12 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
+use ESIK\Traits\Trackable;
 use ESIK\Http\Controllers\DataController;
 
 class GetSystem implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Trackable;
 
     public $id, $dataCont;
 
@@ -25,6 +26,8 @@ class GetSystem implements ShouldQueue
     {
         $this->id = $id;
         $this->dataCont = new DataController();
+        $this->prepareStatus();
+        $this->setInput(['id' => $this->id]);
     }
 
     /**
@@ -34,6 +37,11 @@ class GetSystem implements ShouldQueue
      */
     public function handle()
     {
-        return $this->dataCont->getSystem($this->id)->status;
+        $getSystem = $this->dataCont->getSystem($this->id)->status;
+        $status = $getSystem->status;
+        $payload = $getSystem->payload;
+        if (!$status) {
+            throw new \Exception($payload->message, 1);
+        }
     }
 }
