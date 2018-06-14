@@ -334,7 +334,7 @@ class PortalController extends Controller
             if (!$status) {
                 Session::flash('alert', [
                     "header" => "There was an issue authorizing the scopes you selected",
-                    'message' => "We had an issue authorizing the scopes that you authorized. If the issue persists, please report the error via bitbucket using error id <strong>" . $payload->log_id . "</strong>",
+                    'message' => "We had an issue validating the scopes that you authenticated with. If the issue persists, please report the error via bitbucket using error id <strong>" . $payload->log_id . "</strong>",
                     'type' => 'danger',
                     'close' => 1
                 ]);
