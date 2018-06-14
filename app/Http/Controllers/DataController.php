@@ -476,7 +476,7 @@ class DataController extends Controller
 
     // Method from the Character Skils Namepsace
 
-    public function getMemberClones(Member $member, Collection $scopes)
+    public function getMemberClones(Member $member)
     {
         $request = $this->httpCont->getCharactersCharacterIdClones($member->id, $member->access_token);
         if (!$request->status) {
@@ -499,7 +499,7 @@ class DataController extends Controller
 
         if ($response->get('jump_clones')->isNotEmpty()) {
             $jumpClones = collect();
-            $response->get('jump_clones')->keyBy('jump_clone_id')->each(function ($clone) use ($member, $scopes, $jumpClones) {
+            $response->get('jump_clones')->keyBy('jump_clone_id')->each(function ($clone) use ($member, $jumpClones) {
                 $member->jumpClones()->updateOrCreate(['clone_id' => $clone->get('jump_clone_id')], [
                     'location_id' => $clone->get('location_id'),
                     'location_type' => $clone->get('location_type'),
@@ -508,7 +508,7 @@ class DataController extends Controller
                 if ($clone->get('location_type') === "structure") {
                     $structure = Structure::firstOrNew(['id' => $clone->get('location_id')]);
                     if (!$structure->exists || $structure->name === "Unknown Structure ". $clone->get('location_id')) {
-                        if ($scopes->contains('esi-universe.read_structures.v1')) {
+                        if ($member->scopes->contains('esi-universe.read_structures.v1')) {
                             GetStructure::dispatch($member, $clone->get('location_id'));
                         } else {
                             $structure->fill(['name' => "Unknown Structure " . $clone->get('location_id')]);
@@ -526,7 +526,7 @@ class DataController extends Controller
         return $request;
     }
 
-    public function getMemberImplants(Member $member, Collection $scopes)
+    public function getMemberImplants(Member $member)
     {
         $request = $this->httpCont->getCharactersCharacterIdImplants($member->id, $member->access_token);
 
@@ -559,7 +559,7 @@ class DataController extends Controller
     * @param ESIK\Models\Member $member Instance of Eloquent Member Model. This model contains the id and token we need to make the call.
     * @return mixed
     */
-    public function getMemberLocation (Member $member, Collection $scopes)
+    public function getMemberLocation (Member $member)
     {
         $request = $this->httpCont->getCharactersCharacterIdLocation($member->id, $member->access_token);
         if (!$request->status) {
@@ -591,7 +591,7 @@ class DataController extends Controller
         } else if ($response->has('structure_id')) {
             $structure = Structure::firstOrNew(['id' => $response->get('structure_id')]);
             if (!$structure->exists || $structure->name === "Unknown Structure ". $response->get('structure_id')) {
-                if ($scopes->contains('esi-universe.read_structures.v1')) {
+                if ($member->scopes->contains('esi-universe.read_structures.v1')) {
                     GetStructure::dispatch($member, $response->get('structure_id'));
                 } else {
                     $structure->fill(['name' => "Unknown Structure " . $structure->id]);
@@ -1238,8 +1238,7 @@ class DataController extends Controller
             $x++;
         });
 
-        $scopes = $member->scopes;
-        $transactions->pluck('location_id')->unique()->values()->each(function ($location) use ($member, $scopes, &$now, &$x) {
+        $transactions->pluck('location_id')->unique()->values()->each(function ($location) use ($member, &$now, &$x) {
             if ($location > 1000000000000) {
                 $structure = Structure::find($location);
                 if (!is_null($structure)) {
