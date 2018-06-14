@@ -315,6 +315,15 @@ class PortalController extends Controller
             return redirect(route('dashboard'));
         }
         if (Request::has('state')) {
+            if (!Session::has(Request::get('state'))) {
+                Session::flash('alert', [
+                    "header" => "Unable to Verify Response",
+                    'message' => "Something went wrong parsing the response from the API",
+                    'type' => 'danger',
+                    'close' => 1
+                ]);
+                return redirect(route('welcome'));
+            }
             $ssoResponse = Session::get(Request::get('state'));
             // Session::forget(Request::get('state'));
             $hashedResponseScopes = hash('sha1', collect(explode(' ', $ssoResponse->get('Scopes')))->sort()->values()->implode(' '));
