@@ -234,7 +234,8 @@ return [
         // ESIK\Providers\BroadcastServiceProvider::class,
         ESIK\Providers\EventServiceProvider::class,
         ESIK\Providers\RouteServiceProvider::class,
-
+        ESIK\Providers\JobStatusProvider::class,
+        ESIK\Providers\FailedJobServiceProvider::class
     ],
 
     /*
