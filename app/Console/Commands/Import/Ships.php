@@ -73,7 +73,7 @@ class Ships extends Command
                 return true;
             }
             $bar->advance();
-            if ($x%5==0) {
+            if ($x%20==0) {
                 sleep(1);
             }
             $x++;
