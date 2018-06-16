@@ -52,77 +52,36 @@
             </div>
         </div>
         <div class="row mt-3">
-            <div class="col-lg-12">
-                <ul class="nav nav-pills mb-3  justify-content-center" id="pills-tab" role="tablist">
-                  <li class="nav-item">
-                    <a class="nav-link active" id="bioBodyTab" data-toggle="pill" href="#bioBody" role="tab" aria-controls="pills-home" aria-selected="true">Biography</a>
-                  </li>
-                  <li class="nav-item ml-2">
-                    <a class="nav-link" id="corpHistoryTab" data-toggle="pill" href="#corpHistoryBody2" role="tab" aria-controls="pills-profile" aria-selected="false">Corporation History</a>
-                  </li>
-                </ul>
-                <div class="tab-content" id="pills-tabContent">
-                  <div class="tab-pane fade show active text-center" id="bioBody" role="tabpanel">
-                       <div class="col-lg-6 offset-lg-3">
-                            {!! $member->info->bio ?: "This character does not have a bio set" !!}
-                       </div>
-                  </div>
-                  <div class="tab-pane fade" id="corpHistoryBody" role="tabpanel">
-                      <div class="col-lg-6 offset-lg-3">
-                          @if ($member->info->corporationHistory->isNotEmpty())
-                              <ul class="list-group">
-                                  <?php $corpHistory = $member->info->corporationHistory->sortByDesc('record_id')->values(); ?>
-                                  @foreach($corpHistory as $key=>$corp)
-                                      <li class="list-group-item">
-                                          <div class="media">
-                                              <div class="float-left">
-                                                  <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation_id }}_64.png" />
-                                              </div>
-                                              <div class="media-body ml-2">
-                                                  <h5 class="mt-0">{{ !is_null($corp->corporation) ? $corp->corporation->name : "Unknown Corp ". $corp->corporation_id }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
-                                                  <p>
-                                                      @if ($corpHistory->has($key - 1))
-                                                          Left {{ age($corp->start_date, $corpHistory->get($key - 1)->start_date) }} later on {{ $corpHistory->get($key - 1)->start_date->toDateString() }}<br />
-                                                      @else
-                                                          Been in for {{ age($corp->start_date, now()) }} <br />
-                                                      @endif
-                                                      Started on {{ $corp->start_date->toDateString() }}
-                                                  </p>
-                                              </div>
-                                          </div>
-                                      </li>
-                                  @endforeach
-                              </ul>
-                          @endif
-                      </div>
-                  </div>
-                  <div class="tab-pane fade" id="corpHistoryBody2" role="tabpanel">
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <h4 class="text-center">Corporation History</h4>
+                    <hr />
                     <div class="row">
-                    @if ($member->info->corporationHistory->isNotEmpty())
-                    <?php $corpHistory = $member->info->corporationHistory->sortByDesc('record_id')->values(); ?>
-                         @foreach($corpHistory as $key=>$corp)
-                         <div class="list-group-item col-lg-4">
-                              <div class="media">
-                                  <div class="float-left">
-                                      <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation_id }}_64.png" />
-                                  </div>
-                                  <div class="media-body ml-2">
-                                      <h5 class="mt-0">{{ !is_null($corp->corporation) ? $corp->corporation->name : "Unknown Corp ". $corp->corporation_id }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
-                                      <p>
-                                          @if ($corpHistory->has($key - 1))
-                                              Left {{ age($corp->start_date, $corpHistory->get($key - 1)->start_date) }} later on {{ $corpHistory->get($key - 1)->start_date->toDateString() }}<br />
-                                          @else
-                                              Been in for {{ age($corp->start_date, now()) }} <br />
-                                          @endif
-                                          Started on {{ $corp->start_date->toDateString() }}
-                                      </p>
-                                  </div>
-                              </div>
-                          </div>
-                          @endforeach
-                      @endif
-                      </div>
-                  </div>
+                        @if ($member->info->history->isNotEmpty())
+                            <?php $corpHistory = $member->info->history->sortByDesc('record_id')->values(); ?>
+                            @foreach($corpHistory as $key=>$corp)
+                                <div class="list-group-item col-lg-4">
+                                    <div class="media">
+                                        <div class="float-left">
+                                            <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation_id }}_64.png" />
+                                        </div>
+                                        <div class="media-body ml-2">
+                                            <h5 class="mt-0">{{ !is_null($corp->corporation) ? $corp->corporation->name : "Unknown Corp ". $corp->corporation_id }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
+                                            <p>
+                                                @if ($corpHistory->has($key - 1))
+                                                    Left {{ age($corp->start_date, $corpHistory->get($key - 1)->start_date) }} later on {{ $corpHistory->get($key - 1)->start_date->toDateString() }}<br />
+                                                @else
+                                                    Been in for {{ age($corp->start_date, now()) }} <br />
+                                                @endif
+                                                Started on {{ $corp->start_date->toDateString() }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
