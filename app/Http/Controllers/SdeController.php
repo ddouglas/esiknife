@@ -25,7 +25,6 @@ class SdeController extends Controller
         collect($payload->response)->recursive()->each(function ($ancestry) {
             $import = Ancestry::firstOrNew(['id' => $ancestry->get('ancestryID')])->fill([
                 'name' => $ancestry->get('ancestryName'),
-                'description' => $ancestry->get('description'),
                 'bloodline_id' => $ancestry->get('bloodlineID')
             ]);
             $import->save();
@@ -53,7 +52,6 @@ class SdeController extends Controller
         collect($payload->response)->recursive()->each(function ($bloodline) {
             $import = Bloodline::firstOrNew(['id' => $bloodline->get('bloodlineID')])->fill([
                 'name' => $bloodline->get('bloodlineName'),
-                'description' => $bloodline->get('description'),
                 'race_id' => $bloodline->get('raceID')
             ]);
             $import->save();
@@ -81,7 +79,6 @@ class SdeController extends Controller
         collect($payload->response)->recursive()->each(function ($faction) {
             $import = Faction::firstOrNew(['id' => $faction->get('factionID')])->fill([
                 'name' => $faction->get('factionName'),
-                'description' => $faction->get('description'),
                 'race_id' => $faction->get('raceID')
             ]);
             $import->save();
@@ -108,8 +105,7 @@ class SdeController extends Controller
         dump(__FUNCTION__ . " is being imported");
         collect($payload->response)->recursive()->each(function ($race) {
             $import = Race::firstOrNew(['id' => $race->get('raceID')])->fill([
-                'name' => $race->get('raceName'),
-                'description' => $race->get('description')
+                'name' => $race->get('raceName')
             ]);
             $import->save();
             usleep(500);
