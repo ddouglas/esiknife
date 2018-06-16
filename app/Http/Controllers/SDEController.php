@@ -4,7 +4,7 @@ namespace ESIK\Http\Controllers;
 
 use ESIK\Models\SDE\{Ancestry, Bloodline, Category, Constellation, Faction, Group, Race, Region};
 
-class SDEController extends Controller
+class SdeController extends Controller
 {
     public static function chrAncestries()
     {
