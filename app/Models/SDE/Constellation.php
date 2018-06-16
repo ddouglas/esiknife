@@ -15,4 +15,9 @@ class Constellation extends Model
     {
         return $this->morphOn(MemberBookmark::class, 'location');
     }
+
+    public function region()
+    {
+        return $this->hasOne(Region::class, 'id', 'region_id');
+    }
 }

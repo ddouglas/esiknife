@@ -18,5 +18,5 @@ class Region extends Model
 
     public function nameDotlanFormat() {
         return implode('_', explode(' ', $this->name));
-    }    
+    }
 }

@@ -1145,7 +1145,7 @@ class DataController extends Controller
         }
         $now = now();
         $recipients = collect();
-        $headers = $header->recursive();
+        $headers = $headers->recursive();
         $headers->chunk(25)->each(function($chunk) use(&$now, $member, &$recipients) {
             $mail_ids = $chunk->pluck('mail_id');
             $knownMails = MailHeader::whereIn('id', $mail_ids->toArray())->with('members')->get()->keyBy('id');

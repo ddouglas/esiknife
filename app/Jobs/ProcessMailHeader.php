@@ -34,7 +34,7 @@ class ProcessMailHeader implements ShouldQueue
         $this->header = $header;
         $this->recipients = $recipients;
         $this->prepareStatus();
-        $this->setInput(['memberId' => $memberId, 'header' => $header, 'recipients' => $recipients->toArray()]);
+        $this->setInput(['memberId' => $memberId, 'header' => $header, 'recipients' => $recipients]);
     }
 
     /**
@@ -45,16 +45,17 @@ class ProcessMailHeader implements ShouldQueue
     public function handle()
     {
         $member = Member::findOrFail($this->memberId);
-        $header = collect(json_decode($this->header, true));
+        $header = collect(json_decode($this->header, true))->recursive();
+        $header = MailHeader::findOrFail($header->get('id'));
         $recipients = collect(json_decode($this->recipients, true))->recursive();
-        $getMemberMailBody = $this->dataCont->getMemberMailBody($member, $header->get('id'));
+        $getMemberMailBody = $this->dataCont->getMemberMailBody($member, $header->id);
         $status = $getMemberMailBody->status;
         $payload = $getMemberMailBody->payload;
         if (!$status) {
             return $status;
         }
         unset($status, $payload);
-        $this->recipients->each(function ($recipient) {
+        $recipients->each(function ($recipient) use ($header) {
             if ($recipient->get('recipient_type') === "character") {
                 $getCharacter = $this->dataCont->getCharacter($recipient->get('recipient_id'));
                 $status = $getCharacter->status;
@@ -76,12 +77,12 @@ class ProcessMailHeader implements ShouldQueue
 
             if ($recipient->get('recipient_type') === "mailing_list") {
                 $getMailingList = MailingList::firstOrNew(['id' => $recipient->get('recipient_id')]);
-                $this->mail->fill(['is_on_mailing_list' => 1, 'mailing_list_id' => $recipient->get('recipient_id')]);
+                $header->fill(['is_on_mailing_list' => 1, 'mailing_list_id' => $recipient->get('recipient_id')]);
             }
         });
 
-        $this->mail->fill(['is_ready' => 1]);
-        $this->mail->save();
+        $header->fill(['is_ready' => 1]);
+        $header->save();
         return true;
     }
 }

@@ -21,8 +21,8 @@ class HackingController extends Controller
 
     public function index()
     {
-        // $this->cleanup();
-        
+        $this->cleanup();
+
     }
 
     public function cleanup()

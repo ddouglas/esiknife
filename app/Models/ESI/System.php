@@ -5,6 +5,7 @@ namespace ESIK\Models\ESI;
 use Illuminate\Database\Eloquent\Model;
 
 use ESIK\Models\MemberLocation;
+use ESIK\Models\SDE\Constellation;
 
 class System extends Model
 {
@@ -31,5 +32,10 @@ class System extends Model
     public function location()
     {
         return $this->morphOn(MemberBookmark::class, 'location');
+    }
+
+    public function constellation()
+    {
+        return $this->hasOne(Constellation::class, 'id', 'constellation_id');
     }
 }

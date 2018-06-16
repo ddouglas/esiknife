@@ -19,7 +19,6 @@ class CreateCharactersTable extends Migration
             $table->timestamp('birthday')->nullable();
             $table->string('gender');
             $table->float('sec_status', 15, 13);
-            $table->text('bio');
             $table->integer('corporation_id');
             $table->integer('alliance_id')->nullable();
             $table->integer('ancestry_id');
