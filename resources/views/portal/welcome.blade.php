@@ -6,10 +6,10 @@
     <div class="container">
         <div class="row mt-3">
             <div class="col-lg-3">
-                <img src="{{ config('services.eve.urls.img') }}/Character/1_512.jpg" class="img-fluid rounded mx-auto d-block" />
+                <img src="{{ config('services.eve.urls.img') }}/Character/{{ Auth::user()->id }}_512.jpg" class="img-fluid rounded mx-auto d-block" />
             </div>
             <div class="col-lg-9">
-                <h1 class="text-center">Welcome to ESI Knife</h1>
+                <h1 class="text-center">Welcome to ESI Knife {{ Auth::user()->info->name }}</h1>
                 <hr />
                 <p>
                     You are here because you're either interested in viewing your data out-of-game in a secure environment or a recruiter has instructed you come to our site and register as part of their recruitment process so that they can make sure that you are not a spy!. No worries, we'll help you get setup. It is really simple. Below are the scopes that are currently supported by our site, meaning these are the piece of data that we can currently pull from ESI. More are added every day. Please check the scopes for the data that you are interested in viewing and then click the submit button below them.

@@ -12,13 +12,14 @@
         </div>
         <div class="row">
             <p>
-                Below is a list of character that you are authorized to access. Including your own character. To view the character, click the eye.
+                Below is a list of characters that you are authorized to access., including your own character. To view the character, click the eye.
             </p>
         </div>
         <div class="row">
             <div class="col-md-8">
                 <h3>Your Character</h3>
                 <hr />
+                @include('extra.alert')
                 <ul class="list-group">
                     <li class="list-group-item">
                         <div class="float-right">
@@ -47,21 +48,24 @@
                     <div class="list-group">
                         <li class="list-group-item">
                             <div class="float-right">
-                                {{ Auth::user()->jobs->whereIn('status', ['queued', 'executing'])->count() }}
+                                <span id="countPending">{{ Auth::user()->jobs->whereIn('status', ['queued', 'executing'])->count() }}</span>
                             </div>
                             Pending Jobs
                         </li>
                         <li class="list-group-item">
                             <div class="float-right">
-                                {{ Auth::user()->jobs->whereIn('status', ['finished'])->count() }}
+                                <span id="countFinished">{{ Auth::user()->jobs->whereIn('status', ['finished'])->count() }}</span>
                             </div>
                             Completed Jobs
                         </li>
                         <li class="list-group-item">
                             <div class="float-right">
-                                {{ Auth::user()->jobs->whereIn('status', ['failed'])->count() }}
+                                <span id="countFailed">{{ Auth::user()->jobs->whereIn('status', ['failed'])->count() }}</span>
                             </div>
                              Jobs That Failed
+                        </li>
+                        <li class="list-group-item text-center">
+                            <em>This module updates every {{ config('services.eve.updateInterval') }} seconds</em>
                         </li>
                     </div>
                 </div>
@@ -99,4 +103,32 @@
         @endif
 
     </div>
+@endsection
+
+@section('js')
+    <script>
+        @if (Auth::user()->jobs->where('status', 'queued')->count() > 0)
+            interval = {{ config('services.eve.updateInterval') * 1000 }};
+            function updateJobs() {
+                $.ajax({
+                    url: "{{ route('api.jobs.status', ['id' => Auth::user()->id]) }}",
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data, textStatus, request) {
+                        console.log(data)
+                        document.getElementById('countPending').innerHTML = data.pending;
+                        document.getElementById('countFinished').innerHTML = data.finished;
+                        document.getElementById('countFailed').innerHTML = data.failed;
+                        if (data.pending == 0) {
+                            clearInterval(update);
+                        }
+                    }
+                });
+            };
+
+            $(document).ready(function ()  {
+                update = setInterval(updateJobs, interval);
+            });
+        @endif
+    </script>
 @endsection

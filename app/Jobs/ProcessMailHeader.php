@@ -9,13 +9,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 use ESIK\Models\{Member};
+use ESIK\Traits\Trackable;
 use ESIK\Models\ESI\{MailHeader, MailingList};
 use Illuminate\Support\Collection;
 use ESIK\Http\Controllers\DataController;
 
 class ProcessMailHeader implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Trackable;
 
     public $memberId, $header, $recipients, $dataCont;
 
