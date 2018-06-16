@@ -506,9 +506,12 @@ class PortalController extends Controller
                 $now = $now->addSeconds(1);
             }
             $member->jobs()->attach($dispatchedJobs->toArray());
-            if (!Auth::check()) {
-                Auth::login($member);
-            }
+            Session::flash('alert', [
+                "header" => "Welcome to ESI Knife ". Auth::user()->info->name,
+                'message' => "You account has been setup successfully. However, there is a lot of data we need to pull in from the API to probably display your profile to you, so bare with us while we talk with ESI and whip our slave to get that data for you. It shouldn't take long. You can use the Job Status module to the right to check on the status of these jobs. When you have zero (0) pending jobs, it is okay to load up your character, otherwise a page you visit may crash.",
+                'type' => 'success',
+                'close' => 1
+            ]);
             return redirect(route('dashboard'));
         }
         return view('portal.welcome');
