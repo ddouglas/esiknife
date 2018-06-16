@@ -40,7 +40,6 @@ class JobStatusProvider extends ServiceProvider
             ]);
         });
         app(QueueManager::class)->failing(function (JobFailed $event) use ($entityClass){
-            dd($event->job);
             $this->updateJobStatus($event->job, [
                 'status' => $entityClass::STATUS_FAILED,
                 'attempts' => $event->job->attempts(),
