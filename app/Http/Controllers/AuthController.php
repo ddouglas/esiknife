@@ -71,6 +71,12 @@ class AuthController extends Controller
                     }
                 }
             } else {
+                $member->fill([
+                    'raw_hash' => $ssoResponse->get('CharacterOwnerHash'),
+                    'hash' => hash('sha256', $ssoResponse->get('CharacterOwnerHash')),
+                ]);
+                $member->save();
+                Auth::login($member);
                 return redirect(route('welcome'));
             }
         }
