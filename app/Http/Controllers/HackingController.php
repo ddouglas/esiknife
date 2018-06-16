@@ -2,10 +2,13 @@
 
 namespace ESIK\Http\Controllers;
 
-use Request, Session;
+use Bus,Request, Session;
 use ESIK\Models\{Member};
 use ESIK\Jobs\ESI\GetCharacter;
 use ESIK\Models\ESI\{MailRecipient};
+
+use Illuminate\Events\Dispatcher;
+
 
 class HackingController extends Controller
 {
@@ -18,8 +21,18 @@ class HackingController extends Controller
 
     public function index()
     {
-        $recipient = MailRecipient::where(['mail_id' => 370314718, 'recipient_id' => 99007723])->with('info')->first();
-        dd($recipient);
+        // $this->cleanup();
+        
+    }
+
+    public function cleanup()
+    {
+        \ESIK\Models\Member::whereNotNull('id')->delete();
+        \ESIK\Models\ESI\Contract::whereNotNull('id')->delete();
+        \ESIK\Models\ESI\MailHeader::whereNotNull('id')->delete();
+        \ESIK\Models\ESI\Character::whereNotNull('id')->delete();
+        \ESIK\Models\ESI\Corporation::whereNotNull('id')->delete();
+        \ESIK\Models\ESI\Alliance::whereNotNull('id')->delete();
     }
 
     public function typesWithAttributesEffects ($type_id)
