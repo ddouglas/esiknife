@@ -312,9 +312,7 @@ class PortalController extends Controller
             $ssoUrl = config("services.eve.urls.sso")."/oauth/authorize?response_type=code&redirect_uri=" . route(config('services.eve.sso.callback')) . "&client_id=".config('services.eve.sso.id')."&state={$state_hash}&scope=".$authorized;
             return redirect($ssoUrl);
         }
-        if (Auth::check()) {
-            return redirect(route('dashboard'));
-        }
+
         if (Request::has('state')) {
             if (!Session::has(Request::get('state'))) {
                 Session::flash('alert', [
