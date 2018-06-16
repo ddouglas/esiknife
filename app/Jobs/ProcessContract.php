@@ -2,6 +2,7 @@
 
 namespace ESIK\Jobs;
 
+use Bus;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -9,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 use ESIK\Models\Member;
+use ESIK\Traits\Trackable;
 use ESIK\Http\Controllers\DataController;
 use ESIK\Models\ESI\{Character, Contract, Corporation, Alliance, Station, Structure};
 use ESIK\Jobs\ESI\{GetCharacter, GetCorporation, GetAlliance, GetStation, GetStructure, GetContractItems};
@@ -17,20 +19,22 @@ use Illuminate\Support\Collection;
 
 class ProcessContract implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Trackable;
 
-    public $member, $contract, $dataCont;
+    public $memberId, $contract, $dataCont;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(Member $member, Collection $contract)
+    public function __construct(int $memberId, string $contract)
     {
-        $this->member = $member;
+        $this->memberId = $memberId;
         $this->contract = $contract;
         $this->dataCont = new DataController;
+        $this->prepareStatus();
+        $this->setInput(['memberId' => $memberId, 'contract' => $contract]);
     }
 
     /**
@@ -40,8 +44,9 @@ class ProcessContract implements ShouldQueue
      */
     public function handle()
     {
-        $contract = $this->contract;
-        $dbContract = Contract::find($this->contract->get('contract_id'));
+        $member = Member::findOrFail($this->memberId);
+        $contract = collect(json_decode($this->contract, true));
+        $dbContract = Contract::find($contract->get('contract_id'));
         if (is_null($dbContract)) {
             return false;
         }
@@ -73,25 +78,25 @@ class ProcessContract implements ShouldQueue
             $knownAlliances = Alliance::whereIn('id', $allianceIds->toArray())->get()->keyBy('id');
             $x = 0;
             $characterIds->diff($knownCharacters->keys())->each(function ($characterId) use (&$now, &$x) {
-                GetCharacter::dispatch($characterId)->delay($now);
+                $this->dataCont->getCharacter($characterId);
                 if ($x%10==0) {
-                    $now->addSecond();
+                    sleep(1);
                 }
                 $x++;
             });
             $x = 0;
             $corporationIds->diff($knownCorporations->keys())->each(function ($corporationId) use (&$now, &$x) {
-                GetCorporation::dispatch($corporationId)->delay($now);
+                $this->dataCont->getCorporation($corporationId);
                 if ($x%10==0) {
-                    $now->addSecond();
+                    sleep(1);
                 }
                 $x++;
             });
             $x = 0;
             $allianceIds->diff($knownAlliances->keys())->each(function ($allianceId) use (&$now, &$x) {
-                GetAlliance::dispatch($allianceId)->delay($now);
+                $this->dataCont->getAlliance($allianceId);
                 if ($x%10==0) {
-                    $now->addSecond();
+                    sleep(1);
                 }
                 $x++;
             });
@@ -107,34 +112,35 @@ class ProcessContract implements ShouldQueue
             }
         });
         $structureIds = $structureIds->unique()->values();
-        $stationIds = $stationIds->unique()->values();
         $knownStructures = Structure::whereIn('id', $structureIds->toArray())->get()->keyBy('id');
         $x = 0;
-        $structureIds->diff($knownStructures->keys())->each(function ($structureId) use (&$now, &$x) {
-            if ($this->member->scopes->contains(config('services.eve.scopes.readUniverseStructures'))) {
-                GetStructure::dispatch($this->member, $structureId)->delay($now);
+        $structureIds->diff($knownStructures->keys())->each(function ($structureId) use ($member, &$now, &$x) {
+            if ($member->scopes->contains(config('services.eve.scopes.readUniverseStructures'))) {
+                $this->dataCont->getStructure($member, $structureId);
                 if ($x%10==0) {
-                    $now->addSecond();
+                    sleep(1);
                 }
                 $x++;
             } else {
                 Structure::create([
                     'id' => $structureId,
-                    'name' => "Unknown Structure" . $structureId
+                    'name' => "Unknown Structure " . $structureId
                 ]);
             }
         });
-
+        $stationIds = $stationIds->unique()->values();
         $knownStations = Station::whereIn('id', $stationIds->toArray())->get()->keyBy('id');
         $x = 0;
         $stationIds->diff($knownStations->keys())->each(function ($stationId) use (&$now, &$x) {
-            GetStation::dispatch($stationId)->delay($now);
+            $this->dataCont->getStation($stationId);
             if ($x%10==0) {
-                $now->addSecond();
+                sleep(1);
             }
             $x++;
         });
         $dbContract->save();
-        GetContractItems::dispatch($this->member, $this->contract)->delay($now->addSeconds(10));
+        $job = new GetContractItems($this->memberId, $contract->get('contract_id'));
+        Bus::dispatch($job);
+        $member->jobs()->attach($job->getJobStatusId());
     }
 }

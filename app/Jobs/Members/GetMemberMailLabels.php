@@ -1,6 +1,6 @@
 <?php
 
-namespace ESIK\Jobs\ESI;
+namespace ESIK\Jobs\Members;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -12,24 +12,25 @@ use ESIK\Models\Member;
 use ESIK\Traits\Trackable;
 use ESIK\Http\Controllers\DataController;
 
-class GetContractItems implements ShouldQueue
+class GetMemberMailLabels implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Trackable;
 
-    public $memberId, $contractId, $dataCont;
+    public $id, $dataCont;
+
+    public $timeout = 160;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(int $memberId, int $contractId)
+    public function __construct(int $id)
     {
-        $this->memberId = $memberId;
-        $this->contractId = $contractId;
+        $this->id = $id;
         $this->dataCont = new DataController;
         $this->prepareStatus();
-        $this->setInput(['memberId' => $memberId, 'contractId' => $contractId]);
+        $this->setInput(['id' => $id]);
     }
 
     /**
@@ -39,11 +40,11 @@ class GetContractItems implements ShouldQueue
      */
     public function handle()
     {
-        $this->dataCont->disableJobDispatch();
-        $member = Member::findOrFail($this->memberId);
-        $getMemberContractItems = $this->dataCont->getMemberContractItems($member, $this->contractId);
-        $status = $getMemberContractItems->status;
-        $payload = $getMemberContractItems->payload;
+        // $this->dataCont->disableJobDispatch();
+        $member = Member::findOrFail($this->id);
+        $getMemberMailLabels = $this->dataCont->getMemberMailingLists($member);
+        $status = $getMemberMailLabels->status;
+        $payload = $getMemberMailLabels->payload;
         if (!$status) {
             throw new \Exception($payload->message, 1);
         }

@@ -17,7 +17,7 @@ class ProcessMailHeader implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $member, $mail, $recipients, $dataCont;
+    public $memberId, $header, $recipients, $dataCont;
 
     /**
      * Create a new job instance.
@@ -26,12 +26,14 @@ class ProcessMailHeader implements ShouldQueue
      * @param int $id ID of the Mail that are receiving the body for.
      * @return void
      */
-    public function __construct(Member $member, MailHeader $mail, Collection $recipients)
+    public function __construct(int $memberId, string $header, string $recipients)
     {
         $this->dataCont = new DataController();
-        $this->member = $member;
-        $this->mail = $mail;
+        $this->memberId = $memberId;
+        $this->header = $header;
         $this->recipients = $recipients;
+        $this->prepareStatus();
+        $this->setInput(['memberId' => $memberId, 'header' => $header, 'recipients' => $recipients->toArray()]);
     }
 
     /**
@@ -41,7 +43,10 @@ class ProcessMailHeader implements ShouldQueue
      */
     public function handle()
     {
-        $getMemberMailBody = $this->dataCont->getMemberMailBody($this->member, $this->mail->id);
+        $member = Member::findOrFail($this->memberId);
+        $header = collect(json_decode($this->header, true));
+        $recipients = collect(json_decode($this->recipients, true))->recursive();
+        $getMemberMailBody = $this->dataCont->getMemberMailBody($member, $header->get('id'));
         $status = $getMemberMailBody->status;
         $payload = $getMemberMailBody->payload;
         if (!$status) {

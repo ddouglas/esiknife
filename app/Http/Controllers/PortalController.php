@@ -6,6 +6,7 @@ use Auth, Carbon, Input, Request, Session, Validator;
 use ESIK\Models\Member;
 use ESIK\Models\SDE\Group;
 use ESIK\Models\ESI\{Station, System,Type};
+use ESIK\Jobs\Members\GetMemberAssets;
 use ESIK\Http\Controllers\DataController;
 
 class PortalController extends Controller
@@ -17,7 +18,7 @@ class PortalController extends Controller
 
     public function dashboard ()
     {
-        Auth::user()->load('accessee.info');
+        Auth::user()->load('accessee.info', 'jobs');
         return view('portal.dashboard');
     }
 
@@ -386,144 +387,127 @@ class PortalController extends Controller
 
             $member->save();
             $alert = collect();
-            $scopes = collect(json_decode($member->scopes, true));
-
-            if ($scopes->contains(config('services.eve.scopes.readCharacterAssets'))) {
-                $getMemberAssets = $this->dataCont->getMemberAssets($member);
-                $status = $getMemberAssets->status;
-                $payload = $getMemberAssets->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your bookmarks right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            $now = now();
+            $dispatchedJobs = collect();
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterAssets'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberAssets($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterBookmarks'))) {
-                $getMemberBookmarks = $this->dataCont->getMemberBookmarks($member);
-                $status = $getMemberBookmarks->status;
-                $payload = $getMemberBookmarks->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your bookmarks right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterBookmarks'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberBookmarks($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterClones'))) {
-                $getMemberClones = $this->dataCont->getMemberClones($member, $scopes);
-                $status = $getMemberClones->status;
-                $payload = $getMemberClones->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your clones right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterClones'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberClones($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterContacts'))) {
-                $getMemberContacts = $this->dataCont->getMemberContacts($member);
-                $status = $getMemberContacts->status;
-                $payload = $getMemberContacts->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your contacts right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterContacts'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberContacts($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterContracts'))) {
-                $getMemberContracts = $this->dataCont->getMemberContracts($member, $scopes);
-                $status = $getMemberContracts->status;
-                $payload = $getMemberContracts->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your contracts right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterContracts'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberContracts($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
-                $getMemberImplants = $this->dataCont->getMemberImplants($member, $scopes);
-                $status = $getMemberImplants->status;
-                $payload = $getMemberImplants->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your implants right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberImplants($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterLocation'))) {
-                $getMemberLocation = $this->dataCont->getMemberLocation($member, $scopes);
-                $status = $getMemberLocation->status;
-                $payload = $getMemberLocation->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your location right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterLocation'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberLocation($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterMails'))) {
-                $getMemberMailLabels = $this->dataCont->getMemberMailLabels($member);
-                $status = $getMemberMailLabels->status;
-                $payload = $getMemberMailLabels->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your mail labels right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterMails'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberMailLabels($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
 
-                $getMemberMailingLists = $this->dataCont->getMemberMailingLists($member);
-                $status = $getMemberMailingLists->status;
-                $payload = $getMemberMailingLists->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your mailing lists right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+                $job = new \ESIK\Jobs\Members\GetMemberMailingLists($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
 
-                $getMemberMailHeaders = $this->dataCont->getMemberMailHeaders($member);
-                $status = $getMemberMailHeaders->status;
-                $payload = $getMemberMailHeaders->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your mail headers right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+                $job = new \ESIK\Jobs\Members\GetMemberMailHeaders($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
-            if ($scopes->contains(config('services.eve.scopes.readCharacterShip'))) {
-                $getMemberShip = $this->dataCont->getMemberShip($member);
-                $status = $getMemberShip->status;
-                $payload = $getMemberShip->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your ship right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterShip'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberShip($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterSkills'))) {
-                $getMemberSkillz = $this->dataCont->getMemberSkillz($member);
-                $status = $getMemberSkillz->status;
-                $payload = $getMemberSkillz->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your skills right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkills'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberSkillz($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterSkillQueue'))) {
-                $getMemberSkillQueue = $this->dataCont->getMemberSkillqueue($member);
-                $status = $getMemberSkillQueue->status;
-                $payload = $getMemberSkillQueue->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your skill queue right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkillQueue'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberSkillQueue($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
 
-            if ($scopes->contains(config('services.eve.scopes.readCharacterWallet'))) {
-                $getMemberWallet = $this->dataCont->getMemberWallet($member);
-                $status = $getMemberWallet->status;
-                $payload = $getMemberWallet->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+            if ($member->scopes->contains(config('services.eve.scopes.readCharacterWallet'))) {
+                $job = new \ESIK\Jobs\Members\GetMemberWallet($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
 
-                unset($status, $payload);
-                $getMemberWalletTransaction = $this->dataCont->getMemberWalletTransactions($member);
-                $status = $getMemberWalletTransaction->status;
-                $payload = $getMemberWalletTransaction->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet transaction right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+                $job = new \ESIK\Jobs\Members\GetMemberWalletJournals($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
 
-                unset($status, $payload);
-                $getMemberWalletJournals = $this->dataCont->getMemberWalletJournals($member);
-                $status = $getMemberWalletJournals->status;
-                $payload = $getMemberWalletJournals->payload;
-                if (!$status) {
-                    $alert->push("Unfortunately we were unable to query your wallet transaction right now. If you checked the allow token refreshes checkbox, we will attempt to update this within five minutes.");
-                }
+                $job = new \ESIK\Jobs\Members\GetMemberWalletTransactions($member->id);
+                $job->delay($now);
+                $this->dispatch($job);
+                $dispatchedJobs->push($job->getJobStatusId());
+                $now = $now->addSeconds(1);
             }
+            $member->jobs()->attach($dispatchedJobs->toArray());
             if (!Auth::check()) {
                 Auth::login($member);
             }

@@ -37,7 +37,7 @@ class GetType implements ShouldQueue
      */
     public function handle()
     {
-        $getType = $this->dataCont->getType($this->id)->status;
+        $getType = $this->dataCont->getType($this->id);
         $status = $getType->status;
         $payload = $getType->payload;
         if (!$status) {

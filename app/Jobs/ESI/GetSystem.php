@@ -37,7 +37,7 @@ class GetSystem implements ShouldQueue
      */
     public function handle()
     {
-        $getSystem = $this->dataCont->getSystem($this->id)->status;
+        $getSystem = $this->dataCont->getSystem($this->id);
         $status = $getSystem->status;
         $payload = $getSystem->payload;
         if (!$status) {
