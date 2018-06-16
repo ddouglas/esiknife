@@ -11,16 +11,13 @@ Route::match(['GET'],'/sso/callback', 'SSOController@callback')->name('sso.callb
 Route::match(['GET'],'/sso/revoke', 'SSOController@revoke')->name('sso.revoke');
 Route::match(['GET'],'/sso/refresh', 'SSOController@refresh')->name('sso.refresh');
 
-Route::group(['middleware' => ['guest']], function () {
-    Route::match(['GET', 'POST'], '/welcome', 'PortalController@welcome')->name('welcome');
-});
-
 Route::group(['middleware' => ['auth']], function () {
 
     Route::match(['GET'], '/dashboard', 'PortalController@dashboard')->name('dashboard');
     Route::match(['GET'], '/settings', 'SettingController@index')->name('settings.index');
     Route::match(['GET', 'DELETE'], '/settings/token', 'SettingController@token')->name('settings.token');
     Route::match(['GET', 'POST'], '/settings/access', 'SettingController@access')->name('settings.access');
+    Route::match(['GET', 'POST'], '/welcome', 'PortalController@welcome')->name('welcome');
 
     Route::match(['GET'], '/{member}/overview', 'PortalController@overview')->name('overview');
     Route::match(['GET'], '/{member}/assets', 'PortalController@assets')->name('assets')->middleware('authorized:Somethign');
