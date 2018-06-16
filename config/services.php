@@ -79,7 +79,8 @@ return [
                     ]
                 ]
             ]
-        ]
+        ],
+        'updateInterval' => env('JOB_STATUS_REFRESH_INTERVAL', 10)
     ],
 
     'bitbucket' => [
