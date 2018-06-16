@@ -36,4 +36,8 @@ class Station extends Model
     public function end_location () {
         return $this->morphOne(Contract::class, 'end');
     }
+
+    public function nameDotlanFormat() {
+        return implode('_', explode(' ', $this->name));
+    }
 }

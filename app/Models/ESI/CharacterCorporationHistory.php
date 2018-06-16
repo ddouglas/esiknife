@@ -2,6 +2,7 @@
 
 namespace ESIK\Models\ESI;
 
+use Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class CharacterCorporationHistory extends Model
@@ -20,5 +21,10 @@ class CharacterCorporationHistory extends Model
     public function corporation ()
     {
         return $this->hasOne(Corporation::class, 'id', 'corporation_id');
+    }
+
+    public function setStartDateAttribute($date)
+    {
+        $this->attributes['start_date'] = Carbon::parse($date);
     }
 }

@@ -28,7 +28,7 @@ class Character extends Model
         return $this->hasOne(Corporation::class, 'id', 'corporation_id');
     }
 
-    public function corporationHistory()
+    public function history()
     {
         return $this->hasMany(CharacterCorporationHistory::class, 'id', 'id');
     }

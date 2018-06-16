@@ -15,4 +15,8 @@ class Region extends Model
     {
         return $this->morphOn(MemberBookmark::class, 'location');
     }
+
+    public function nameDotlanFormat() {
+        return implode('_', explode(' ', $this->name));
+    }    
 }

@@ -117,6 +117,11 @@ class Member extends Authenticatable
         return $this->hasMany(MemberJumpClone::class, 'id', 'id');
     }
 
+    public function jobs()
+    {
+        return $this->belongsToMany(JobStatus::class, 'member_jobs', 'member_id', 'job_id');
+    }
+
     public function location ()
     {
         return $this->hasOne(MemberLocation::class, 'id', 'id')->with('info');

@@ -17,7 +17,8 @@ class AuthController extends Controller
         if (Request::has('state') && Session::has(Request::get('state'))) {
             $ssoResponse = Session::get(Request::get('state'));
             Session::forget(Request::get('state'));
-            $getMemberData = $this->dataCont->getMemberData($ssoResponse->get('CharacterID'));
+            $this->dataCont->disableJobDispatch();
+            $getMemberData = $this->dataCont->getMemberData($ssoResponse->get('CharacterID'), true);
             if (!$getMemberData->status) {
                 activity(__METHOD__)->withProperties($getMemberData->payload)->log($getMemberData->payload->message);
                 Session::flash('alert', [
