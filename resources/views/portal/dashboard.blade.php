@@ -16,7 +16,7 @@
             </p>
         </div>
         <div class="row">
-            <div class="col-8">
+            <div class="col-md-8">
                 <h3>Your Character</h3>
                 <hr />
                 <ul class="list-group">
@@ -38,6 +38,33 @@
                         </div>
                     </li>
                 </ul>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        Job Status
+                    </div>
+                    <div class="list-group">
+                        <li class="list-group-item">
+                            <div class="float-right">
+                                {{ Auth::user()->jobs->whereIn('status', ['queued', 'executing'])->count() }}
+                            </div>
+                            Pending Jobs
+                        </li>
+                        <li class="list-group-item">
+                            <div class="float-right">
+                                {{ Auth::user()->jobs->whereIn('status', ['finished'])->count() }}
+                            </div>
+                            Completed Jobs
+                        </li>
+                        <li class="list-group-item">
+                            <div class="float-right">
+                                {{ Auth::user()->jobs->whereIn('status', ['failed'])->count() }}
+                            </div>
+                             Jobs That Failed
+                        </li>
+                    </div>
+                </div>
             </div>
         </div>
         @if (Auth::user()->accessee->isNotEmpty())
