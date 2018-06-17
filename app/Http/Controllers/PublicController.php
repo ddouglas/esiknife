@@ -10,4 +10,12 @@ class PublicController extends Controller
     {
         return redirect(route('auth.login'));
     }
+    public function about ()
+    {
+        return view('public.about');
+    }
+    public function donate ()
+    {
+        return view('public.donate');
+    }
 }
