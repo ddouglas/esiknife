@@ -750,7 +750,7 @@ class DataController extends Controller
             return $contactRequest;
         }
         $contacts = collect();
-        $response = collect($payload->response)->recursive()->each(function ($contact) use ($contacts) {
+        $response = collect($payload->response)->recursive()->where('is_blocked', 0)->each(function ($contact) use ($contacts) {
             $contacts->push([
                 'contact_id' => $contact->get('contact_id'),
                 'contact_type' => $contact->get('contact_type'),
