@@ -69,7 +69,7 @@ class SettingController extends Controller
                                 'char_name' => "required|min:3|max:50"
                             ]);
                             if ($validator->fails()) {
-                                return redirect(route('access'))->withErrors($validator)->withInput();
+                                return redirect(route('settings.access'))->withErrors($validator)->withInput();
                             }
                             $search = $this->search(Request::get('char_name'));
                             $status = $search->status;
@@ -81,7 +81,7 @@ class SettingController extends Controller
                                     'type' => 'danger',
                                     'close' => 1
                                 ]);
-                                return redirect(route('access'));
+                                return redirect(route('settings.access'));
                             }
                             return view('settings.access', [
                                 'results' => collect($payload->response)->recursive()
@@ -96,7 +96,7 @@ class SettingController extends Controller
                                 'access.min' => "Each Accessor must have atleast one scope assigned to them. Delete the accessors access with the red trashcan if no access is desired"
                             ]);
                             if ($validator->fails()) {
-                                return redirect(route('access'))->withErrors($validator)->withInput();
+                                return redirect(route('settings.access'))->withErrors($validator)->withInput();
                             }
                             $access = collect(Request::get('access'))->recursive();
                             $access->each(function ($scopes, $charId) use ($access) {
@@ -110,7 +110,7 @@ class SettingController extends Controller
                                     'access' => $scopes->toJson()
                                 ]);
                             });
-                            return redirect(route('access'));
+                            return redirect(route('settings.access'));
                         }
                     }
                     if (Request::has('select')) {
@@ -122,7 +122,7 @@ class SettingController extends Controller
                                 'type' => 'danger',
                                 'close' => 1
                             ]);
-                            return redirect(route('access'));
+                            return redirect(route('settings.access'));
                         }
                         $selection = $this->dataCont->getCharacter($selection);
                         $isMember = Member::find($selection->payload->id);
@@ -133,7 +133,7 @@ class SettingController extends Controller
                                 'type' => 'danger',
                                 'close' => 1
                             ]);
-                            return redirect(route('access'));
+                            return redirect(route('settings.access'));
                         }
                         Auth::user()->accessor()->attach(collect([
                             $isMember->id => [
@@ -147,7 +147,7 @@ class SettingController extends Controller
                             'type' => 'success',
                             'close' => 1
                         ]);
-                        return redirect(route('access'));
+                        return redirect(route('settings.access'));
                     }
 
                     if (Request::has('remove')) {
@@ -159,7 +159,7 @@ class SettingController extends Controller
                                 'type' => 'danger',
                                 'close' => 1
                             ]);
-                            return redirect(route('access'));
+                            return redirect(route('settings.access'));
                         }
                         $isMember = Member::find($selection);
                         if (is_null($isMember)) {
@@ -169,7 +169,7 @@ class SettingController extends Controller
                                 'type' => 'danger',
                                 'close' => 1
                             ]);
-                            return redirect(route('access'));
+                            return redirect(route('settings.access'));
                         }
                         Auth::user()->accessor()->detach($selection);
                         Session::flash('alert', [
@@ -178,7 +178,7 @@ class SettingController extends Controller
                             'type' => 'success',
                             'close' => 1
                         ]);
-                        return redirect(route('access'));
+                        return redirect(route('settings.access'));
                     }
                 }
             }
