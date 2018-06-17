@@ -39,8 +39,15 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('home') }}">Homepage</a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('about') }}" class="nav-link">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('donate') }}" class="nav-link">Donate</a>
+                        </li>
                     </ul>
                     <ul class="navbar-nav ml-auto mr-3">
+
 
                         @if(Auth::check())
                             <li class="nav-item">
@@ -73,9 +80,9 @@
         <footer>
             <div class="row">
                 <div class="col-lg-12 text-center">
-                    Brought to you by <a href="https://evewho.com/pilot/David+Davaham">David Davaham</a><br />
-                    <p>Copyright &copy; <a href="mailto:ddouglas@douglaswebdev.net">David Douglas</a> 2018</p>
-                    {{-- - {{ \Carbon\Carbon::now()->format('Y') }} --}}
+                    <p>
+                        Brought to you by <a href="https://evewho.com/pilot/David+Davaham">David Davaham</a>
+                    </p>
                 </div>
             </div>
         </footer>

@@ -1,6 +1,8 @@
 <?php
 
 Route::match(['GET'],'/', 'PublicController@home')->name('home');
+Route::match(['GET'],'/about', 'PublicController@about')->name('about');
+Route::match(['GET'],'/donate', 'PublicController@donate')->name('donate');
 
 
 Route::match(['GET'],'/login', 'AuthController@login')->name('auth.login');
