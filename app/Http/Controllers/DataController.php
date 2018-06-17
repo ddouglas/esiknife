@@ -694,10 +694,6 @@ class DataController extends Controller
                 } else {
                     $this->GetStation($response->get('station_id'));
                 }
-                if ($x%10==0) {
-                    $now->addSecond();
-                }
-                $x++;
             }
             $location->put('location_id', $response->get('station_id'));
             $location->put('location_type', "station");
@@ -1400,6 +1396,7 @@ class DataController extends Controller
         $ids = $clients->merge($types);
         $pUNResponse = collect();
         if ($ids->isNotEmpty()) {
+            $ids = $ids->unique()->values();
             $pUNRequest = $this->postUniverseNames($ids);
             $pUNStatus = $pUNRequest->status;
             $pUNPayload = $pUNRequest->payload;
