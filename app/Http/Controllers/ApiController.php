@@ -13,11 +13,12 @@ class ApiController extends Controller
         if (is_null($member)) {
             return response()->json([], 404);
         }
-        Log::info('Return Job Status Count for Member '. $id, [$member]);
-        return response()->json([
+        $jobsCount = collect([
             'pending' => $member->jobs()->whereIn('status', ['queued', 'executing'])->count(),
             'finished' => $member->jobs()->whereIn('status', ['finished'])->count(),
             'failed' => $member->jobs()->whereIn('status', ['failed'])->count()
-        ], 200);
+        ])->toArray();
+        Log::info('Return Job Status Count for Member '. $id, [$jobsCount]);
+        return response()->json($jobsCount, 200);
     }
 }
