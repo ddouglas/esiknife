@@ -31,8 +31,19 @@ class RedirectIfNotAuthorized
                     ]);
                     return redirect(route('dashboard'));
                 }
-                $accessee = $accessees->get($memberId);
-                dd($accessee);
+                if (!is_null($scope)) {
+                    $accessee = $accessees->get($memberId);
+                    $accesseeScopes = collect(json_decode($accessees->get($memberId)->pivot->access, true));
+                    if (!$accesseeScopes->containsStrict($scope)) {
+                        Session::flash('alert', [
+                            'header' => "Unauthorized Request",
+                            'message' => "You are not authorized to view data associated with that page",
+                            'type' => "danger",
+                            'close' => 1
+                        ]);
+                        return redirect(route('dashboard'));
+                    }
+                }
             }
         }
         return $next($request);
