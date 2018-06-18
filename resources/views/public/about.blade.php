@@ -13,10 +13,10 @@
                     </div>
                     <div class="card-body">
                         <p>
-                            First off, thank you for interest in ESI Knife. This page is here to answer a few question about this application. You can always talk to me directly by joined the #esi channel on the Tweetfleet Slack. Information on how to join is included below. If there is a question that you have that is not answered here, please send a mail in game to <a href="https://evewho.com/pilot/ESIKnife+Admin" target="_blank">ESIKnife Admin</a>
+                            First off, thank you for your interest in ESI Knife. This page is here to answer a few questions about this application. You can always talk to me directly by joined the #esi channel on the Tweetfleet Slack. Information on how to join is included below. If there is a question that you have that is not answered here, please send a mail in game to <a href="https://evewho.com/pilot/ESIKnife+Admin" target="_blank">ESIKnife Admin</a>
                         </p>
                     </div>
-                    <div id="accordion">
+                    {{-- <div id="accordion"> --}}
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
                             <h5 class="mb-0">
                                 <button class="btn btn-link">
@@ -26,7 +26,9 @@
                         </div>
                         <div id="collapse1" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
-                                My main's name is David Davaham. I have an alt named ESIKnife Admin who is the CEO of the corporation The ESIKnife Corporation. Any correspondants regarding ESIKnife to our users will come from ESIKnife Admin.<br /><br />I have been developing applications in my free time for about ten years now.
+                                My main's name is David Davaham. I have an alt named ESIKnife Admin who is the CEO of the corporation The ESIKnife Corporation. Any correspondence regarding ESIKnife to our users will come from ESIKnife Admin.
+                                <br /><br />
+                                I have been developing applications in my free time for about ten years now.
                             </div>
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse2">
@@ -73,7 +75,32 @@
                                 </ol>
                             </div>
                         </div>
-                    </div>
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse6">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link">
+                                    I am done with your site now. How do I delete my data?
+                                </button>
+                            </h5>
+                        </div>
+                        <div id="collapse6" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
+                                Every member has the ability to revoke their token and purge their data from our system by visiting their settings page. Click <a href="{{ route('settings.index') }}">here</a> to visit your settings page. From there you can navigate to the token page and delete your token.
+                            </div>
+                        </div>
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse7">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link">
+                                    I need to share my information with a corporation recruiter. How do I do that?
+                                </button>
+                            </h5>
+                        </div>
+                        <div id="collapse7" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
+                                To share you data with another EVE Character, the character will have had previously logged into the application. They do not need to authorize any scopes, just need to have of logged in. Once that is complete, you can go to your settings page, click <a href="{{ route('settings.index') }}">here</a>, click manage access and then type their name exactly as it appears in-game.<br /><br />
+                                If you have any issues with this feature, please join tweetfleet slack, link above, and ping me in the #esi channel. You can also submit an bug report.
+                            </div>
+                        </div>
+                    {{-- </div> --}}
                 </div>
             </div>
         </div>
