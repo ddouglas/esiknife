@@ -41,10 +41,7 @@ class Refresh extends Command
      */
     public function handle()
     {
-        $members = Member::get()->each(function ($member) {
-            if ($member->disabled) {
-                return true;
-            }
+        $members = Member::where('disabled', 0)->whereNotNull('refresh_token')->get()->each(function ($member) {
             $this->ssoCont->refresh($member);
         });
     }
