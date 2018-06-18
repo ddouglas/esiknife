@@ -33,7 +33,7 @@
                                 @empty
                                     <div class="col-lg-12">
                                         <p class="text-white">
-                                            Unfortunately, this character cannot fly any of the ships in this group
+                                            Unfortunately, this character cannot fly any of the ships in the {{ $value->get('name') }} ship
                                         </p>
 
                                     </div>
@@ -62,7 +62,7 @@
                                 @empty
                                     <div class="col-lg-12">
                                         <p class="text-white">
-                                            This is epic. This character can fly every ship in this group
+                                            This is epic. This character can fly every ship in the {{ $value->get('name') }} ship group
                                         </p>
 
                                     </div>
