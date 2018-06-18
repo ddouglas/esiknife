@@ -227,7 +227,7 @@ class PortalController extends Controller
         $member->skillQueue->load('group')->each(function ($item) use ($spTraining, $groupsTraining) {
             if (!$groupsTraining->has($item->group_id)) {
                 $item->training = 0;
-                $groupsTraining->put($item->group_id, $item);
+                $groupsTraining->put($item->group_id, $item->group);
             }
             $groupsTraining->get($item->group_id)->training = $groupsTraining->get($item->group_id)->training + 1;
             if (!is_null($item->pivot->level_end_sp) && !is_null($item->pivot->training_start_sp)) {
