@@ -16,7 +16,7 @@
                             First off, thank you for your interest in ESI Knife. This page is here to answer a few questions about this application. You can always talk to me directly by joined the #esi channel on the Tweetfleet Slack. Information on how to join is included below. If there is a question that you have that is not answered here, please send a mail in game to <a href="https://evewho.com/pilot/ESIKnife+Admin" target="_blank">ESIKnife Admin</a>
                         </p>
                     </div>
-                    {{-- <div id="accordion"> --}}
+                    <div id="accordion">
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
                             <h5 class="mb-0">
                                 <button class="btn btn-link">
@@ -58,7 +58,19 @@
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse5">
                             <h5 class="mb-0">
                                 <button class="btn btn-link">
-                                    Why did you build ESIKnife
+                                    Is ESIKnife Open source?
+                                </button>
+                            </h5>
+                        </div>
+                        <div id="collapse5" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
+                                Of course. All infomation about ESIKnife can found <a href="https://bitbucket.org/devoverlord/esiknife/src/">here</a>
+                            </div>
+                        </div>
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse5">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link">
+                                    Why did you build ESIKnife?
                                 </button>
                             </h5>
                         </div>
@@ -100,7 +112,7 @@
                                 If you have any issues with this feature, please join tweetfleet slack, link above, and ping me in the #esi channel. You can also submit an bug report.
                             </div>
                         </div>
-                    {{-- </div> --}}
+                    </div>
                 </div>
             </div>
         </div>
