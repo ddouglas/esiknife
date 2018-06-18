@@ -234,33 +234,21 @@ class DataController extends Controller
         ];
     }
 
-    public function getMemberAssets (Member $member)
+    public function headMemberAssets ($member)
     {
-        $assets = collect();
-        $currentPage = 1;
-        $numPages = 0;
-        while (true) {
-            $request = $this->httpCont->getCharacterCharacterIdAssets($member->id, $member->access_token, $currentPage);
-            $status = $request->status;
-            $payload = $request->payload;
-            if (!$status) {
-                return $request;
-            }
-            $response = collect($payload->response)->recursive();
-            $assets = $assets->merge($response);
-            $requestHeaders = collect($payload->headers->response);
-            if ($requestHeaders->has('X-Pages')) {
-                $numOfPages = $requestHeaders->get('X-Pages');
-            } else {
-                break;
-            }
-            if ($currentPage == $numOfPages) {
-                break;
-            }
-            $currentPage++;
+        return $this->httpCont->headCharacterCharacterIdAssets($member->id, $member->access_token);
+    }
+
+    public function getMemberAssetsByPage (Member $member, $page)
+    {
+        $request = $this->httpCont->getCharacterCharacterIdAssets($member->id, $member->access_token, $page);
+        $status = $request->status;
+        $payload = $request->payload;
+        if (!$status) {
+            return $request;
         }
+        $assets = collect($payload->response)->recursive()->keyBy('item_id');
         $dispatchedJobs = collect();
-        $assets = $assets->keyBy('item_id');
         $typeIds = $assets->pluck('type_id')->unique()->values();
 
         $knownTypes = Type::whereIn('id', $typeIds->toArray())->get()->keyBy('id');
@@ -306,7 +294,7 @@ class DataController extends Controller
                 $this->dispatch($job);
                 $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
             } else {
-                $this->getSystem($stationId);
+                $this->getSystem($systemId);
             }
             if ($x%10==0) {
                 $now->addSecond();
@@ -316,43 +304,9 @@ class DataController extends Controller
 
         $member->jobs()->attach($dispatchedJobs->toArray());
 
-        $assetsToUpdate = collect();
-        $assets->chunk(50)->each(function ($assetItemChunk) use ($member, &$assetsToUpdate) {
-            $assetItemChunk = $assetItemChunk->keyBy('item_id');
-            $knownItems = $member->assets()->whereIn('item_id', $assetItemChunk->keys())->get()->keyBy('item_id');
 
-            $postNames = $this->postAssetNames($member, $assetItemChunk->keys());
-            $pNStatus = $postNames->status;
-            $pNPayload = $postNames->payload;
-
-            $assetItemChunk->each(function ($item) use ($member,$knownItems, $assetItemChunk, &$assetsToUpdate, $pNPayload, $pNStatus) {
-
-                if ($knownItems->has($item->get('item_id'))) {
-                    $knownItem = $knownItems->get($item->get('item_id'));
-                    $diffAssoc = $item->diffAssoc($knownItem);
-                    if ($diffAssoc->isNotEmpty()) {
-                        $assetsToUpdate->put($item->get('item_id'), $diffAssoc);
-                    }
-                } else {
-                    if ($pNStatus && $pNPayload->has($item->get('item_id'))) {
-                        $item->put('name', $pNPayload->get($item->get('item_id'))->get('name'));
-                    }
-                    $assetsToUpdate->put($item->get('item_id'), $item);
-                }
-            });
-        });
-
-        if ($assetsToUpdate->isNotEmpty()) {
-            $assetsToUpdate->each(function ($asset, $item_id) use ($member) {
-                MemberAsset::updateOrCreate(['id' => $member->id,'item_id' => $item_id], $asset->toArray());
-            });
-        }
-        $member->assets()->chunk(100, function ($knownAssetChunk) use ($assets, $member) {
-            $knownAssetChunk->each(function ($knownAsset) use ($assets, $member) {
-                if (!$assets->has($knownAsset->item_id)) {
-                    $member->assets()->where('item_id', $knownAsset->item_id)->delete();
-                }
-            });
+        $assets->chunk(250)->each(function ($assetChunk) use ($member) {
+            $member->assets()->createMany($assetChunk->toArray());
         });
 
         return (object)[

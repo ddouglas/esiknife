@@ -143,6 +143,15 @@ class HttpController extends Controller
         ]);
     }
 
+    public function headCharacterCharacterIdAssets(int $id, string $token)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'head', config('services.eve.urls.esi'),"/v3/characters/{$id}/assets/", []);
+    }
+
     public function postCharactersCharacterIdAssetsLocations(int $id, string $token, array $ids)
     {
         return $this->request([
