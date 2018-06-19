@@ -20,7 +20,7 @@
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
                             <h5 class="mb-0">
                                 <button class="btn btn-link">
-                                    Who are you?
+                                    Who am I?
                                 </button>
                             </h5>
                         </div>
@@ -43,26 +43,26 @@
                                 ESIKnife is a version of the famous Jackknife application that was built on top of CCP's XML/Crest API. This one is built on top of CCP's new API, the Eve Swagger Interface, better known as ESI (pronounced as "easy").
                             </div>
                         </div>
-                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse4">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse3">
                             <h5 class="mb-0">
                                 <button class="btn btn-link">
                                     Okay, So What is Jackknife?
                                 </button>
                             </h5>
                         </div>
-                        <div id="collapse4" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div id="collapse3" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
-                                As I mentioned, Jackknife was an application that was built ontop of CCP's XML/Crest API. It allows a player to share information about their character(s) with any other character in game without having to give away usernames and passwords or any tedious screenshots/copy pasta. It is/was a very common tool used amount corporation recruiters/ceo's to audit/evaluate a character prior to allowing them to join their corporation.
+                                    As I mentioned, Jackknife was an application that was built ontop of CCP's XML/Crest API. It allows a player to share information about their character(s) with any other character in game without having to give away usernames and passwords or any tedious screenshots/copy pasta. It is/was a very common tool used amount corporation recruiters/ceo's to audit/evaluate a character prior to allowing them to join their corporation.
                             </div>
                         </div>
-                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse5">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse4">
                             <h5 class="mb-0">
                                 <button class="btn btn-link">
                                     Is ESIKnife Open source?
                                 </button>
                             </h5>
                         </div>
-                        <div id="collapse5" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div id="collapse4" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
                                 Of course. All infomation about ESIKnife can found <a href="https://bitbucket.org/devoverlord/esiknife/src/">here</a>
                             </div>
