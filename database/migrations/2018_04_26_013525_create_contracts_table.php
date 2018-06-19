@@ -18,7 +18,7 @@ class CreateContractsTable extends Migration
             $table->unsignedBigInteger('issuer_id');
             $table->unsignedBigInteger('issuer_corporation_id');
             $table->unsignedBigInteger('assignee_id');
-            $table->enum('assignee_type', ['character','corporation'])->nullable();
+            $table->enum('assignee_type', ['character','corporation', 'alliance'])->nullable();
             $table->unsignedBigInteger('acceptor_id')->nullable();
             $table->enum('acceptor_type', ['character','corporation'])->nullable();
             $table->string('title')->nullable();
