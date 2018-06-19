@@ -18,11 +18,9 @@
                     </div>
                     <div id="accordion">
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link">
-                                    Who am I?
-                                </button>
-                            </h5>
+                            <span>
+                                Who am I?
+                            </span>
                         </div>
                         <div id="collapse1" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
@@ -32,11 +30,9 @@
                             </div>
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse2">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link">
-                                    What is ESIKnife
-                                </button>
-                            </h5>
+                            <span>
+                                What is ESIKnife
+                            </span>
                         </div>
                         <div id="collapse2" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
@@ -44,11 +40,9 @@
                             </div>
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse3">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link">
-                                    Okay, So What is Jackknife?
-                                </button>
-                            </h5>
+                            <span>
+                                Okay, So What is Jackknife?
+                            </span>
                         </div>
                         <div id="collapse3" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
@@ -56,11 +50,9 @@
                             </div>
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse4">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link">
-                                    Is ESIKnife Open source?
-                                </button>
-                            </h5>
+                            <span>
+                                Is ESIKnife Open source?
+                            </span>
                         </div>
                         <div id="collapse4" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
@@ -68,11 +60,9 @@
                             </div>
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse5">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link">
-                                    Why did you build ESIKnife?
-                                </button>
-                            </h5>
+                            <span>
+                                Why did you build ESIKnife?
+                            </span>
                         </div>
                         <div id="collapse5" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
@@ -88,11 +78,9 @@
                             </div>
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse6">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link">
-                                    I am done with your site now. How do I delete my data?
-                                </button>
-                            </h5>
+                            <span>
+                                I am done with your site now. How do I delete my data?
+                            </span>
                         </div>
                         <div id="collapse6" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
@@ -100,11 +88,9 @@
                             </div>
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse7">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link">
-                                    I need to share my information with a corporation recruiter. How do I do that?
-                                </button>
-                            </h5>
+                            <span>
+                                I need to share my information with a corporation recruiter. How do I do that?
+                            </span>
                         </div>
                         <div id="collapse7" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
