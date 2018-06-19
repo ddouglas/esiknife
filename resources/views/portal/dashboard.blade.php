@@ -39,6 +39,11 @@
                         </div>
                     </li>
                 </ul>
+                <div class="row">
+                    <div class="col-12 mt-3">
+                        <a href="{{ route('settings.access') }}" class="btn btn-info float-right">Manage Access</a>
+                    </div>
+                </div>
             </div>
             <div class="col-md-4">
                 <div class="card">
@@ -98,9 +103,11 @@
                             </li>
                         @endforeach
                     </ul>
+
                 </div>
             </div>
         @endif
+
 
     </div>
 @endsection
