@@ -8,18 +8,18 @@
         @include('portal.extra.nav')
         <div class="row">
 
-                @foreach (Auth::user()->contacts as $contact)
-                @if ($contact->standing == 10)
-                    <a class="list-group-item list-group-item-secondary col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
-                @elseif ($contact->standing == 5)
-                    <a class="list-group-item list-group-item-info col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
-                @elseif ($contact->standing == 0)
-                    <a class="list-group-item list-group-item-default col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
-                @elseif ($contact->standing == -5)
-                    <a class="list-group-item list-group-item-warning col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
-                @elseif ($contact->standing == -10)
-                    <a class="list-group-item list-group-item-danger col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
-                @endif
+                @foreach ($member as $contact)
+                    @if ($contact->standing == 10)
+                        <a class="list-group-item list-group-item-secondary col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    @elseif ($contact->standing == 5)
+                        <a class="list-group-item list-group-item-info col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    @elseif ($contact->standing == 0)
+                        <a class="list-group-item list-group-item-default col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    @elseif ($contact->standing == -5)
+                        <a class="list-group-item list-group-item-warning col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    @elseif ($contact->standing == -10)
+                        <a class="list-group-item list-group-item-danger col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
+                    @endif
                         <div class="media">
                             @if($contact->contact_type === "character")
                                 <img class="mr-3 rounded img-fluid" src="{{ config('services.eve.urls.img') }}/Character/{{ $contact->contact_id }}_64.jpg" />
@@ -39,7 +39,7 @@
                         </div>
                     </a>
                 @endforeach
-            
+
         </div>
     </div>
 @endsection
