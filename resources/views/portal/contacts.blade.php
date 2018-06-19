@@ -8,7 +8,7 @@
         @include('portal.extra.nav')
         <div class="row">
 
-                @foreach ($member as $contact)
+                @foreach ($member->contacts as $contact)
                     @if ($contact->standing == 10)
                         <a class="list-group-item list-group-item-secondary col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
                     @elseif ($contact->standing == 5)
@@ -39,7 +39,6 @@
                         </div>
                     </a>
                 @endforeach
-
         </div>
     </div>
 @endsection
