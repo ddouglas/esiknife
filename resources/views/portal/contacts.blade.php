@@ -7,8 +7,17 @@
         @include('portal.extra.header')
         @include('portal.extra.nav')
         <div class="row">
-
-                @foreach ($member->contacts as $contact)
+            <div class="col-12">
+                @if (Request::has('npc'))
+                    <a href="{{ route('contacts', ['id' => $member->id]) }}" type="submit" class="mb-3 btn btn-primary">Hide NPC Contacts</a>
+                @else
+                    <a href="{{ route('contacts', ['id' => $member->id, 'npc' => true]) }}" type="submit" class="mb-3 btn btn-primary">View NPC Contacts</a>
+                @endif
+            </div>
+        </div>
+        @foreach ($member->contacts->chunk(3) as $chunk)
+            <div class="row">
+                @foreach($chunk as $contact)
                     @if ($contact->standing == 10)
                         <a class="list-group-item list-group-item-secondary col-lg-4" href="{{ config('services.eve.urls.km') }}{{ $contact->contact_type }}/{{ $contact->contact_id }}/" target="_blank">
                     @elseif ($contact->standing == 5)
@@ -39,6 +48,7 @@
                         </div>
                     </a>
                 @endforeach
-        </div>
+            </div>
+        @endforeach
     </div>
 @endsection

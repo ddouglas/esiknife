@@ -111,7 +111,9 @@ class PortalController extends Controller
     public function contacts ($member)
     {
         $member = Member::findOrFail($member);
-        $member->load('contacts.info', 'contact_labels');
+        $member->load(['contacts' => function ($query) {
+            $query->where('contact_id', '>', Request::has('npc') && Request::get('npc') ? 0 : 9000000)->with('info');
+        }] ,'contact_labels');
         return view('portal.contacts')->withMember($member);
     }
 
