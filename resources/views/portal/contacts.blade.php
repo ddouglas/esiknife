@@ -39,7 +39,7 @@
                                 <h5 class="mt-0">{{ !is_null($contact->info) ? $contact->info->name : "Unknown Contact ". $contact->contact_id }}</h5>
                                 @if (!is_null($contact->label_ids))
                                     @foreach (json_decode($contact->label_ids) as $label)
-                                        <span class="badge badge-primary">{{ Auth::user()->contact_labels->keyBy('label_id')->get($label)->label_name }}</span>
+                                        <span class="badge badge-primary">{{ $member->contact_labels->keyBy('label_id')->get($label)->label_name }}</span>
                                     @endforeach
                                     <br />
                                 @endif

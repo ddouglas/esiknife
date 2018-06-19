@@ -8,7 +8,7 @@
         @include('portal.extra.nav')
         <div class="row">
             <div class="col-lg-6 offset-lg-3 col-md-12 offset-md-0">
-                @foreach (Auth::user()->bookmarkFolders as $folder)
+                @foreach ($member->bookmarkFolders as $folder)
                     <div class="card">
                         <div class="card-header">
                             <h5 class="mb-0">{{ $folder->name }}</h5>

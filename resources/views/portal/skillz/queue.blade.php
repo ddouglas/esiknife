@@ -13,7 +13,7 @@
                         # Skills Queued
                     </div>
                     <div class="card-body mx-auto">
-                        <h4>{{ Auth::user()->skillQueue()->count() }}</h4>
+                        <h4>{{ $member->skillQueue()->count() }}</h4>
                     </div>
                 </div>
             </div>
@@ -72,7 +72,7 @@
                     </div>
                     <div class="card-body p-0">
                         <table class="table mb-0">
-                            @foreach (Auth::user()->skillQueue as $item)
+                            @foreach ($member->skillQueue as $item)
                                 <tr>
                                     <td class="text-white">
                                         {{ $item->pivot->queue_position }}
