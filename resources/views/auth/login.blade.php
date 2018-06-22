@@ -19,6 +19,48 @@
                         </a>
                     </div>
                 </div>
+                <h4 class="mt-2">Patch Notes</h4>
+                <hr class="mt-0" />
+                <div id="accordion">
+                    <div class="card">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
+                            <span>
+                                2018-06-20 - v0.14-beta
+                            </span>
+                        </div>
+                        <div id="collapse1" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
+                                <p>
+                                    The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.13-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
+                                </p>
+                                <ul>
+                                    <li>
+                                        Fixed several issues with invalid data being displayed when viewing another characters data.
+                                    </li>
+                                    <li>
+                                        Fixed an issue with Skills where the Skill Groups Training were displaying the names of skill rather than the names of groups
+                                    </li>
+                                    <li>
+                                        Fixed an issue with the About Us page where click the title of one section would open another section
+                                    </li>
+                                    <li>
+                                        Fixed a display issue when viewing the about page on Mobile, longer titles would trail of the screen
+                                    </li>
+                                    <li>
+                                        Fixed a display issue when viewing the about page on Mobile, longer titles would trail of the screen
+                                    </li>
+                                     <li>
+                                         Added a filter to the contacts so that NPC Agent will no longer show up when viewing contacts. The viewer can toggle these back on by clicking the supplied button.
+                                     </li>
+                                     <li>
+                                         Fixed an issue with the assignee_type column on the contracts table preventing Alliance Contract from being inserted into the table due a 1265 Warning Error. This is because that column has an enum setup on it and the string alliance was not in the enum.
+                                     </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>

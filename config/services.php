@@ -83,8 +83,12 @@ return [
         'updateInterval' => env('JOB_STATUS_REFRESH_INTERVAL', 10)
     ],
 
-    'bitbucket' => [
-        'url' => "https://bitbucket.org/douglaswebdev/esim/issues"
+    "bitbucket" => [
+        "urls" => [
+            "issues" => "https://bitbucket.org/devoverlord/esiknife/issues",
+            "commit" => "https://bitbucket.org/devoverlord/esiknife/commits",
+            "branches" => "https://bitbucket.org/devoverlord/esiknife/branches"
+        ]
     ]
 
 ];

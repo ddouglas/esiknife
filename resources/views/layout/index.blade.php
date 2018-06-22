@@ -46,7 +46,7 @@
                             <a href="{{ route('donate') }}" class="nav-link">Donate</a>
                         </li>
                         <li class="nav-item">
-                            <a href="https://bitbucket.org/devoverlord/esiknife/issues" class="nav-link" target="_blank">Report An Issue</a>
+                            <a href="{{ config('services.bitbucket.urls.issues') }}" class="nav-link" target="_blank">Report An Issue</a>
                         </li>
                     </ul>
                     <ul class="navbar-nav ml-auto mr-3">
