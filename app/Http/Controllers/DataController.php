@@ -1350,14 +1350,17 @@ class DataController extends Controller
         $ids = $clients->merge($types);
         $pUNResponse = collect();
         if ($ids->isNotEmpty()) {
-            $ids = $ids->unique()->values();
-            $pUNRequest = $this->postUniverseNames($ids);
-            $pUNStatus = $pUNRequest->status;
-            $pUNPayload = $pUNRequest->payload;
-            if (!$pUNStatus) {
-                return $pUNRequest;
-            }
-            $pUNResponse = $pUNResponse->merge(collect($pUNPayload->response)->recursive()->keyBy('id'));
+            $ids = $ids->unique()->values()->chunk(500)->each(function ($chunk) use ($pUNResponse) {
+                $pUNRequest = $this->postUniverseNames($ids);
+                $pUNStatus = $pUNRequest->status;
+                $pUNPayload = $pUNRequest->payload;
+                if (!$pUNStatus) {
+                    exit();
+
+                }
+                $pUNResponse = $pUNResponse->merge(collect($pUNPayload->response)->recursive()->keyBy('id'));
+            });
+
             $characterIds = $pUNResponse->where('category', 'character')->pluck('id')->unique()->values();
             $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
             $now = now(); $x = 0; $dispatchedJobs = collect();
