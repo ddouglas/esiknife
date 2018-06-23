@@ -16,11 +16,13 @@
                     </div>
                 </div>
                 <hr />
+                @include('extra.alert')
             </div>
         </div>
         <div class="row">
+
             <div class="col-lg-6">
-                @include('extra.alert')
+
                 <div class="card">
                     <div class="card-header text-center">
                         Characters Who Can See My Data
@@ -140,6 +142,9 @@
                                 @endforelse
                             </table>
                         </form>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{{ route('settings.urls') }}" class="btn btn-primary btn-block">Generate Shareable Url</a>
                     </div>
                 </div>
             </div>

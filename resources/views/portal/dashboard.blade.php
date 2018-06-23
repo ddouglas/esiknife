@@ -19,6 +19,16 @@
             <div class="col-md-8">
                 <h3>Your Character</h3>
                 <hr />
+                @if (Session::has('to'))
+                    @if (starts_with(Session::get('to'), url('/settings/grant/')))
+                        <div class="alert alert-info">
+                            <h5>You have a pending grant URL</h5>
+                            <p>
+                                You have grant url pending. To finish the process of granting another character access to your data, click <a href="{{ Session::get('to') }}">here</a>.<br />If you no longer want to grant access to your data, click <a href="{{ route('dashboard', ['action' => 'delete_pending_grant']) }}">here</a>
+                            </p>
+                        </div>
+                    @endif
+                @endif
                 @include('extra.alert')
                 <ul class="list-group">
                     <li class="list-group-item">
@@ -26,7 +36,6 @@
                             <a href="{{ route('overview', ['id' => Auth::user()->id]) }}" class="btn btn-primary">
                                 <i class="fas fa-eye"></i>
                             </a>
-
                         </div>
                         <div class="media mt-0">
                             <img src="{{ config('services.eve.urls.img') }}/Character/{{ Auth::user()->id }}_64.jpg" class="rounded img-fluid mr-3" />

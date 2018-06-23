@@ -16,9 +16,6 @@ Route::match(['GET'],'/sso/refresh', 'SSOController@refresh')->name('sso.refresh
 Route::group(['middleware' => ['auth']], function () {
 
     Route::match(['GET'], '/dashboard', 'PortalController@dashboard')->name('dashboard');
-    Route::match(['GET'], '/settings', 'SettingController@index')->name('settings.index');
-    Route::match(['GET', 'DELETE'], '/settings/token', 'SettingController@token')->name('settings.token');
-    Route::match(['GET', 'POST'], '/settings/access', 'SettingController@access')->name('settings.access');
     Route::match(['GET', 'POST'], '/welcome', 'PortalController@welcome')->name('welcome');
 
     Route::match(['GET'], '/{member}/overview', 'PortalController@overview')->name('overview')->middleware("authorized");
@@ -36,6 +33,12 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET'], '/{member}/skillqueue', 'PortalController@queue')->name('skillqueue')->middleware("authorized:esi-skills.read_skillqueue.v1");
     Route::match(['GET'], '/{member}/wallet/transactions', 'PortalController@wallet_transactions')->name('wallet.transactions')->middleware("authorized:esi-wallet.read_character_wallet.v1");
     Route::match(['GET'], '/{member}/wallet/journal', 'PortalController@wallet_journal')->name('wallet.journal')->middleware("authorized:esi-wallet.read_character_wallet.v1");
+
+    Route::match(['GET'], '/settings', 'SettingController@index')->name('settings.index');
+    Route::match(['GET', 'DELETE'], '/settings/token', 'SettingController@token')->name('settings.token');
+    Route::match(['GET', 'POST'], '/settings/access', 'SettingController@access')->name('settings.access');
+    Route::match(['GET', 'POST'], '/settings/grant/{grant}', 'SettingController@grant')->name('settings.grant');
+    Route::match(['GET', 'POST', 'DELETE'], '/settings/urls', 'SettingController@urls')->name('settings.urls');
 });
 
 

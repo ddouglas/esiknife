@@ -3,7 +3,7 @@
 namespace ESIK\Http\Controllers;
 
 use Auth, Request, Session, Validator;
-use ESIK\Models\Member;
+use ESIK\Models\{Member, MemberUrl};
 use ESIK\Http\Controllers\{DataController, SSOController};
 
 class SettingController extends Controller
@@ -17,6 +17,47 @@ class SettingController extends Controller
     public function index ()
     {
         return view('settings.index');
+    }
+
+    public function grant(string $hash)
+    {
+        $hash = explode(':', $hash);
+        if (count($hash) != 2) {
+            Session::flash('alert', [
+                'header' => "Invalid Grant Format",
+                'message' => "The submitted grant is invalid. Please check the format and try again. If error persits, contact the member who gave you the url.",
+                'type' => "danger",
+                'close' => 1
+            ]);
+            return redirect(route('dashboard'));
+        }
+        $memberId = $hash[0];
+        $grant = MemberUrl::whereId($memberId)->whereHash($hash[1])->firstOrFail();
+        $grantExists = Auth::user()->accessor()->where('accessor_id', $grant->id)->count();
+        if ($grantExists > 0) {
+            Session::flash('alert', [
+                'header' => "Access Granted",
+                'message' => "You have successfully granted access to ". $grant->member->info->name .".",
+                'type' => 'success',
+                'close' => 1
+            ]);
+            return redirect(route('settings.access'));
+        }
+        if (Request::isMethod('post')) {
+            Auth::user()->accessor()->attach(collect([
+                $grant->id => [
+                    'access' => $grant->scopes->toJson()
+                ]
+            ]));
+            Session::flash('alert', [
+                'header' => "Access Granted",
+                'message' => "You have successfully granted access to ". $grant->member->info->name .".",
+                'type' => 'success',
+                'close' => 1
+            ]);
+            return redirect(route('settings.access'));
+        }
+        return view('settings.grant', ['grant' => $grant]);
     }
 
     public function token ()
@@ -186,6 +227,34 @@ class SettingController extends Controller
         Auth::user()->load('accessor', 'accessee');
         return view('settings.access');
     }
+
+    public function urls ()
+    {
+        if (Request::isMethod('post')) {
+            $validator = Validator::make(Request::all(), [
+                'name' => "sometimes|nullable|min:4|max:32"
+            ]);
+            if ($validator->fails()) {
+                return redirect(route('settings.urls'))->withInput()->withErrors($validator);
+            }
+            $scopes = collect(Request::get('scopes'))->keys();
+            $scopes = collect(config('services.eve.scopes'))->only($scopes->toArray())->values();
+
+            Auth::user()->urls()->create([
+                'hash' => str_random(16),
+                'name' => Request::get('name'),
+                'scopes' => $scopes->toJson()
+            ]);
+            return redirect(route('settings.urls'));
+        }
+        if (Request::isMethod('delete')) {
+            $hash = Request::get('hash');
+            Auth::user()->urls()->where('hash', $hash)->delete();
+            return redirect(route('settings.urls'));
+        }
+        return view ('settings.urls');
+    }
+
     public function search($term) {
         $getSearch = $this->dataCont->getSearch("character", $term);
         $status = $getSearch->status;
