@@ -25,7 +25,7 @@
                     <div class="card">
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
                             <span>
-                                2018-06-20 - v0.14-beta
+                                2018-06-20 - v0.13-beta
                             </span>
                         </div>
                         <div id="collapse1" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
