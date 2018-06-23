@@ -388,101 +388,103 @@ class DataController extends Controller
 
 
         $ids = $itemTypeIds->merge($locationIds)->merge($creatorIds)->unique()->values();
-        $request = $this->postUniverseNames($ids);
-        $status = $request->status;
-        $payload = $request->payload;
-        if (!$status) {
-            return $request;
-        }
-
-        $dictionary = collect($payload->response)->recursive()->keyBy('id');
-        $dispatchedJobs = collect();
-        $now = now(); $x = 0;
-        $characterIds = $dictionary->where('category', 'character')->pluck('id');
-        if ($characterIds->isNotEmpty()) {
-            $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
-            $characterIds->diff($knownCharacters->keys())->each(function ($character) use ($dispatchedJobs, &$now, &$x) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetCharacter($character);
-                    $job->delay($now);
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->getCharacter($character);
-                }
-                if ($x%10==0) {
-                    $now->addSecond();
-                }
-                $x++;
-            });
-        }
-
-        $corporationIds = $dictionary->where('category', 'corporation')->pluck('id');
-        if ($corporationIds->isNotEmpty()) {
-            $knownCorporations = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
-            $corporationIds->diff($knownCorporations->keys())->each(function ($corporation) use ($dispatchedJobs, &$now, &$x) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetCorporation($corporation);
-                    $job->delay($now);
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->getCorporation($corporation);
-                }
-                if ($x%10==0) {
-                    $now->addSecond();
-                }
-                $x++;
-            });
-        }
-
-        $systemIds = $dictionary->where('category', 'solar_system')->pluck('id');
-        if ($systemIds->isNotEmpty()) {
-            $knownSystems = System::whereIn('id', $systemIds->toArray())->get()->keyBy('id');
-            $systemIds->diff($knownSystems->keys())->each(function ($system) use ($dispatchedJobs, &$now, &$x) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetSystem($system);
-                    $job->delay($now);
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->getSystem($system);
-                }
-                if ($x%10==0) {
-                    $now->addSecond();
-                }
-                $x++;
-            });
-        }
-
-        $member->jobs()->attach($dispatchedJobs->toArray());
-
-        $memBookmarks = collect();
-        $bookmarks->each(function ($bookmark) use ($memBookmarks,$dictionary) {
-            if (is_null($dictionary->get($bookmark->get('location_id')))) {
-                return true;
+        if ($ids->isNotEmpty()) {
+            $request = $this->postUniverseNames($ids);
+            $status = $request->status;
+            $payload = $request->payload;
+            if (!$status) {
+                return $request;
             }
-            $memBookmarks->put($bookmark->get('bookmark_id'), collect([
-                'bookmark_id' => $bookmark->get('bookmark_id'),
-                "folder_id" => $bookmark->get('folder_id'),
-                "label" => $bookmark->get('label'),
-                "notes" => $bookmark->get('notes'),
-                "location_id" => $bookmark->get('location_id'),
-                "location_type" => $dictionary->get($bookmark->get('location_id'))->get('category'),
-                "creator_id" => $bookmark->get('creator_id'),
-                "creator_type" => $dictionary->get($bookmark->get('creator_id'))->get('category'),
-                "created" => Carbon::parse($bookmark->get('created')),
-            ]));
-            if ($bookmark->has('item')) {
-                $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_id', $bookmark->get('item')->get('item_id'));
-                $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_type_id', $bookmark->get('item')->get('type_id'));
+
+            $dictionary = collect($payload->response)->recursive()->keyBy('id');
+            $dispatchedJobs = collect();
+            $now = now(); $x = 0;
+            $characterIds = $dictionary->where('category', 'character')->pluck('id');
+            if ($characterIds->isNotEmpty()) {
+                $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
+                $characterIds->diff($knownCharacters->keys())->each(function ($character) use ($dispatchedJobs, &$now, &$x) {
+                    if ($this->dispatchJobs) {
+                        $job = new \ESIK\Jobs\ESI\GetCharacter($character);
+                        $job->delay($now);
+                        $this->dispatch($job);
+                        $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
+                    } else {
+                        $this->getCharacter($character);
+                    }
+                    if ($x%10==0) {
+                        $now->addSecond();
+                    }
+                    $x++;
+                });
             }
-            if ($bookmark->has('coordinates')) {
-                $memBookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
+
+            $corporationIds = $dictionary->where('category', 'corporation')->pluck('id');
+            if ($corporationIds->isNotEmpty()) {
+                $knownCorporations = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
+                $corporationIds->diff($knownCorporations->keys())->each(function ($corporation) use ($dispatchedJobs, &$now, &$x) {
+                    if ($this->dispatchJobs) {
+                        $job = new \ESIK\Jobs\ESI\GetCorporation($corporation);
+                        $job->delay($now);
+                        $this->dispatch($job);
+                        $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
+                    } else {
+                        $this->getCorporation($corporation);
+                    }
+                    if ($x%10==0) {
+                        $now->addSecond();
+                    }
+                    $x++;
+                });
             }
-        });
-        $member->bookmarks()->delete();
-        $member->bookmarks()->createMany($memBookmarks->toArray());
+
+            $systemIds = $dictionary->where('category', 'solar_system')->pluck('id');
+            if ($systemIds->isNotEmpty()) {
+                $knownSystems = System::whereIn('id', $systemIds->toArray())->get()->keyBy('id');
+                $systemIds->diff($knownSystems->keys())->each(function ($system) use ($dispatchedJobs, &$now, &$x) {
+                    if ($this->dispatchJobs) {
+                        $job = new \ESIK\Jobs\ESI\GetSystem($system);
+                        $job->delay($now);
+                        $this->dispatch($job);
+                        $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
+                    } else {
+                        $this->getSystem($system);
+                    }
+                    if ($x%10==0) {
+                        $now->addSecond();
+                    }
+                    $x++;
+                });
+            }
+
+            $member->jobs()->attach($dispatchedJobs->toArray());
+
+            $memBookmarks = collect();
+            $bookmarks->each(function ($bookmark) use ($memBookmarks,$dictionary) {
+                if (is_null($dictionary->get($bookmark->get('location_id')))) {
+                    return true;
+                }
+                $memBookmarks->put($bookmark->get('bookmark_id'), collect([
+                    'bookmark_id' => $bookmark->get('bookmark_id'),
+                    "folder_id" => $bookmark->get('folder_id'),
+                    "label" => $bookmark->get('label'),
+                    "notes" => $bookmark->get('notes'),
+                    "location_id" => $bookmark->get('location_id'),
+                    "location_type" => $dictionary->get($bookmark->get('location_id'))->get('category'),
+                    "creator_id" => $bookmark->get('creator_id'),
+                    "creator_type" => $dictionary->get($bookmark->get('creator_id'))->get('category'),
+                    "created" => Carbon::parse($bookmark->get('created')),
+                ]));
+                if ($bookmark->has('item')) {
+                    $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_id', $bookmark->get('item')->get('item_id'));
+                    $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_type_id', $bookmark->get('item')->get('type_id'));
+                }
+                if ($bookmark->has('coordinates')) {
+                    $memBookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
+                }
+            });
+            $member->bookmarks()->delete();
+            $member->bookmarks()->createMany($memBookmarks->toArray());
+        }
         return $request;
     }
 
