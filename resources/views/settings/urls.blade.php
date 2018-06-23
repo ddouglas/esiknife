@@ -19,7 +19,10 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-12">
+            <div class="col-lg-3">
+                @include('settings.extra.nav')
+            </div>
+            <div class="col-lg-9">
                 <div class="card">
                     <div class="card-header">
                         My Current Urls
@@ -77,7 +80,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6 offset-md-3">
+                    <div class="col-md-8 offset-md-2">
                         <div class="collapse" id="urlGenerator">
                             <div class="card mt-2">
                                 <div class="card-header">

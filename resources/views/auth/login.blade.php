@@ -23,12 +23,34 @@
                 <hr class="mt-0" />
                 <div id="accordion">
                     <div class="card">
-                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#v020_beta">
                             <span>
-                                2018-06-20 - v0.20-beta
+                                2018-06-23 - v0.21-beta
                             </span>
                         </div>
-                        <div id="collapse1" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div id="v020_beta" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
+                                <p>
+                                    The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.20-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
+                                </p>
+                                <ul>
+                                    <li>
+                                        Updated this page with these patch notes
+                                    </li>
+                                    <li>
+                                        Added Link to URL management page on the Setting Navigation Menu
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#v020_beta">
+                            <span>
+                                2018-06-23 - v0.20-beta
+                            </span>
+                        </div>
+                        <div id="v020_beta" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
                                 <p>
                                     The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.20-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
@@ -45,12 +67,12 @@
                         </div>
                     </div>
                     <div class="card">
-                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#v013_beta">
                             <span>
                                 2018-06-20 - v0.13-beta
                             </span>
                         </div>
-                        <div id="collapse1" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div id="v013_beta" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
                                 <p>
                                     The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.13-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
