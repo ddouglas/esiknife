@@ -163,4 +163,9 @@ class Member extends Authenticatable
     public function journals () {
         return $this->hasMany(MemberWalletJournal::class, 'id', 'id');
     }
+
+    public function urls()
+    {
+        return $this->hasMany(MemberUrl::class, 'id', 'id');
+    }
 }

@@ -19,6 +19,23 @@ class PortalController extends Controller
     public function dashboard ()
     {
         Auth::user()->load('accessee.info', 'jobs');
+        if (Request::has('action')) {
+            $action = Request::get('action');
+            if ($action === "delete_pending_grant") {
+                if (Session::has('to')) {
+                    if (starts_with(Session::get('to'), url('/settings/grant/'))) {
+                        Session::forget('to');
+                        Session::flash('alert', [
+                            'header' => "Pending Grant Removed Successfully",
+                            'message' => "The pending grant has been removed. If you still want to grant access to your data for the character that generated the URL, please navigate back to where you clicked on that URL, and click on it again.",
+                            'type' => 'success',
+                            'close' => 1
+                        ]);
+                        return redirect(route('dashboard'));
+                    }
+                }
+            }
+        }
         return view('portal.dashboard');
     }
 
@@ -514,6 +531,13 @@ class PortalController extends Controller
                 'type' => 'success',
                 'close' => 1
             ]);
+            if (Session::has('to')) {
+                if (!starts_with(Session::get('to'), url('/settings/grant/'))) {
+                    $to = Session::get('to');
+                    Session::forget(Session::get('to'));
+                    return redirect($to);
+                }
+            }
             return redirect(route('dashboard'));
         }
         return view('portal.welcome');
