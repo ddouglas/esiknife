@@ -25,6 +25,28 @@
                     <div class="card">
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
                             <span>
+                                2018-06-20 - v0.20-beta
+                            </span>
+                        </div>
+                        <div id="collapse1" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
+                                <p>
+                                    The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.20-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
+                                </p>
+                                <ul>
+                                    <li>
+                                        Updated this page with these patch notes
+                                    </li>
+                                    <li>
+                                        Added Support for Shareable URLs
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse1">
+                            <span>
                                 2018-06-20 - v0.13-beta
                             </span>
                         </div>

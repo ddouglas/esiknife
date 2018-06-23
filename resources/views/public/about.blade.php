@@ -13,7 +13,7 @@
                     </div>
                     <div class="card-body">
                         <p>
-                            First off, thank you for your interest in ESI Knife. This page is here to answer a few questions about this application. You can always talk to me directly by joined the #esi channel on the Tweetfleet Slack. Information on how to join is included below. If there is a question that you have that is not answered here, please send a mail in game to <a href="https://evewho.com/pilot/ESIKnife+Admin" target="_blank">ESIKnife Admin</a>
+                            First off, thank you for your interest in ESI Knife. This page is here to answer a few questions about this application. You can always talk to me directly on discord. Information on how to join is included below in the #TalkingWithTheDeveloper section.
                         </p>
                     </div>
                     <div id="accordion">
@@ -79,20 +79,33 @@
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse6">
                             <span>
-                                I am done with your site now. How do I delete my data?
+                                #TalkWithTheDeveloper
                             </span>
                         </div>
                         <div id="collapse6" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
-                                Every member has the ability to revoke their token and purge their data from our system by visiting their settings page. Click <a href="{{ route('settings.index') }}">here</a> to visit your settings page. From there you can navigate to the token page and delete your token.
+                                Want to talk about ESIKnife? Or just code in general? Do you have a feature request or some sort? Awesome! Come chat with me on Discord. Click the button below to get started.
+                            </div>
+                            <div class="card-footer">
+                                <a href="https://discord.gg/WApHS9F" class="btn btn-info">Join ESISpace Discord!</a>
                             </div>
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse7">
                             <span>
-                                I need to share my information with a corporation recruiter. How do I do that?
+                                I am done with your site now. How do I delete my data?
                             </span>
                         </div>
                         <div id="collapse7" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
+                                Every member has the ability to revoke their token and purge their data from our system by visiting their settings page. Click <a href="{{ route('settings.index') }}">here</a> to visit your settings page. From there you can navigate to the token page and delete your token.
+                            </div>
+                        </div>
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse8">
+                            <span>
+                                I need to share my information with a corporation recruiter. How do I do that?
+                            </span>
+                        </div>
+                        <div id="collapse8" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
                                 To share you data with another EVE Character, the character will have had previously logged into the application. They do not need to authorize any scopes, just need to have of logged in. Once that is complete, you can go to your settings page, click <a href="{{ route('settings.index') }}">here</a>, click manage access and then type their name exactly as it appears in-game.<br /><br />
                                 If you have any issues with this feature, please join tweetfleet slack, link above, and ping me in the #esi channel. You can also submit an bug report.
