@@ -79,18 +79,20 @@
         @yield('content')
 
 
-        <footer>
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <hr>
-                    <!-- Footer -->
-                    <p>
-                        Brought to you by <a href="https://evewho.com/pilot/David+Davaham">David Davaham</a><br />
-                        <a href="https://bitbucket.org/devoverlord/esiknife/src/development/">Bitbucket</a>
-                    </p>
+        <div class="container mt-3">
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12 text-center">
+                        <hr>
+                        <!-- Footer -->
+                        <p>
+                            Brought to you by <a href="https://evewho.com/pilot/David+Davaham">David Davaham</a><br />
+                            <a href="https://bitbucket.org/devoverlord/esiknife/src/development/">Bitbucket</a>
+                        </p>
+                    </div>
                 </div>
-            </div>
-        </footer>
+            </footer>
+        </div>
 
 
         <!-- Bootstrap core JavaScript

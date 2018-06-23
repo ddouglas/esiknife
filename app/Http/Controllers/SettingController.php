@@ -28,7 +28,7 @@ class SettingController extends Controller
                 $payload = $revoke->payload;
                 if (!$status) {
                     Session::flash('alert', [
-                        'name' => "Unable to delete tokem",
+                        'header' => "Unable to delete token",
                         'message' => "We are unable to revoke your token at this time due to invalid response from CCP. Please try again in a few moments.",
                         'type' => "danger",
                         'close' => 1
