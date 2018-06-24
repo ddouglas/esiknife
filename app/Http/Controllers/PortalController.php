@@ -148,7 +148,7 @@ class PortalController extends Controller
             if (Request::has('standing')) {
                 $where->push(collect(['standing', (int)Request::get('standing')]));
             }
-            
+
             $query->where($where->toArray())->with('info');
         }] ,'contact_labels');
         return view('portal.contacts')->withMember($member);
@@ -375,7 +375,15 @@ class PortalController extends Controller
                 return redirect(route('welcome'));
             }
             $getMemberData = $this->dataCont->getMemberData($ssoResponse->get('CharacterID'));
-
+            if ($ssoResponse->get('CharacterID') != Auth::user()->id) {
+                Session::flash('alert', [
+                    "header" => "Invalid Scope Authorization",
+                    'message' => "The character that you logged in with is different then the character that you just authorized the scopes on. PLease try again and select the correct toon. In this case that is" . Auth::user()->info->name,
+                    'type' => 'danger',
+                    'close' => 1
+                ]);
+                return redirect(route('welcome'));
+            }
             $status = $getMemberData->status;
             $payload = $getMemberData->payload;
             if (!$status) {
