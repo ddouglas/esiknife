@@ -712,7 +712,6 @@ class DataController extends Controller
                 'contact_type' => $contact->get('contact_type'),
                 'standing' => $contact->get('standing'),
                 'is_watched' => $contact->get('is_watched'),
-                'is_blocked' => $contact->get('is_blocked'),
                 'label_ids' => $contact->has('label_ids') ? $contact->get('label_ids')->toJson() : null
             ]);
         });

@@ -138,7 +138,18 @@ class PortalController extends Controller
     {
         $member = Member::findOrFail($member);
         $member->load(['contacts' => function ($query) {
-            $query->where('contact_id', '>', Request::has('npc') && Request::get('npc') ? 0 : 9000000)->with('info');
+            $where = collect();
+            if (Request::has('npc') && Request::get('npc')) {
+                $where->push(collect(['contact_id', '>', 0]));
+            } else {
+                $where->push(collect(['contact_id', '>', 9000000]));
+            }
+
+            if (Request::has('standing')) {
+                $where->push(collect(['standing', (int)Request::get('standing')]));
+            }
+            
+            $query->where($where->toArray())->with('info');
         }] ,'contact_labels');
         return view('portal.contacts')->withMember($member);
     }
@@ -156,7 +167,7 @@ class PortalController extends Controller
     public function contract ($member, $contract_id)
     {
         $member = Member::findOrFail($member);
-        $contract = $member->contracts()->where('id', $contract_id)->with('issuer.corporation', 'acceptor', 'assignee', 'start', 'end', 'items')->first();
+        $contract = $member->contracts()->where('id', $contract_id)->with('issuer.corporation', 'acceptor', 'assignee', 'start', 'end', 'items')->firstOrFail();
         return view('portal.contracts.view', [
             'contract' => $contract
         ])->withMember($member);
@@ -515,6 +526,9 @@ class PortalController extends Controller
                 'close' => 1
             ]);
             if (Session::has('to')) {
+                if (starts_with(Session::get('to'), url('/welcome'))) {
+                    return redirect(route('dashboard'));
+                }
                 if (!starts_with(Session::get('to'), url('/settings/grant/'))) {
                     $to = Session::get('to');
                     Session::forget(Session::get('to'));
