@@ -1353,7 +1353,7 @@ class DataController extends Controller
         $pUNResponse = collect();
         if ($ids->isNotEmpty()) {
             $ids = $ids->unique()->values()->chunk(500)->each(function ($chunk) use ($pUNResponse) {
-                $pUNRequest = $this->postUniverseNames($ids);
+                $pUNRequest = $this->postUniverseNames($chunk);
                 $pUNStatus = $pUNRequest->status;
                 $pUNPayload = $pUNRequest->payload;
                 if (!$pUNStatus) {
