@@ -10,45 +10,45 @@ if (!function_exists('age')) {
 
         if ($difference->y != 0) {
             if ($difference->y > 1) {
-                $results .= $difference->y." years ";
+                $results .= $difference->y."ys ";
             } else {
-                $results .= $difference->y." year ";
+                $results .= $difference->y."y ";
             }
         }
         if ($difference->m != 0) {
             if ($difference->m > 1) {
-                $results .= $difference->m." months ";
+                $results .= $difference->m."ms ";
             } else {
-                $results .= $difference->m." month ";
+                $results .= $difference->m."m ";
             }
         }
         if ($difference->d != 0) {
             if ($difference->d > 1) {
-                $results .= $difference->d." days ";
+                $results .= $difference->d."ds ";
             } else {
-                $results .= $difference->d." day ";
+                $results .= $difference->d."d ";
             }
         }
         if ($results === "") {
             if ($difference->h != 0) {
                 if ($difference->h > 1) {
-                    $results .= $difference->h." hours ";
+                    $results .= $difference->h."hs ";
                 } else {
-                    $results .= $difference->h." hour ";
+                    $results .= $difference->h."h ";
                 }
             }
             if ($difference->i != 0) {
                 if ($difference->i > 1) {
-                    $results .= $difference->i." minutes ";
+                    $results .= $difference->i."ms ";
                 } else {
-                    $results .= $difference->i." minute ";
+                    $results .= $difference->i."m ";
                 }
             }
             if ($difference->s != 0) {
                 if ($difference->s > 1) {
-                    $results .= $difference->s." seconds ";
+                    $results .= $difference->s."ss ";
                 } else {
-                    $results .= $difference->s." second ";
+                    $results .= $difference->s."s ";
                 }
             }
         }

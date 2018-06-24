@@ -72,7 +72,7 @@
                                         I built ESIKnife as a replacement for Jackknife. No viable replacement's were publicaly in the works as the deadline for the shutdown of the XML/Crest API's approached. About a month before this, I started work on ESIKnife. Real life prevented me from finishing the application on time and some serious design flaw's in the first version pushed the release of the application back even further.
                                     </li>
                                     <li>
-                                        I built it because it was a challenge. I do not program IRL professionally. All of my programming is purely done as a hobby in my free time. Some would say it is a bad addiction that I have. Tha tis good for you guys, sometimes bad for me :-)
+                                        I built it because it was a challenge. I do not program IRL professionally. All of my programming is purely done as a hobby in my free time. Some would say it is a bad addiction that I have. That is good for you guys, sometimes bad for me :-)
                                     </li>
                                 </ol>
                             </div>

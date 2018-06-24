@@ -4,6 +4,7 @@ namespace ESIK\Http\Controllers;
 
 use Auth, Request, Session, Validator;
 use ESIK\Models\{Member, MemberUrl};
+use ESIK\Models\ESI\{Mailheader, Contract};
 use ESIK\Http\Controllers\{DataController, SSOController};
 
 class SettingController extends Controller
@@ -91,15 +92,21 @@ class SettingController extends Controller
                     return redirect(route('settings.token'));
                 }
             }
-            Auth::user()->update([
-                'disabled' => 1,
-                'disabled_timestamp' => null,
-                'access_token' => null,
-                'refresh_token' => null,
-                'expires' => null,
-                'scopes' => null
-            ]);
-            Auth::logout();
+            $contracts = Auth::user()->contracts()->with('members')->chunk(50, function ($chunk) {
+                $chunk->each(function ($contract) {
+                    if ($contract->members->count() <= 1) {
+                        $contract->delete();
+                    }
+                });
+            });
+            $headers = Auth::user()->mail()->with('members')->chunk(50, function ($chunk) {
+                $chunk->each(function ($header) {
+                    if ($header->members->count() <= 1) {
+                        $header->delete();
+                    }
+                });
+            });
+            Auth::user()->delete();
             Session::flash('alert', [
                 'header' => "Token Deleted Successfully",
                 'message' => "Your token has been successfully deleted from the system. Please login to register a new token and continue using the site",

@@ -7,34 +7,56 @@
         @include('portal.extra.header')
         @include('portal.extra.nav')
         <div class="row">
-            <div class="col-lg-6 offset-lg-3 col-md-12 offset-md-0">
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        Unique Locations ({{ $uniqueLocations->count() }})
+                    </div>
+                    <div class="list-group">
+                        @foreach ($uniqueLocations as $location)
+                            <a href="{{ config('services.eve.urls.dotlan') }}search?q={{ urlencode($location->name) }}" class="list-group-item list-group-item-action" target="_blank">
+                                {{ $location->name }} ({{ $location->count }})
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
                 @foreach ($member->bookmarkFolders as $folder)
                     <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">{{ $folder->name }}</h5>
+                        <div class="card-header" data-toggle="collapse" data-target="#folder{{ $folder->folder_id }}">
+                            <h5 class="mb-0">{{ $folder->name }} ({{ $folder->bookmarks->count() }})</h5>
                         </div>
-                        <div class="card-body p-0">
-                            <table class="table mb-0">
-                                @foreach ($folder->bookmarks as $bookmark)
-                                    <tr>
-                                        <td>
-                                            {{ $bookmark->label }}
-                                        </td>
-                                        <td>
-                                            {{ $bookmark->notes }}
-                                        </td>
-                                        <td>
-                                            {{ !is_null($bookmark->location) ? $bookmark->location->name : "Unknown Location ". $bookmark->location_id }}
-                                        </td>
-                                        <td>
-                                            {{ !is_null($bookmark->creator) ? $bookmark->creator->name : "Unknown Creator ". $bookmark->creator_id }}
-                                        </td>
-                                        <td>
-                                            {{ !is_null($bookmark->type) ? $bookmark->type->name  : "Middle of Space" }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </table>
+                        <div id="folder{{ $folder->folder_id }}" class="collapse">
+                            <div class="card-body p-0">
+                                <table class="table mb-0">
+                                    @forelse ($folder->bookmarks as $bookmark)
+                                        <tr>
+                                            <td>
+                                                {{ $bookmark->label }}
+                                            </td>
+                                            <td>
+                                                {{ $bookmark->notes }}
+                                            </td>
+                                            <td>
+                                                {{ !is_null($bookmark->location) ? $bookmark->location->name : "Unknown Location ". $bookmark->location_id }}
+                                            </td>
+                                            <td>
+                                                {{ !is_null($bookmark->creator) ? $bookmark->creator->name : "Unknown Creator ". $bookmark->creator_id }}
+                                            </td>
+                                            <td>
+                                                {{ !is_null($bookmark->type) ? $bookmark->type->name  : "Middle of Space" }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5">
+                                                No Bookmarks Here
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </table>
+                            </div>
                         </div>
                     </div>
                 @endforeach

@@ -4,6 +4,7 @@ namespace ESIK\Models\ESI;
 
 use Illuminate\Database\Eloquent\Model;
 
+use ESIK\Models\Member;
 use ESIK\Models\ESI\Type;
 
 class Contract extends Model
@@ -25,6 +26,11 @@ class Contract extends Model
     public function getStatusAttribute($status)
     {
         return ucfirst($status);
+    }
+
+    public function members()
+    {
+        return $this->belongsToMany(Member::class, 'member_contracts', 'contract_id', 'member_id');
     }
 
     public function assignee()

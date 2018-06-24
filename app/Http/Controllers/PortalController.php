@@ -109,8 +109,17 @@ class PortalController extends Controller
 
     public function bookmarks ($member) {
         $member = Member::findOrFail($member);
-        $member->load('bookmarks', 'bookmarkFolders');
-        return view('portal.bookmarks')->withMember($member);
+        $member->load('bookmarkFolders.bookmarks');
+
+        $uniqueLocations = $member->bookmarks->pluck('location')->unique('id')->keyBy('id');
+
+        foreach ($uniqueLocations as $location) {
+            $count = $member->bookmarks->where('location_id', $location->id)->count();
+            $uniqueLocations->get($location->id)->count = $count;
+        }
+        $uniqueLocations = $uniqueLocations->sortByDesc('count');
+
+        return view('portal.bookmarks')->withMember($member)->withUniqueLocations($uniqueLocations);
     }
 
     public function clones ($member)
@@ -129,7 +138,18 @@ class PortalController extends Controller
     {
         $member = Member::findOrFail($member);
         $member->load(['contacts' => function ($query) {
-            $query->where('contact_id', '>', Request::has('npc') && Request::get('npc') ? 0 : 9000000)->with('info');
+            $where = collect();
+            if (Request::has('npc') && Request::get('npc')) {
+                $where->push(collect(['contact_id', '>', 0]));
+            } else {
+                $where->push(collect(['contact_id', '>', 9000000]));
+            }
+
+            if (Request::has('standing')) {
+                $where->push(collect(['standing', (int)Request::get('standing')]));
+            }
+            
+            $query->where($where->toArray())->with('info');
         }] ,'contact_labels');
         return view('portal.contacts')->withMember($member);
     }
@@ -147,7 +167,7 @@ class PortalController extends Controller
     public function contract ($member, $contract_id)
     {
         $member = Member::findOrFail($member);
-        $contract = $member->contracts()->where('id', $contract_id)->with('issuer.corporation', 'acceptor', 'assignee', 'start', 'end', 'items')->first();
+        $contract = $member->contracts()->where('id', $contract_id)->with('issuer.corporation', 'acceptor', 'assignee', 'start', 'end', 'items')->firstOrFail();
         return view('portal.contracts.view', [
             'contract' => $contract
         ])->withMember($member);
@@ -343,7 +363,7 @@ class PortalController extends Controller
                 return redirect(route('welcome'));
             }
             $ssoResponse = Session::get(Request::get('state'));
-            // Session::forget(Request::get('state'));
+            Session::forget(Request::get('state'));
             $hashedResponseScopes = hash('sha1', collect(explode(' ', $ssoResponse->get('Scopes')))->sort()->values()->implode(' '));
             if ($hashedResponseScopes !== $ssoResponse->get('authorizedScopesHash')) {
                 Session::flash('alert', [
@@ -369,38 +389,12 @@ class PortalController extends Controller
             }
 
             $memberData = $getMemberData->payload;
-            $member = Member::firstOrNew(['id' => $memberData->id]);
-            if (!$member->exists) {
-                $member->fill([
-                    'raw_hash' => $ssoResponse->get('CharacterOwnerHash'),
-                    'hash' => hash('sha256', $ssoResponse->get('CharacterOwnerHash')),
-                    'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
-                    'access_token' => $ssoResponse->get('access_token'),
-                    'refresh_token' => $ssoResponse->get('refresh_token'),
-                    'expires' => Carbon::now()->addSeconds($ssoResponse->get('expires_in'))->toDateTimeString()
-                ]);
-            } else if (hash('sha256', $ssoResponse->get('CharacterOwnerHash')) !== $member->hash) {
-                $member->delete();
-                $member = Member::create([
-                    'id' =>  $memberData->id,
-                    'raw_hash' => $ssoResponse->get('CharacterOwnerHash'),
-                    'hash' => hash('sha256', $ssoResponse->get('CharacterOwnerHash')),
-                    'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
-                    'access_token' => $ssoResponse->get('access_token'),
-                    'refresh_token' => $ssoResponse->get('refresh_token'),
-                    'expires' => Carbon::now()->addSeconds($ssoResponse->get('expires_in'))->toDateTimeString()
-                ]);
-            } else {
-                $member->fill([
-                    'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
-                    'access_token' => $ssoResponse->get('access_token'),
-                    'refresh_token' => $ssoResponse->get('refresh_token'),
-                    'disabled' => 0,
-                    'disabled_reason' => null,
-                    'disabled_timestamp' => null,
-                    'expires' => Carbon::now()->addSeconds($ssoResponse->get('expires_in'))->toDateTimeString()
-                ]);
-            }
+            $member = Member::firstOrNew(['id' => $memberData->id])->fill([
+                'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
+                'access_token' => $ssoResponse->get('access_token'),
+                'expires' => Carbon::now()->addHours(48)
+            ]);
+
 
             $member->save();
             $alert = collect();
@@ -532,6 +526,9 @@ class PortalController extends Controller
                 'close' => 1
             ]);
             if (Session::has('to')) {
+                if (starts_with(Session::get('to'), url('/welcome'))) {
+                    return redirect(route('dashboard'));
+                }
                 if (!starts_with(Session::get('to'), url('/settings/grant/'))) {
                     $to = Session::get('to');
                     Session::forget(Session::get('to'));

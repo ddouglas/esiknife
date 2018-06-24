@@ -366,7 +366,10 @@ class DataController extends Controller
         if (!$status) {
             return $request;
         }
-        $response = collect($payload->response)->recursive();
+        $response = collect($payload->response)->recursive()->push(collect([
+            'folder_id' => 9999999,
+            'name' => "No Folder"
+        ]));
         $member->bookmarkFolders()->delete();
         $member->bookmarkFolders()->createMany($response->toArray());
 
@@ -458,33 +461,34 @@ class DataController extends Controller
 
             $member->jobs()->attach($dispatchedJobs->toArray());
 
-            $memBookmarks = collect();
-            $bookmarks->each(function ($bookmark) use ($memBookmarks,$dictionary) {
-                if (is_null($dictionary->get($bookmark->get('location_id')))) {
-                    return true;
-                }
-                $memBookmarks->put($bookmark->get('bookmark_id'), collect([
-                    'bookmark_id' => $bookmark->get('bookmark_id'),
-                    "folder_id" => $bookmark->get('folder_id'),
-                    "label" => $bookmark->get('label'),
-                    "notes" => $bookmark->get('notes'),
-                    "location_id" => $bookmark->get('location_id'),
-                    "location_type" => $dictionary->get($bookmark->get('location_id'))->get('category'),
-                    "creator_id" => $bookmark->get('creator_id'),
-                    "creator_type" => $dictionary->get($bookmark->get('creator_id'))->get('category'),
-                    "created" => Carbon::parse($bookmark->get('created')),
-                ]));
-                if ($bookmark->has('item')) {
-                    $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_id', $bookmark->get('item')->get('item_id'));
-                    $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_type_id', $bookmark->get('item')->get('type_id'));
-                }
-                if ($bookmark->has('coordinates')) {
-                    $memBookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
-                }
-            });
-            $member->bookmarks()->delete();
-            $member->bookmarks()->createMany($memBookmarks->toArray());
+
         }
+        $memBookmarks = collect();
+        $bookmarks->each(function ($bookmark) use ($memBookmarks,$dictionary) {
+            if (is_null($dictionary->get($bookmark->get('location_id')))) {
+                return true;
+            }
+            $memBookmarks->put($bookmark->get('bookmark_id'), collect([
+                'bookmark_id' => $bookmark->get('bookmark_id'),
+                "folder_id" => $bookmark->has('folder_id') ? $bookmark->get('folder_id') : 9999999,
+                "label" => $bookmark->get('label'),
+                "notes" => $bookmark->get('notes'),
+                "location_id" => $bookmark->get('location_id'),
+                "location_type" => $dictionary->get($bookmark->get('location_id'))->get('category'),
+                "creator_id" => $bookmark->get('creator_id'),
+                "creator_type" => $dictionary->get($bookmark->get('creator_id'))->get('category'),
+                "created" => Carbon::parse($bookmark->get('created')),
+            ]));
+            if ($bookmark->has('item')) {
+                $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_id', $bookmark->get('item')->get('item_id'));
+                $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_type_id', $bookmark->get('item')->get('type_id'));
+            }
+            if ($bookmark->has('coordinates')) {
+                $memBookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
+            }
+        });
+        $member->bookmarks()->delete();
+        $member->bookmarks()->createMany($memBookmarks->toArray());
         return $request;
     }
 
@@ -708,7 +712,6 @@ class DataController extends Controller
                 'contact_type' => $contact->get('contact_type'),
                 'standing' => $contact->get('standing'),
                 'is_watched' => $contact->get('is_watched'),
-                'is_blocked' => $contact->get('is_blocked'),
                 'label_ids' => $contact->has('label_ids') ? $contact->get('label_ids')->toJson() : null
             ]);
         });
