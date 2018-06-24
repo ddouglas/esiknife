@@ -52,29 +52,14 @@ class AuthController extends Controller
             $member = Member::firstOrNew(['id' => $getMemberData->id]);
             if ($member->exists) {
                 Auth::login($member);
-
-                if ($member->disabled) {
-                    Session::flash('alert', [
-                        "header" => "Welcome back to ESI Knife ". Auth::user()->info->name,
-                        'message' => "It appears that your account has been disabled. This happeneds if you delete you token with us or an attempt to refresh your token failed. Please select a new set of scopes to us and we'll get back into the application is a ASAP",
-                        'type' => 'success',
-                        'close' => 1
-                    ]);
-                    return redirect(route('welcome', ['returning']));
+                if (Session::has('to')) {
+                    $to = Session::get('to');
+                    Session::forget('to');
+                    return redirect($to);
                 } else {
-                    if (Session::has('to')) {
-                        $to = Session::get('to');
-                        Session::forget('to');
-                        return redirect($to);
-                    } else {
-                        return redirect(route('dashboard'));
-                    }
+                    return redirect(route('dashboard'));
                 }
             } else {
-                $member->fill([
-                    'raw_hash' => $ssoResponse->get('CharacterOwnerHash'),
-                    'hash' => hash('sha256', $ssoResponse->get('CharacterOwnerHash')),
-                ]);
                 $member->save();
                 Auth::login($member);
                 return redirect(route('welcome'));

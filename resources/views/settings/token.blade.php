@@ -33,14 +33,6 @@
                             </tr>
                             <tr>
                                 <th>
-                                    Current Refresh Token
-                                </th>
-                                <td>
-                                    {{ str_limit(Auth::user()->refresh_token, 40) ?: '-' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>
                                     Currently Authorized Scopes
                                 </th>
                                 <td>
@@ -51,25 +43,6 @@
                                     @endif
                                 </td>
                             </tr>
-                            <tr>
-                                <th>
-                                    Expires At
-                                </th>
-                                <td>
-                                    {{ !is_null(Auth::user()->expires) ?  Auth::user()->expires->toDayDateTimeString() . " Eve (UTC)": '-' }}
-                                </td>
-                            </tr>
-                            @if (!is_null(Auth::user()->access_token) && !is_null(Auth::user()->refresh_token) && !is_null(Auth::user()->scopes))
-                                <tr>
-                                    <th>
-                                        Next Refresh
-                                    </th>
-                                    <td>
-                                        All tokens are refreshed every five minutes unless cleared
-                                    </td>
-                                </tr>
-                            @endif
-
                         </table>
                     </div>
                     <div class="card-footer text-center">

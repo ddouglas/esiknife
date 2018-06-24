@@ -369,38 +369,12 @@ class PortalController extends Controller
             }
 
             $memberData = $getMemberData->payload;
-            $member = Member::firstOrNew(['id' => $memberData->id]);
-            if (!$member->exists) {
-                $member->fill([
-                    'raw_hash' => $ssoResponse->get('CharacterOwnerHash'),
-                    'hash' => hash('sha256', $ssoResponse->get('CharacterOwnerHash')),
-                    'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
-                    'access_token' => $ssoResponse->get('access_token'),
-                    'refresh_token' => $ssoResponse->get('refresh_token'),
-                    'expires' => Carbon::now()->addSeconds($ssoResponse->get('expires_in'))->toDateTimeString()
-                ]);
-            } else if (hash('sha256', $ssoResponse->get('CharacterOwnerHash')) !== $member->hash) {
-                $member->delete();
-                $member = Member::create([
-                    'id' =>  $memberData->id,
-                    'raw_hash' => $ssoResponse->get('CharacterOwnerHash'),
-                    'hash' => hash('sha256', $ssoResponse->get('CharacterOwnerHash')),
-                    'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
-                    'access_token' => $ssoResponse->get('access_token'),
-                    'refresh_token' => $ssoResponse->get('refresh_token'),
-                    'expires' => Carbon::now()->addSeconds($ssoResponse->get('expires_in'))->toDateTimeString()
-                ]);
-            } else {
-                $member->fill([
-                    'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
-                    'access_token' => $ssoResponse->get('access_token'),
-                    'refresh_token' => $ssoResponse->get('refresh_token'),
-                    'disabled' => 0,
-                    'disabled_reason' => null,
-                    'disabled_timestamp' => null,
-                    'expires' => Carbon::now()->addSeconds($ssoResponse->get('expires_in'))->toDateTimeString()
-                ]);
-            }
+            $member = Member::firstOrNew(['id' => $memberData->id])->fill([
+                'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
+                'access_token' => $ssoResponse->get('access_token'),
+                'expires' => Carbon::now()->addHours(48)
+            ]);
+
 
             $member->save();
             $alert = collect();
