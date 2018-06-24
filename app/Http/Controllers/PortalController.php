@@ -343,7 +343,7 @@ class PortalController extends Controller
                 return redirect(route('welcome'));
             }
             $ssoResponse = Session::get(Request::get('state'));
-            // Session::forget(Request::get('state'));
+            Session::forget(Request::get('state'));
             $hashedResponseScopes = hash('sha1', collect(explode(' ', $ssoResponse->get('Scopes')))->sort()->values()->implode(' '));
             if ($hashedResponseScopes !== $ssoResponse->get('authorizedScopesHash')) {
                 Session::flash('alert', [
