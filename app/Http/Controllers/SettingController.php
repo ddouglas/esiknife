@@ -32,6 +32,15 @@ class SettingController extends Controller
             return redirect(route('dashboard'));
         }
         $memberId = $hash[0];
+        if (Auth::user()->id == $memberId) {
+            Session::flash('alert', [
+                'header' => "Are you trying to cause a blackhole?",
+                'message' => "You cannot use your own grant url on yourself. Bad Things happen when you do this. Please send this to another user. If you want to use your own grant url on an Alt, then Logout before clicking on the URL.",
+                'type' => 'danger',
+                'close' => 1
+            ]);
+            return redirect(route('settings.access'));
+        }
         $grant = MemberUrl::whereId($memberId)->whereHash($hash[1])->firstOrFail();
         $grantExists = Auth::user()->accessor()->where('accessor_id', $grant->id)->count();
         if ($grantExists > 0) {
@@ -44,6 +53,11 @@ class SettingController extends Controller
             return redirect(route('settings.access'));
         }
         if (Request::isMethod('post')) {
+            if (Session::has('to')) {
+                if (!starts_with(Session::get('to'), url('/settings/grant/'))) {
+                    Session::forget('to');
+                }
+            }
             Auth::user()->accessor()->attach(collect([
                 $grant->id => [
                     'access' => $grant->scopes->toJson()

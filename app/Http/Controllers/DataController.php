@@ -1420,7 +1420,7 @@ class DataController extends Controller
                 $structure = Structure::find($location);
                 if (is_null($structure) || starts_with($structure->name, "Unknown Structure")) {
                     if ($this->dispatchJobs) {
-                        $job = new \ESIK\Jobs\ESI\GetStructure($member, $location);
+                        $job = new \ESIK\Jobs\ESI\GetStructure($member->id, $location);
                         $job->delay(now());
                         $this->dispatch($job);
                         $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());

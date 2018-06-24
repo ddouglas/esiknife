@@ -87,7 +87,7 @@
                                 Want to talk about ESIKnife? Or just code in general? Do you have a feature request or some sort? Awesome! Come chat with me on Discord. Click the button below to get started.
                             </div>
                             <div class="card-footer">
-                                <a href="https://discord.gg/WApHS9F" class="btn btn-info">Join ESISpace Discord!</a>
+                                <a href="https://discord.gg/QpQsgaw" class="btn btn-info" target="_blank">Join ESISpace Discord!</a>
                             </div>
                         </div>
                         <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapse7">

@@ -47,15 +47,12 @@
                             <td>
                                 {{ $transaction->quantity }}
                             </td>
-
                             <td>
                                 {{ $transaction->credit }}
                             </td>
-
                             <td>
                                 {{ !is_null($transaction->client) ? $transaction->client->name : "Unknown Client ". $transaction->client_id }}
                             </td>
-
                             <td>
                                 {{ !is_null($transaction->location) ? $transaction->location->name : "Unknown Location ". $transaction->location_id }}
                             </td>

@@ -121,6 +121,10 @@
                                     <tr>
                                         <td>
                                             <div class="float-right">
+                                                <a href="{{ route('overview', ['member' => $accessee->id]) }}" class="btn btn-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {{ csrf_field() }}
                                                 <button class="btn btn-danger" name="remove" value="{{ $accessee->id }}">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>

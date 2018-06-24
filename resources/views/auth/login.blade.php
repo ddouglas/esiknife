@@ -31,7 +31,7 @@
                         <div id="v020_beta" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
                                 <p>
-                                    The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.20-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
+                                    The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.21-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
                                 </p>
                                 <ul>
                                     <li>

@@ -98,7 +98,6 @@
                                     <a href="{{ route('overview', ['member' => $accessee->id]) }}" class="btn btn-primary">
                                         <i class="fas fa-eye"></i>
                                     </a>
-
                                 </div>
                                 <div class="media mt-0">
                                     <img src="{{ config('services.eve.urls.img') }}/Character/{{ $accessee->id }}_64.jpg" class="rounded img-fluid mr-3" />
@@ -112,7 +111,6 @@
                             </li>
                         @endforeach
                     </ul>
-
                 </div>
             </div>
         @endif

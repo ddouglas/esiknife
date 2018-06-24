@@ -2,7 +2,7 @@
 
 namespace ESIK\Http\Controllers;
 
-use Bus,Request, Session;
+use Bus,DB,Request, Session;
 use ESIK\Models\{Member};
 use ESIK\Jobs\ESI\GetCharacter;
 use ESIK\Models\ESI\{MailRecipient};
@@ -21,8 +21,9 @@ class HackingController extends Controller
 
     public function index()
     {
-        $this->cleanup();
-
+        // $this->cleanup();
+        $character = DB::table('characters')->where('name', "yankdoodle")->first();
+        dd($character);
     }
 
     public function cleanup()
