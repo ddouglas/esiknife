@@ -4,6 +4,8 @@ namespace ESIK\Models\ESI;
 
 use Illuminate\Database\Eloquent\Model;
 
+use ESIK\Models\Member;
+
 class MailHeader extends Model
 {
     protected $primaryKey = 'id';
@@ -17,7 +19,7 @@ class MailHeader extends Model
 
     public function members()
     {
-        return $this->belongsToMany(MailHeader::class, 'member_mail_headers', 'mail_id', 'member_id')->withPivot(['labels', 'is_read']);
+        return $this->belongsToMany(Member::class, 'member_mail_headers', 'mail_id', 'member_id')->withPivot(['labels', 'is_read']);
     }
 
     public function recipients ()
