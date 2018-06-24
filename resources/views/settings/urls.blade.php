@@ -31,7 +31,7 @@
                         <table class="table table-bordered m-0">
                             <tr>
                                 <th>
-                                    Hash
+                                    Name (If Applicable)
                                 </th>
                                 <th>
                                     Copy Url
@@ -46,7 +46,7 @@
                             @forelse (Auth::user()->urls as $url)
                                 <tr>
                                     <td class="align-middle">
-                                        <span>{{ $url->hash }}</span>
+                                        <span>{{ $url->name ?: "N/A" }}</span>
                                     </td>
                                     <td class="align-middle">
                                         <span><a href="#" class="copyMe" data-toggle="tooltip" title="{{ route('settings.grant', ['grant' => Auth::user()->id.":".$url->hash]) }}" data-clipboard-text="{{ route('settings.grant', ['grant' => Auth::user()->id.":".$url->hash]) }}">Click To Copy URL</a></span>
