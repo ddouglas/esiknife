@@ -28,11 +28,11 @@ return [
         ],
         'urls' => [
             'sso' => "https://login.eveonline.com",
-            'esi' => "https://esi.tech.ccp.is",
+            'esi' => "https://esi.evetech.net",
             'img' => "https://imageserver.eveonline.com",
             'km' => "https://zkillboard.com/",
             'dotlan' => "https://evemaps.dotlan.net/",
-            'who' => "https://evewho.com",
+            'who' => "https://evewho.com/",
             'sde' => "http://sde.zzeve.com"
         ],
         'sde' => [
