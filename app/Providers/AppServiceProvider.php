@@ -7,7 +7,7 @@ use View;
 use Illuminate\Support\{Collection, ServiceProvider};
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-use ESIK\Models\ESI\{Alliance, Station, Structure, System, Character, Corporation};
+use ESIK\Models\ESI\{Alliance, Station, Structure, System, Character, Corporation, MailingList};
 use ESIK\Models\SDE\{Constellation, Region};
 
 class AppServiceProvider extends ServiceProvider
@@ -28,7 +28,8 @@ class AppServiceProvider extends ServiceProvider
             'character' => Character::class,
             'corporation' => Corporation::class,
             'constellation' => Constellation::class,
-            'region' => Region::class
+            'region' => Region::class,
+            'mailing_list' => MailingList::class
         ]);
 
         View::composer('*', \ESIK\Composers\ScopeComposer::class);

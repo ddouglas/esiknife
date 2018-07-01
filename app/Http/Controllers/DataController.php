@@ -391,6 +391,7 @@ class DataController extends Controller
 
 
         $ids = $itemTypeIds->merge($locationIds)->merge($creatorIds)->unique()->values();
+        $dictionary = collect();
         if ($ids->isNotEmpty()) {
             $request = $this->postUniverseNames($ids);
             $status = $request->status;
@@ -399,7 +400,7 @@ class DataController extends Controller
                 return $request;
             }
 
-            $dictionary = collect($payload->response)->recursive()->keyBy('id');
+            $dictionary = $dictionary->merge(collect($payload->response)->recursive()->keyBy('id'));
             $dispatchedJobs = collect();
             $now = now(); $x = 0;
             $characterIds = $dictionary->where('category', 'character')->pluck('id');
