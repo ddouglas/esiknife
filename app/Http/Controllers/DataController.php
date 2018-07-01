@@ -1351,12 +1351,12 @@ class DataController extends Controller
         $transactions = $wTransactionResponse->whereIn('transaction_id', $transactions);
 
         $clients = $transactions->pluck('client_id');
-        $types = $transactions->pluck('type_id')->unique()->values();
+        $types = $transactions->pluck('type_id');
 
-        $ids = $clients->merge($types);
+        $ids = $clients->merge($types)->unique()->values();
         $pUNResponse = collect();
         if ($ids->isNotEmpty()) {
-            $ids = $ids->unique()->values()->chunk(500)->each(function ($chunk) use ($pUNResponse) {
+            $ids = $ids->chunk(500)->each(function ($chunk) use (&$pUNResponse) {
                 $pUNRequest = $this->postUniverseNames($chunk);
                 $pUNStatus = $pUNRequest->status;
                 $pUNPayload = $pUNRequest->payload;
@@ -1366,7 +1366,7 @@ class DataController extends Controller
                 }
                 $pUNResponse = $pUNResponse->merge(collect($pUNPayload->response)->recursive()->keyBy('id'));
             });
-
+            $pUNResponse = $pUNResponse->keyBy('id');
             $characterIds = $pUNResponse->where('category', 'character')->pluck('id')->unique()->values();
             $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
             $now = now(); $x = 0; $dispatchedJobs = collect();
