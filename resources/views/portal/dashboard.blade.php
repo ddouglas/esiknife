@@ -12,7 +12,7 @@
         </div>
         <div class="row">
             <p>
-                Below is a list of characters that you are authorized to access., including your own character. To view the character, click the eye.
+                Below is a list of characters that you are authorized to access, including your own character. To view the character, click the eye.
             </p>
         </div>
         <div class="row">
