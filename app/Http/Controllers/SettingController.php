@@ -64,7 +64,7 @@ class SettingController extends Controller
             });
             Auth::user()->accessor()->attach(collect([
                 $grant->id => [
-                    'access' => $grant->scopes->toJson()
+                    'access' => $grantScopes->toJson()
                 ]
             ]));
             Session::flash('alert', [

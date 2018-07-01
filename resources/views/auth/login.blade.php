@@ -23,15 +23,15 @@
                 <hr class="mt-0" />
                 <div id="accordion">
                     <div class="card">
-                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#v022_beta">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#v022a_beta">
                             <span>
-                                2018-07-01 - v0.22-beta
+                                2018-07-01 - v0.22a-beta
                             </span>
                         </div>
-                        <div id="v022_beta" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div id="v022a_beta" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
                                 <p>
-                                    The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.22-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
+                                    The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.22a-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
                                 </p>
                                 <ul>
                                     <li>
