@@ -23,12 +23,40 @@
                 <hr class="mt-0" />
                 <div id="accordion">
                     <div class="card">
-                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#v020_beta">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#v022_beta">
+                            <span>
+                                2018-07-01 - v0.22-beta
+                            </span>
+                        </div>
+                        <div id="v022_beta" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
+                                <p>
+                                    The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.22-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
+                                </p>
+                                <ul>
+                                    <li>
+                                        Updated this page with these patch notes
+                                    </li>
+                                    <li>
+                                        Fixed Issue #26 addressing a where a character utilizing a grant url to authorize another character access to their data. The system was not taking into consideration the scopes that the user had grant the application to access when registered and was just blanket approving every scope in the grant. This resulted in access to pages on the user that the user never granted access to when registering with the site.
+                                    </li>
+                                    <li>
+                                        Fixed a typo on this page, somewhere.
+                                    </li>
+                                    <li>
+                                        Added the ability generate a refresh token for an "Admin Character" that will later be used to query the wallet to detect Wallet Transactions and donations.
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#v021_beta">
                             <span>
                                 2018-06-23 - v0.21-beta
                             </span>
                         </div>
-                        <div id="v020_beta" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div id="v021_beta" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
                             <div class="card-body">
                                 <p>
                                     The following addresses the bugs and feature requests that were released in the <a href="{{ config('services.bitbucket.urls.commit') }}/tag/v0.21-beta">release</a>. If you have any question, please reference the #TalkWithTheDeveloper section of the about page.
