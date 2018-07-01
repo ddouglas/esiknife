@@ -30,9 +30,9 @@ class DataController extends Controller
     * @param string $code Authorization Code received in the callback from CCP
     * @return mixed Returns an object from the HttpController containing the response payload and a status property.
     */
-    public function verifyAuthCode(string $code)
+    public function verifyAuthCode(string $code, string $authorization = null)
     {
-        return $this->httpCont->oauthVerifyAuthCode($code);
+        return $this->httpCont->oauthVerifyAuthCode($code, $authorization);
     }
 
     /**
@@ -1605,21 +1605,6 @@ class DataController extends Controller
                 ];
             }
             $response = $request->payload->response;
-            // if ($structure->exists) {
-            //     $structure->fill([
-            //         'name' => $response->name,
-            //         'cached_until' => isset($responseHeaders['Expires']) ? Carbon::parse($responseHeaders['Expires'])->toDateTimeString() : Carbon::now()->addHour()->toDateTimeString()
-            //     ]);
-            // } else {
-            //     $structure->fill([
-            //         'name' => $response->name,
-            //         'solar_system_id' => $response->solar_system_id,
-            //         'pos_x' => $response->position->x,
-            //         'pos_y' => $response->position->y,
-            //         'pos_z' => $response->position->z,
-            //         'cached_until' => isset($responseHeaders['Expires']) ? Carbon::parse($responseHeaders['Expires'])->toDateTimeString() : Carbon::now()->addHour()->toDateTimeString()
-            //     ]);
-            // }
             $structure->fill([
                 'name' => $response->name,
                 'solar_system_id' => $response->solar_system_id,
@@ -1806,11 +1791,6 @@ class DataController extends Controller
         ];
     }
 
-    public function getGroup($id)
-    {
-        return $this->httpCont->getUniverseGroupsGroupId($id);
-    }
-
     // Methods related to importing the SDE from zzeve
     public function getChrAncestries()
     {
@@ -1826,7 +1806,6 @@ class DataController extends Controller
     {
         return $this->httpCont->getChrFactions();
     }
-
 
     public function getChrRaces()
     {

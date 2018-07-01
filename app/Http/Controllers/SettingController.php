@@ -59,9 +59,12 @@ class SettingController extends Controller
                     Session::forget('to');
                 }
             }
+            $grantScopes = $grant->scopes->filter(function ($scope) {
+                return Auth::user()->scopes->containsStrict($scope);
+            });
             Auth::user()->accessor()->attach(collect([
                 $grant->id => [
-                    'access' => $grant->scopes->toJson()
+                    'access' => $grantScopes->toJson()
                 ]
             ]));
             Session::flash('alert', [

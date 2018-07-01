@@ -24,7 +24,12 @@ return [
         'sso' => [
             'id' => env('EVESSO_CLIENT_ID'),
             'secret' => env('EVESSO_CLIENT_SECRET'),
-            'callback' => 'sso.callback' // name of the route that generates the sso call back url
+            'callback' => 'sso.callback', // name of the route that generates the sso call back url
+            'admin' => [
+                'id' => env('EVESSO_CLIENT_ID_ADMIN'),
+                'secret' => env('EVESSO_CLIENT_SECRET_ADMIN'),
+                'callback' => env('EVESSO_CLIENT_CALLBACK_ADMIN')
+            ]
         ],
         'urls' => [
             'sso' => "https://login.eveonline.com",
