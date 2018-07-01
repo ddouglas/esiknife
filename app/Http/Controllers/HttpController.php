@@ -52,10 +52,10 @@ class HttpController extends Controller
         return $response;
     }
 
-    public function oauthVerifyAuthCode (string $code)
+    public function oauthVerifyAuthCode (string $code, string $authorization = null)
     {
         return $this->request([
-            "Authorization" => "Basic ".base64_encode(config("services.eve.sso.id").":".config("services.eve.sso.secret")),
+            "Authorization" => "Basic ". (!is_null($authorization) ?  $authorization : base64_encode(config("services.eve.sso.id").":".config("services.eve.sso.secret"))),
             "Content-Type" => "application/x-www-form-urlencoded",
             "Host" => "login.eveonline.com",
             "User-Agent" => config("services.eve.userAgent")
