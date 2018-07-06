@@ -1791,6 +1791,11 @@ class DataController extends Controller
         ];
     }
 
+    public function getGroup($id)
+    {
+        return $this->httpCont->getUniverseGroupsGroupId($id);
+    }
+
     // Methods related to importing the SDE from zzeve
     public function getChrAncestries()
     {
