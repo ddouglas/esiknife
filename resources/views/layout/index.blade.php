@@ -40,6 +40,9 @@
                             <a class="nav-link" href="{{ route('home') }}">Homepage</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ route('welcome') }}">Update My Character</a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ route('about') }}" class="nav-link">About</a>
                         </li>
                         <li class="nav-item">
