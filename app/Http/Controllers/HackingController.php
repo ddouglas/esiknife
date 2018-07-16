@@ -2,13 +2,12 @@
 
 namespace ESIK\Http\Controllers;
 
-use Bus,DB,Request, Session;
+use Bus, Carbon, DB, Request, Session;
 use ESIK\Models\{Member};
 use ESIK\Jobs\ESI\GetCharacter;
-use ESIK\Models\ESI\{MailRecipient};
+use ESIK\Models\ESI\{Character, Corporation, System};
 
 use Illuminate\Events\Dispatcher;
-
 
 class HackingController extends Controller
 {
@@ -21,22 +20,10 @@ class HackingController extends Controller
 
     public function index()
     {
-        // $this->cleanup();
-        $character = DB::table('characters')->where('name', "yankdoodle")->first();
-        dd($character);
+
     }
 
-    public function cleanup()
-    {
-        \ESIK\Models\Member::whereNotNull('id')->delete();
-        \ESIK\Models\ESI\Contract::whereNotNull('id')->delete();
-        \ESIK\Models\ESI\MailHeader::whereNotNull('id')->delete();
-        \ESIK\Models\ESI\Character::whereNotNull('id')->delete();
-        \ESIK\Models\ESI\Corporation::whereNotNull('id')->delete();
-        \ESIK\Models\ESI\Alliance::whereNotNull('id')->delete();
-    }
-
-    public function typesWithAttributesEffects ($type_id)
+    public function typesWithAttributes ($type_id)
     {
         $request = $this->httpCont->getUniverseTypesTypeId($type_id);
         $status = $request->status;
@@ -60,22 +47,6 @@ class HackingController extends Controller
                 usleep(10000);
             });
             dump($attributes);
-        }
-        if (property_exists($response, 'dogma_effects')) {
-            $effects = collect($response->dogma_effects)->recursive()->keyBy('effect_id');
-            $effects->each(function ($effect) use ($effects) {
-                $request = $this->httpCont->getDogmaEffectsEffectId($effect->get('effect_id'));
-                $status = $request->status;
-                $payload = $request->payload;
-                $response = $payload->response;
-                if (!$status) {
-                    dd($payload->message, __METHOD__.":".__LINE__);
-                }
-                $effects->get($effect->get('effect_id'))->put('name', $response->name);
-                $effects->get($effect->get('effect_id'))->put('display_name', $response->display_name);
-                usleep(10000);
-            });
-            dump($effects);
         }
         return response(200);
     }
