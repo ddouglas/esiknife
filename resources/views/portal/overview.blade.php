@@ -67,7 +67,7 @@
                                             <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation_id }}_64.png" />
                                         </div>
                                         <div class="media-body ml-3">
-                                            <h5 class="mt-0">{{ !is_null($corp->corporation) ? $corp->corporation->name : "Unknown Corp ". $corp->corporation_id }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
+                                            <h5 class="mt-0">{{ !is_null($corp->info) ? $corp->info->name : "Unknown Corp ". $corp->corporation_id }} {{ $corp->is_deleted ? "(Closed)" : "" }}</h5>
                                             <p>
                                                 @if ($corpHistory->has($key - 1))
                                                     Left {{ age($corp->start_date, $corpHistory->get($key - 1)->start_date) }} later on {{ $corpHistory->get($key - 1)->start_date->format("m/d/Y") }}<br />
@@ -81,7 +81,7 @@
                                     </div>
                                     <div class="text-center align-bottom">
                                         <a href="{{ config('services.eve.urls.km') }}corporation/{{ $corp->corporation_id }}/" class="btn btn-primary" target="_blank">zKillboard</a>
-                                        <a href="{{ config('services.eve.urls.who') }}corp/{{ $corp->corporation->name }}/" class="btn btn-primary" target="_blank">eveWho</a>
+                                        <a href="{{ config('services.eve.urls.who') }}corp/{{ $corp->info->name }}/" class="btn btn-primary" target="_blank">Eve Who</a>
                                     </div>
                                 </div>
                             @endforeach
