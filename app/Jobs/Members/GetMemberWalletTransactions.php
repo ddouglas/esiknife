@@ -18,8 +18,6 @@ class GetMemberWalletTransactions implements ShouldQueue
 
     public $id, $dataCont;
 
-    public $timeout = 160;
-
     /**
      * Create a new job instance.
      *

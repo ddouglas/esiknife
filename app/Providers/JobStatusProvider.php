@@ -68,10 +68,7 @@ class JobStatusProvider extends ServiceProvider
 
             $jobStatusId = $jobStatus->getJobStatusId();
 
-	        /** @var JobStatus $entityClass */
-	        $entityClass = app()->getAlias(JobStatus::class);
-
-	        $jobStatus = $entityClass::where('id', '=', $jobStatusId);
+	        $jobStatus = JobStatus::where('id', '=', $jobStatusId);
 
             return $jobStatus->update($data);
         } catch (\Exception $e) {
