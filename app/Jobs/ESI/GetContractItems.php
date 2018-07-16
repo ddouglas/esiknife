@@ -39,7 +39,6 @@ class GetContractItems implements ShouldQueue
      */
     public function handle()
     {
-        $this->dataCont->disableJobDispatch();
         $member = Member::findOrFail($this->memberId);
         $getMemberContractItems = $this->dataCont->getMemberContractItems($member, $this->contractId);
         $status = $getMemberContractItems->status;
