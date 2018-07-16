@@ -3,10 +3,9 @@
 namespace ESIK\Http\Controllers;
 
 use Carbon, DOMDocument, Request, Session;
-
 use ESIK\Jobs\{ProcessContract,ProcessMailHeader};
 use ESIK\Jobs\ESI\{GetCharacter, GetCorporation, GetAlliance, GetSystem, GetType, GetStation, GetStructure};
-use ESIK\Models\{Member, MemberAsset};
+use ESIK\Models\{Member, MemberAsset, JobStatus};
 use ESIK\Models\ESI\{Alliance, Character, Contract, Corporation, MailHeader, MailingList, Station, Structure, System, Type};
 use ESIK\Models\SDE\{Region, Constellation};
 
@@ -16,12 +15,9 @@ class DataController extends Controller
 {
     public $httpCont;
 
-    protected $dispatchJobs;
-
     public function __construct()
     {
         $this->httpCont = new HttpController;
-        $this->dispatchJobs = true;
     }
 
     /**
@@ -132,13 +128,11 @@ class DataController extends Controller
                 $knownCorps = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
                 $now = now(); $x = 0;
                 $corporationIds->diff($knownCorps->keys())->each(function ($corporation) use (&$now, &$x) {
-                    if ($this->dispatchJobs) {
-                        $job = new \ESIK\Jobs\ESI\GetCorporation($corporation);
-                        $job->delay($now);
-                        $this->dispatch($job);
-                    } else {
-                        $this->getCorporation($corporation);
-                    }
+                    $class = \ESIK\Jobs\ESI\GetCorporation::class;
+                    $params = collect(['id' => $corporation]);
+                    $jobId = $this->dispatchJob($class, $params, $now);
+                    $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
+
                     if ($x%10==0) {
                         $now->addSecond();
                     }
@@ -236,7 +230,7 @@ class DataController extends Controller
 
     public function headMemberAssets ($member)
     {
-        return $this->httpCont->headCharacterCharacterIdAssets($member->id, $member->access_token);
+        return $this->httpCont->headCharactersCharacterIdAssets($member->id, $member->access_token);
     }
 
     public function getMemberAssetsByPage (Member $member, $page)
@@ -254,14 +248,10 @@ class DataController extends Controller
         $knownTypes = Type::whereIn('id', $typeIds->toArray())->get()->keyBy('id');
         $now = now(); $x = 0;
         $typeIds->diff($knownTypes->keys())->each(function ($typeId) use ($dispatchedJobs, &$now, &$x) {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetType($typeId);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getType($typeId);
-            }
+            $class = \ESIK\Jobs\ESI\GetType::class;
+            $params = collect(['id' => $typeId]);
+            $jobId = $this->dispatchJob($class, $params, $now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             if ($x%10==0) {
                 $now->addSecond();
             }
@@ -271,14 +261,10 @@ class DataController extends Controller
         $stationIds = $assets->where('location_type', 'station')->pluck('location_id')->unique()->values();
         $knownStations = Station::whereIn('id', $stationIds->toArray())->get()->keyBy('id');
         $stationIds->diff($knownStations->keys())->each(function ($stationId) use ($dispatchedJobs, &$now, &$x) {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetStation($stationId);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getStation($stationId);
-            }
+            $class = \ESIK\Jobs\ESI\GetStation::class;
+            $params = collect(['id' => $stationId]);
+            $jobId = $this->dispatchJob($class, $params, $now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             if ($x%10==0) {
                 $now->addSecond();
             }
@@ -288,23 +274,16 @@ class DataController extends Controller
         $systemIds = $assets->where('location_type', 'solar_system')->pluck('location_id')->unique()->values();
         $knownSystems = System::whereIn('id', $systemIds->toArray())->get()->keyBy('id');
         $systemIds->diff($knownSystems->keys())->each(function ($systemId) use ($dispatchedJobs, &$now, &$x) {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetSystem($systemId);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getSystem($systemId);
-            }
+            $class = \ESIK\Jobs\ESI\GetSystem::class;
+            $params = collect(['id' => $systemId]);
+            $jobId = $this->dispatchJob($class, $params, $now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             if ($x%10==0) {
                 $now->addSecond();
             }
             $x++;
         });
-
         $member->jobs()->attach($dispatchedJobs->toArray());
-
-
         $assets->chunk(250)->each(function ($assetChunk) use ($member) {
             $member->assets()->createMany($assetChunk->toArray());
         });
@@ -350,15 +329,19 @@ class DataController extends Controller
     }
 
 
-    // Method from the Character Skils Namepsace
-
+    // Method from the Character Bookmarks Namespace
     /**
-    * Fetches and Parses the current skills of the member
+    * Fetches headers for the Bookmarks endpoint. From this we get the number of pages and can create a loop to retreive them.
     *
     * @param ESIK\Models\Member $member Instance of Eloquent Member Model. This model contains the id and token we need to make the call.
     * @return mixed
     */
-    public function getMemberBookmarks (Member $member)
+    public function headMemberBookmarks(Member $member)
+    {
+        return $this->httpCont->headCharactersCharacterIdBookmarks($member->id, $member->access_token);
+    }
+
+    public function getMemberBookmarkFolders (Member $member)
     {
         $request = $this->httpCont->getCharactersCharacterIdBookmarksFolders($member->id, $member->access_token);
         $status = $request->status;
@@ -374,8 +357,18 @@ class DataController extends Controller
         $member->bookmarkFolders()->createMany($response->toArray());
 
         unset($status, $payload);
+        return $request;
+    }
 
-        $request = $this->httpCont->getCharactersCharacterIdBookmarks($member->id, $member->access_token);
+    /**
+    * Fetches and Parses the current bookmarks of the member
+    *
+    * @param ESIK\Models\Member $member Instance of Eloquent Member Model. This model contains the id and token we need to make the call.
+    * @return mixed
+    */
+    public function getMemberBookmarksByPage (Member $member, int $page)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdBookmarks($member->id, $member->access_token, $page);
         $status = $request->status;
         $payload = $request->payload;
         if (!$status) {
@@ -407,14 +400,10 @@ class DataController extends Controller
             if ($characterIds->isNotEmpty()) {
                 $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
                 $characterIds->diff($knownCharacters->keys())->each(function ($character) use ($dispatchedJobs, &$now, &$x) {
-                    if ($this->dispatchJobs) {
-                        $job = new \ESIK\Jobs\ESI\GetCharacter($character);
-                        $job->delay($now);
-                        $this->dispatch($job);
-                        $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                    } else {
-                        $this->getCharacter($character);
-                    }
+                    $class = \ESIK\Jobs\ESI\GetCharacter::class;
+                    $params = collect(['id' => $character]);
+                    $jobId = $this->dispatchJob($class, $params, $now);
+                    $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                     if ($x%10==0) {
                         $now->addSecond();
                     }
@@ -426,14 +415,10 @@ class DataController extends Controller
             if ($corporationIds->isNotEmpty()) {
                 $knownCorporations = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
                 $corporationIds->diff($knownCorporations->keys())->each(function ($corporation) use ($dispatchedJobs, &$now, &$x) {
-                    if ($this->dispatchJobs) {
-                        $job = new \ESIK\Jobs\ESI\GetCorporation($corporation);
-                        $job->delay($now);
-                        $this->dispatch($job);
-                        $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                    } else {
-                        $this->getCorporation($corporation);
-                    }
+                    $class = \ESIK\Jobs\ESI\GetCorporation::class;
+                    $params = collect(['id' => $corporation]);
+                    $jobId = $this->dispatchJob($class, $params, $now);
+                    $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                     if ($x%10==0) {
                         $now->addSecond();
                     }
@@ -445,14 +430,10 @@ class DataController extends Controller
             if ($systemIds->isNotEmpty()) {
                 $knownSystems = System::whereIn('id', $systemIds->toArray())->get()->keyBy('id');
                 $systemIds->diff($knownSystems->keys())->each(function ($system) use ($dispatchedJobs, &$now, &$x) {
-                    if ($this->dispatchJobs) {
-                        $job = new \ESIK\Jobs\ESI\GetSystem($system);
-                        $job->delay($now);
-                        $this->dispatch($job);
-                        $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                    } else {
-                        $this->getSystem($system);
-                    }
+                    $class = \ESIK\Jobs\ESI\GetSystem::class;
+                    $params = collect(['id' => $system]);
+                    $jobId = $this->dispatchJob($class, $params, $now);
+                    $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                     if ($x%10==0) {
                         $now->addSecond();
                     }
@@ -461,36 +442,36 @@ class DataController extends Controller
             }
 
             $member->jobs()->attach($dispatchedJobs->toArray());
-
-
+            $memBookmarks = collect();
+            $bookmarks->each(function ($bookmark) use ($memBookmarks,$dictionary) {
+                if (is_null($dictionary->get($bookmark->get('location_id')))) {
+                    return true;
+                }
+                $memBookmarks->put($bookmark->get('bookmark_id'), collect([
+                    'bookmark_id' => $bookmark->get('bookmark_id'),
+                    "folder_id" => $bookmark->has('folder_id') ? $bookmark->get('folder_id') : 9999999,
+                    "label" => $bookmark->get('label'),
+                    "notes" => $bookmark->get('notes'),
+                    "location_id" => $bookmark->get('location_id'),
+                    "location_type" => $dictionary->get($bookmark->get('location_id'))->get('category'),
+                    "creator_id" => $bookmark->get('creator_id'),
+                    "creator_type" => $dictionary->get($bookmark->get('creator_id'))->get('category'),
+                    "created" => Carbon::parse($bookmark->get('created')),
+                ]));
+                if ($bookmark->has('item')) {
+                    $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_id', $bookmark->get('item')->get('item_id'));
+                    $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_type_id', $bookmark->get('item')->get('type_id'));
+                }
+                if ($bookmark->has('coordinates')) {
+                    $memBookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
+                }
+            });
+            $member->bookmarks()->delete();
+            $member->bookmarks()->createMany($memBookmarks->toArray());
         }
-        $memBookmarks = collect();
-        $bookmarks->each(function ($bookmark) use ($memBookmarks,$dictionary) {
-            if (is_null($dictionary->get($bookmark->get('location_id')))) {
-                return true;
-            }
-            $memBookmarks->put($bookmark->get('bookmark_id'), collect([
-                'bookmark_id' => $bookmark->get('bookmark_id'),
-                "folder_id" => $bookmark->has('folder_id') ? $bookmark->get('folder_id') : 9999999,
-                "label" => $bookmark->get('label'),
-                "notes" => $bookmark->get('notes'),
-                "location_id" => $bookmark->get('location_id'),
-                "location_type" => $dictionary->get($bookmark->get('location_id'))->get('category'),
-                "creator_id" => $bookmark->get('creator_id'),
-                "creator_type" => $dictionary->get($bookmark->get('creator_id'))->get('category'),
-                "created" => Carbon::parse($bookmark->get('created')),
-            ]));
-            if ($bookmark->has('item')) {
-                $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_id', $bookmark->get('item')->get('item_id'));
-                $memBookmarks->get($bookmark->get('bookmark_id'))->put('item_type_id', $bookmark->get('item')->get('type_id'));
-            }
-            if ($bookmark->has('coordinates')) {
-                $memBookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
-            }
-        });
-        $member->bookmarks()->delete();
-        $member->bookmarks()->createMany($memBookmarks->toArray());
+
         return $request;
+
     }
 
     // Method from the Character Skils Namepsace
@@ -505,23 +486,23 @@ class DataController extends Controller
         $deathClone = $response->get('home_location');
         $now = now(); $x = 0; $dispatchedJobs = collect();
         if ($deathClone->get('location_type') === "structure") {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetStructure($member->id, $deathClone->get('location_id'));
-                $job->delay(now());
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getStructure($member->id, $deathClone->get('location_id'));
+            $class = \ESIK\Jobs\ESI\GetStructure::class;
+            $params = collect(['member_id' => $member->id,'id' => $deathClone->get('location_id')]);
+            $jobId = $this->dispatchJob($class, $params, $now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
+            if ($x%10==0) {
+                $now->addSecond();
             }
+            $x++;
         } elseif ($deathClone->get('location_type') === "station") {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetStation($deathClone->get('location_id'));
-                $job->delay(now());
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getStation($member, $deathClone->get('location_id'));
+            $class = \ESIK\Jobs\ESI\GetStation::class;
+            $params = collect(['id' => $deathClone->get('location_id')]);
+            $jobId = $this->dispatchJob($class, $params, $now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
+            if ($x%10==0) {
+                $now->addSecond();
             }
+            $x++;
         }
 
         $member->fill([
@@ -539,34 +520,23 @@ class DataController extends Controller
                     'implants' => $clone->get('implants')->toJson()
                 ]);
                 if ($clone->get('location_type') === "structure") {
-                    $structure = Structure::firstOrNew(['id' => $clone->get('location_id')]);
-                    if (!$structure->exists || $structure->name === "Unknown Structure ". $clone->get('location_id')) {
-                        if ($member->scopes->contains('esi-universe.read_structures.v1')) {
-                            if ($this->dispatchJobs) {
-                                $job = new \ESIK\Jobs\ESI\GetStructure($member->id, $clone->get('location_id'));
-                                $job->delay($now);
-                                $this->dispatch($job);
-                                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                            } else {
-                                $this->getStructure($member->id, $clone->get('location_id'));
-                            }
-                        } else {
-                            $structure->fill(['name' => "Unknown Structure " . $clone->get('location_id')]);
-                            $structure->save();
-                        }
+                    $class = \ESIK\Jobs\ESI\GetStructure::class;
+                    $params = collect(['member_id' => $member->id,'id' => $clone->get('location_id')]);
+                    $jobId = $this->dispatchJob($class, $params, $now);
+                    $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
+                    if ($x%10==0) {
+                        $now->addSecond();
                     }
+                    $x++;
                 } elseif ($clone->get('location_type') === "station") {
-                    $station = Station::firstOrNew(['id' => $clone->get('location_id')]);
-                    if (!$station->exists) {
-                        if ($this->dispatchJobs) {
-                            $job = new \ESIK\Jobs\ESI\GetStation($clone->get('location_id'));
-                            $job->delay($now);
-                            $this->dispatch($job);
-                            $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                        } else {
-                            $this->getStructure($member->id, $clone->get('location_id'));
-                        }
+                    $class = \ESIK\Jobs\ESI\GetStation::class;
+                    $params = collect(['id' => $clone->get('location_id')]);
+                    $jobId = $this->dispatchJob($class, $params, $now);
+                    $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
+                    if ($x%10==0) {
+                        $now->addSecond();
                     }
+                    $x++;
                 }
             });
         }
@@ -586,17 +556,12 @@ class DataController extends Controller
 
         $knownImplants = Type::whereIn('id', $response->toArray())->get()->keyBy('id');
 
-        $now = now(); $x = 0;
-        $dispatchedJobs = collect();
+        $now = now(); $x = 0; $dispatchedJobs = collect();
         $response->diff($knownImplants->keys())->each(function ($type) use ($dispatchedJobs, &$now, &$x) {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetType($type);
-                $job->delay(now());
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getType($type);
-            }
+            $class = \ESIK\Jobs\ESI\GetType::class;
+            $params = collect(['id' => $type]);
+            $jobId = $this->dispatchJob($class, $params,$now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             if ($x%10==0) {
                 $now->addSecond();
             }
@@ -624,58 +589,31 @@ class DataController extends Controller
         }
         $response = collect($request->payload->response)->recursive();
         $dispatchedJobs = collect();
-        $system = System::firstOrNew(['id' => $response->get('solar_system_id')]);
-        if (!$system->exists) {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetSystem($response->get('solar_system_id'));
-                $job->delay(now());
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getSystem($response->get('solar_system_id'));
-            }
-        }
-
+        $class = \ESIK\Jobs\ESI\GetSystem::class;
+        $params = collect(['id' => $response->get('solar_system_id')]);
+        $jobId = $this->dispatchJob($class, $params);
+        $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
         // Query System ID for System Dat was successful, Set Member Location Data
         $location = collect([
-            "solar_system_id" => $system->id,
+            "solar_system_id" => $response->get('solar_system_id'),
             "location_id" => null,
             "location_type" => null
         ]);
 
         // Does the property station_data exists? If yes, character is currently in a Station or Outpost.
         if ($response->has('station_id')) {
-            $station = Station::firstOrNew(['id' => $response->get('station_id')]);
-            if (!$station->exists) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetStation($response->get('station_id'));
-                    $job->delay(now());
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->GetStation($response->get('station_id'));
-                }
-            }
+            $class = \ESIK\Jobs\ESI\GetStation::class;
+            $params = collect(['id' => $response->get('station_id')]);
+            $jobId = $this->dispatchJob($class, $params);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             $location->put('location_id', $response->get('station_id'));
             $location->put('location_type', "station");
 
         } else if ($response->has('structure_id')) {
-            $structure = Structure::firstOrNew(['id' => $response->get('structure_id')]);
-            if (!$structure->exists || $structure->name === "Unknown Structure ". $response->get('structure_id')) {
-                if ($member->scopes->contains('esi-universe.read_structures.v1')) {
-                    if ($this->dispatchJobs) {
-                        $job = new \ESIK\Jobs\ESI\GetStructure($member->id, $response->get('structure_id'));
-                        $job->delay(now());
-                        $this->dispatch($job);
-                        $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                    } else {
-                        $this->getStructure($member->id, $response->get('structure_id'));
-                    }
-                } else {
-                    $structure->fill(['name' => "Unknown Structure " . $structure->id]);
-                    $structure->save();
-                }
-            }
+            $class = \ESIK\Jobs\ESI\GetStructure::class;
+            $params = collect(['member_id' => $member->id, 'id' => $response->get('structure_id')]);
+            $jobId = $this->dispatchJob($class, $params);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             $location->put('location_id', $response->get('structure_id'));
             $location->put('location_type', "structure");
         } else {
@@ -723,14 +661,10 @@ class DataController extends Controller
             $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
             $now = now(); $x = 0; $dispatchedJobs = collect();
             $characterIds->diff($knownCharacters->keys())->each(function ($characterId) use ($dispatchedJobs, &$now, &$x) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetCharacter($characterId);
-                    $job->delay(now());
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->getCharacter($characterId);
-                }
+                $class = \ESIK\Jobs\ESI\GetCharacter::class;
+                $params = collect(['id' => $characterId]);
+                $jobId = $this->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
                     $now->addSecond();
                 }
@@ -740,14 +674,10 @@ class DataController extends Controller
             $corporationIds = $nonfaction->where('contact_type', 'corporation')->pluck('contact_id');
             $knownCorporations = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
             $corporationIds->diff($knownCorporations->keys())->each(function ($corporationId) use ($dispatchedJobs, &$now, &$x) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetCorporation($corporationId);
-                    $job->delay(now());
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->getCorporation($characterId);
-                }
+                $class = \ESIK\Jobs\ESI\GetCorporation::class;
+                $params = collect(['id' => $corporationId]);
+                $jobId = $this->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
                     $now->addSecond();
                 }
@@ -756,15 +686,11 @@ class DataController extends Controller
 
             $allianceIds = $nonfaction->where('contact_type', 'alliance')->pluck('contact_id');
             $knownAlliances = Alliance::whereIn('id', $allianceIds->toArray())->get()->keyBy('id');
-            $allianceIds->diff($knownAlliances->keys())->each(function ($allianceIds) use ($dispatchedJobs, &$now, &$x) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetAlliance($allianceIds);
-                    $job->delay(now());
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->getAlliance($allianceIds);
-                }
+            $allianceIds->diff($knownAlliances->keys())->each(function ($allianceId) use ($dispatchedJobs, &$now, &$x) {
+                $class = \ESIK\Jobs\ESI\GetAlliance::class;
+                $params = collect(['id' => $allianceId]);
+                $jobId = $this->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
                     $now->addSecond();
                 }
@@ -830,10 +756,10 @@ class DataController extends Controller
                 'date_issued' => $contract->has('date_issued') ? Carbon::parse($contract->get('date_issued')) : null
             ]);
             if ($create) {
-                $job = new \ESIK\Jobs\ProcessContract($member->id, $contract->toJson());
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
+                $class = \ESIK\Jobs\ProcessContract::class;
+                $params = collect(['member_id' => $member->id, 'contract' => $contract->toJson()]);
+                $jobId = $this->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
                     $now->addSecond();
                 }
@@ -847,6 +773,7 @@ class DataController extends Controller
 
     public function getMemberContractItems(Member $member, int $contractId)
     {
+        $contract = Contract::findOrFail($contractId);
         $request = $this->httpCont->getCharactersCharacterIdContractsContractIdItems($member->id, $member->access_token, $contractId);
         $status = $request->status;
         $payload = $request->payload;
@@ -856,26 +783,16 @@ class DataController extends Controller
         $response = collect($payload->response)->recursive();
         $now = now(); $x = 0; $dispatchedJobs = collect();
         $response->pluck('type_id')->unique()->values()->each(function ($type) use(&$now, &$x, $dispatchedJobs) {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetType($type);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getType($type);
-            }
+            $class = \ESIK\Jobs\ESI\GetType::class;
+            $params = collect(['id' => $type]);
+            $jobId = $this->dispatchJob($class, $params, $now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             if ($x%10==0) {
                 $now->addSecond();
             }
             $x++;
         });
         $member->jobs()->attach($dispatchedJobs->toArray());
-        $contract = Contract::find($contractId);
-        if (is_null($contract)) {
-            return (object)[
-                'status' => false
-            ];
-        }
         $contract->items()->attach($response);
         return $request;
     }
@@ -1131,7 +1048,7 @@ class DataController extends Controller
                     $mailHeader->recipients()->createMany($header->get('recipients')->toArray());
 
                     ProcessMailHeader::dispatch($member->id, $mailHeader->toJson(), $header->get('recipients')->toJson())->delay($now);
-                    $now = $now->addSeconds(1);
+                    $now->addSecond();
                 }
                 $attach->put($header->get('mail_id'), [
                     'labels' => $header->get('labels')->implode(','),
@@ -1192,19 +1109,7 @@ class DataController extends Controller
             return $request;
         }
         $response = collect($request->payload->response)->recursive();
-        $dispatchedJobs = collect();
-        $shipTypeInfo = Type::where('id', $response->get('ship_type_id'))->first();
-        if (is_null($shipTypeInfo)) {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetType($response->get('ship_type_id'));
-                $job->delay(now());
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getType($response->get('ship_type_id'));
-            }
-        }
-        $member->jobs()->attach($dispatchedJobs->toArray());
+        $shipTypeInfo = $this->getType($response->get('ship_type_id'));
         $member->ship()->updateOrCreate([], [
             'type_id' => $response->get('ship_type_id'),
             'item_id' => $response->get('ship_item_id'),
@@ -1234,14 +1139,10 @@ class DataController extends Controller
         $knownTypes = Type::whereIn('id', $skillIds->toArray())->get()->keyBy('id');
         $now = now(); $x = 0; $dispatchedJobs = collect();
         $skills->diffKeys($knownTypes)->each(function ($skill) use ($dispatchedJobs, &$now, &$x) {
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetType($skill->get('skill_id'));
-                $job->delay(now());
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getType($skill->get('skill_id'));
-            }
+            $class = \ESIK\Jobs\ESI\GetType::class;
+            $params = collect(['id' => $skill->get('skill_id')]);
+            $jobId = $this->dispatchJob($class, $params, $now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             if ($x%10==0) {
                 $now->addSecond();
             }
@@ -1270,14 +1171,10 @@ class DataController extends Controller
 
         $now = now(); $x = 0; $dispatchedJobs = collect();
         $skillIds->diff($knownTypeIds)->each(function ($skill) use ($dispatchedJobs, &$now, &$x){
-            if ($this->dispatchJobs) {
-                $job = new \ESIK\Jobs\ESI\GetType($skill);
-                $job->delay(now());
-                $this->dispatch($job);
-                $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-            } else {
-                $this->getType($skill);
-            }
+            $class = \ESIK\Jobs\ESI\GetType::class;
+            $params = collect(['id' => $skill]);
+            $jobId = $this->dispatchJob($class, $params, $now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             if ($x%10==0) {
                 $now->addSecond();
             }
@@ -1362,23 +1259,18 @@ class DataController extends Controller
                 $pUNPayload = $pUNRequest->payload;
                 if (!$pUNStatus) {
                     exit();
-
                 }
-                $pUNResponse = $pUNResponse->merge(collect($pUNPayload->response)->recursive()->keyBy('id'));
+                $pUNResponse = $pUNResponse->merge(collect($pUNPayload->response));
             });
-            $pUNResponse = $pUNResponse->keyBy('id');
+            $pUNResponse = $pUNResponse->recursive()->keyBy('id');
             $characterIds = $pUNResponse->where('category', 'character')->pluck('id')->unique()->values();
             $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
             $now = now(); $x = 0; $dispatchedJobs = collect();
             $characterIds->diff($knownCharacters->keys())->each(function ($characterId) use ($dispatchedJobs, &$now, &$x) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetCharacter($characterId);
-                    $job->delay(now());
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->getCharacter($characterId);
-                }
+                $class = \ESIK\Jobs\ESI\GetCharacter::class;
+                $params = collect(['id' => $characterId]);
+                $jobId = $this->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
                     $now->addSecond();
                 }
@@ -1388,14 +1280,10 @@ class DataController extends Controller
             $corporationIds = $pUNResponse->where('category', 'corporation')->pluck('id')->unique()->values();
             $knownCorporations = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
             $corporationIds->diff($knownCorporations->keys())->each(function ($corporationId) use ($dispatchedJobs, &$now, &$x) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetCorporation($corporationId);
-                    $job->delay(now());
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->getCorporation($corporationId);
-                }
+                $class = \ESIK\Jobs\ESI\GetCorporation::class;
+                $params = collect(['id' => $corporationId]);
+                $jobId = $this->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
                     $now->addSecond();
                 }
@@ -1405,14 +1293,10 @@ class DataController extends Controller
             $typeIds = $pUNResponse->where('category', 'inventory_type')->pluck('id')->unique()->values();
             $knownTypes = Type::whereIn('id', $typeIds->toArray())->get()->keyBy('id');
             $typeIds->diff($knownTypes->keys())->each(function ($typeId) use ($dispatchedJobs, &$now, &$x) {
-                if ($this->dispatchJobs) {
-                    $job = new \ESIK\Jobs\ESI\GetType($typeId);
-                    $job->delay(now());
-                    $this->dispatch($job);
-                    $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                } else {
-                    $this->getType($typeId);
-                }
+                $class = \ESIK\Jobs\ESI\GetType::class;
+                $params = collect(['id' => $typeId]);
+                $jobId = $this->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
                     $now->addSecond();
                 }
@@ -1421,37 +1305,23 @@ class DataController extends Controller
         }
         $transactions->pluck('location_id')->unique()->values()->each(function ($location) use ($dispatchedJobs, $member, &$now, &$x) {
             if ($location > 1000000000000) {
-                $structure = Structure::find($location);
-                if (is_null($structure) || starts_with($structure->name, "Unknown Structure")) {
-                    if ($this->dispatchJobs) {
-                        $job = new \ESIK\Jobs\ESI\GetStructure($member->id, $location);
-                        $job->delay(now());
-                        $this->dispatch($job);
-                        $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                    } else {
-                        $this->getStructure($member, $location);
-                    }
-                    if ($x%10==0) {
-                        $now->addSecond();
-                    }
-                    $x++;
+                $class = \ESIK\Jobs\ESI\GetStructure::class;
+                $params = collect(['member_id' => $member->id, 'id' => $location]);
+                $jobId = $this->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
+                if ($x%10==0) {
+                    $now->addSecond();
                 }
+                $x++;
             } else {
-                $station = Station::find($location);
-                if (is_null($station)) {
-                    if ($this->dispatchJobs) {
-                        $job = new \ESIK\Jobs\ESI\GetStation($location);
-                        $job->delay(now());
-                        $this->dispatch($job);
-                        $dispatchedJobs = $dispatchedJobs->push($job->getJobStatusId());
-                    } else {
-                        $this->getStation($location);
-                    }
-                    if ($x%10==0) {
-                        $now->addSecond();
-                    }
-                    $x++;
+                $class = \ESIK\Jobs\ESI\GetStation::class;
+                $params = collect(['id' => $location]);
+                $jobId = $this->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
+                if ($x%10==0) {
+                    $now->addSecond();
                 }
+                $x++;
             }
         });
         $unknownTransactions = collect();
@@ -1497,7 +1367,7 @@ class DataController extends Controller
         $secondPartyIds = $esiJournals->pluck('second_party_id');
         $partyIds = $firstPartyIds->merge($secondPartyIds)->unique()->reject(function($id) {
             return is_null($id);
-        })->values()->push(500001);
+        })->values();
 
 
         $factionPartyIds = $partyIds->filter(function ($id, $key) use ($partyIds) {
@@ -1552,21 +1422,6 @@ class DataController extends Controller
         });
         $member->journals()->createMany($journals->toArray());
         return $request;
-    }
-
-    public function disableJobDispatch()
-    {
-        $this->dispatchJobs = false;
-    }
-
-    public function enableJobDispatch()
-    {
-        $this->dispatchJobs = true;
-    }
-
-    public function getJobDispatchStatus()
-    {
-        return $this->dispatchJobs;
     }
 
     // ****************************************************************************************************
@@ -1835,5 +1690,31 @@ class DataController extends Controller
     public function getMapRegions()
     {
         return $this->httpCont->getMapRegions();
+    }
+
+    private function dispatchJob (string $class, Collection $params, Carbon $delay = null) {
+        $shouldDispatch = $this->shouldDispatchJob($class, $params->toArray());
+        $results = collect(['dispatched' => false]);
+        if ($shouldDispatch) {
+            $job = new $class(...$params->values()->toArray());
+            if (!is_null($delay)) {
+                $job->delay($delay);
+            }
+            $this->dispatch($job);
+            $results->put('dispatched', true);
+            $results->put('job', $job->getJobStatusId());
+        }
+        return $results;
+    }
+
+    private function shouldDispatchJob(string $class, array $args) {
+        $check = JobStatus::where('type', $class);
+        foreach ($args as $key=>$value) {
+            $check=$check->where('input->'.$key, $value);
+        }
+        $check = $check->whereIn('status',[JobStatus::STATUS_EXECUTING, JobStatus::STATUS_QUEUED]);
+        $check = $check->first();
+
+        return is_null($check);
     }
 }
