@@ -57,22 +57,28 @@ class ProcessMailHeader implements ShouldQueue
         unset($status, $payload);
         $recipients->each(function ($recipient) use ($header) {
             if ($recipient->get('recipient_type') === "character") {
-                $getCharacter = $this->dataCont->getCharacter($recipient->get('recipient_id'));
-                $status = $getCharacter->status;
-                $payload = $getCharacter->payload;
-                unset($status, $payload);
+                $class = \ESIK\Jobs\ESI\GetCharacter::class;
+                $params = collect(['id' => $recipient->get('recipient_id')]);
+                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                if ($shouldDispatch) {
+                    $this->dataCont->getCharacter($recipient->get('recipient_id'));
+                }
             }
             if ($recipient->get('recipient_type') === "corporation") {
-                $getCorporation = $this->dataCont->getCorporation($recipient->get('recipient_id'));
-                $status = $getCorporation->status;
-                $payload = $getCorporation->payload;
-                unset($status, $payload);
+                $class = \ESIK\Jobs\ESI\GetCorporation::class;
+                $params = collect(['id' => $recipient->get('recipient_id')]);
+                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                if ($shouldDispatch) {
+                    $this->dataCont->getCharacter($recipient->get('recipient_id'));
+                }
             }
             if ($recipient->get('recipient_type') === "alliance") {
-                $getAlliance = $this->dataCont->getAlliance($recipient->get('recipient_id'));
-                $status = $getAlliance->status;
-                $payload = $getAlliance->payload;
-                unset($status, $payload);
+                $class = \ESIK\Jobs\ESI\GetAlliance::class;
+                $params = collect(['id' => $recipient->get('recipient_id')]);
+                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                if ($shouldDispatch) {
+                    $this->dataCont->getCharacter($recipient->get('recipient_id'));
+                }
             }
 
             if ($recipient->get('recipient_type') === "mailing_list") {

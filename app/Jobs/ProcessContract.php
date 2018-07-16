@@ -78,15 +78,25 @@ class ProcessContract implements ShouldQueue
             $knownAlliances = Alliance::whereIn('id', $allianceIds->toArray())->get()->keyBy('id');
             $x = 0;
             $characterIds->diff($knownCharacters->keys())->each(function ($characterId) use (&$now, &$x) {
-                $this->dataCont->getCharacter($characterId);
+                $class = \ESIK\Jobs\ESI\GetCharacter::class;
+                $params = collect(['id' => $characterId]);
+                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                if ($shouldDispatch) {
+                    $this->dataCont->getCharacter($characterId);
+                }
                 if ($x%10==0) {
-                    sleep(1);
+                    usleep(50000);
                 }
                 $x++;
             });
             $x = 0;
             $corporationIds->diff($knownCorporations->keys())->each(function ($corporationId) use (&$now, &$x) {
-                $this->dataCont->getCorporation($corporationId);
+                $class = \ESIK\Jobs\ESI\GetCorporation::class;
+                $params = collect(['id' => $corporationId]);
+                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                if ($shouldDispatch) {
+                    $this->dataCont->getCorporation($corporationId);
+                }
                 if ($x%10==0) {
                     sleep(1);
                 }
@@ -94,7 +104,12 @@ class ProcessContract implements ShouldQueue
             });
             $x = 0;
             $allianceIds->diff($knownAlliances->keys())->each(function ($allianceId) use (&$now, &$x) {
-                $this->dataCont->getAlliance($allianceId);
+                $class = \ESIK\Jobs\ESI\GetAlliance::class;
+                $params = collect(['id' => $allianceId]);
+                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                if ($shouldDispatch) {
+                    $this->dataCont->getAlliance($allianceId);
+                }
                 if ($x%10==0) {
                     sleep(1);
                 }
@@ -116,16 +131,16 @@ class ProcessContract implements ShouldQueue
         $x = 0;
         $structureIds->diff($knownStructures->keys())->each(function ($structureId) use ($member, &$now, &$x) {
             if ($member->scopes->contains(config('services.eve.scopes.readUniverseStructures'))) {
-                $this->dataCont->getStructure($member, $structureId);
+                $class = \ESIK\Jobs\ESI\GetStructure::class;
+                $params = collect(['memberId' => $member->id, 'id' => $structureId]);
+                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                if ($shouldDispatch) {
+                    $this->dataCont->getStructure($member, $structureId);
+                }
                 if ($x%10==0) {
                     sleep(1);
                 }
                 $x++;
-            } else {
-                Structure::create([
-                    'id' => $structureId,
-                    'name' => "Unknown Structure " . $structureId
-                ]);
             }
         });
         $stationIds = $stationIds->unique()->values();
@@ -133,6 +148,12 @@ class ProcessContract implements ShouldQueue
         $x = 0;
         $stationIds->diff($knownStations->keys())->each(function ($stationId) use (&$now, &$x) {
             $this->dataCont->getStation($stationId);
+            $class = \ESIK\Jobs\ESI\GetStructure::class;
+            $params = collect(['id' => $stationId]);
+            $shouldDispatch = $this->shouldDispatchJob($class, $params);
+            if ($shouldDispatch) {
+                $this->dataCont->getStation($stationId);
+            }
             if ($x%10==0) {
                 sleep(1);
             }
