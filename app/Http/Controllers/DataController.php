@@ -477,7 +477,7 @@ class DataController extends Controller
 
     }
 
-    // Method from the Character Skils Namepsace
+    // Method from the Character Clones Namepsace
 
     public function getMemberClones(Member $member)
     {
