@@ -31,24 +31,6 @@ class AuthController extends Controller
             }
             $getMemberData = $getMemberData->payload;
 
-            // $entities = collect();
-            // $entities->push($getMemberData->id);
-            // $entities->push($getMemberData->corporation_id);
-            // if ($getMemberData->alliance_id !== null) {
-            //     $entities->push($getMemberData->alliance_id);
-            // }
-            // $entities = $entities->toArray();
-            // $bl = BlackList::whereIn('id', $entities)->with('entity')->get()->keyBy('id');
-            // if ($bl->isNotEmpty()){
-            //     Session::flash('alert', [
-            //        "header" => "Login Attempt Revoked",
-            //        'message' => "One or more of the entities that you are associated with has been banned from using this applications.",
-            //        'type' => 'danger',
-            //        'close' => 1
-            //     ]);
-            //     return redirect(route('auth.login'));
-            // }
-
             $member = Member::firstOrNew(['id' => $getMemberData->id]);
             if ($member->exists) {
                 Auth::login($member);
