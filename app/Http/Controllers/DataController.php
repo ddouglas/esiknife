@@ -1695,7 +1695,7 @@ class DataController extends Controller
         return $this->httpCont->getMapRegions();
     }
 
-    private function dispatchJob (string $class, Collection $params, Carbon $delay = null) {
+    public function dispatchJob (string $class, Collection $params, Carbon $delay = null) {
         $shouldDispatch = $this->shouldDispatchJob($class, $params->toArray());
         $results = collect(['dispatched' => false]);
         if ($shouldDispatch) {
@@ -1710,7 +1710,7 @@ class DataController extends Controller
         return $results;
     }
 
-    private function shouldDispatchJob(string $class, array $args) {
+    public function shouldDispatchJob(string $class, array $args) {
         $check = JobStatus::where('type', $class);
         foreach ($args as $key=>$value) {
             $check=$check->where('input->'.$key, $value);
