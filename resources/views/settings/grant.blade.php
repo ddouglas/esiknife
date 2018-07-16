@@ -15,24 +15,6 @@
                         {{ $grant->member->info->name }} is requesting access to your data with the following scopes. Please review this entire screen before clicking <strong>"Grant Access to Data"</strong> or <strong>"Do not grant Access to Data"</strong>
                     </div>
                     <div class="card-body p-0">
-                        {{-- <table class="table table-bordered m-0">
-                            <th>
-                                Request Scope
-                            </th>
-                            <th>
-                                Scope Is Granted
-                            </th>
-                            @foreach($grant->scopes as $scope)
-                                <tr>
-                                    <td>
-                                        {{ $scope }}
-                                    </td>
-                                    <td>
-                                        {{ Auth::user()->scopes->containsStrict($scope) ? "Scope is Registerd" : "Scope is not registered" }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </table> --}}
                         <div class="list-group">
                             <div class="list-group-item">
                                 <div class="float-right">

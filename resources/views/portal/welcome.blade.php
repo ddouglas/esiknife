@@ -129,7 +129,8 @@
 @section('js')
     <script>
         $('#all').on('click', function(){
-            $(':checkbox.item').prop('checked', true);
+            var checkboxes = $(':checkbox.item');
+            checkboxes.prop('checked', !checkboxes.prop('checked'));
         });
     </script>
 @endsection

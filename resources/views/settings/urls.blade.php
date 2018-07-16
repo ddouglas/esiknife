@@ -94,7 +94,7 @@
                                             <input type="text" name="name" id="name" class="form-control" placeholder="Url for Corporation Recruitment" value="{{ old('name') }}"/>
                                         </div>
                                         <div class="form-group">
-                                            <label>Scopes Requesting:</label> <a href="#" id="all">[Select All]</a>
+                                            <label>Scopes Requesting:</label> <a href="#" id="all">[Un/Select All]</a>
                                             <ul class="list-unstyled">
                                                 @foreach (config('services.eve.scopes') as $key => $scope)
                                                     <li>
@@ -125,7 +125,8 @@
     <script>
         $(document).ready(function () {
             $('#all').on('click', function(){
-                $(':checkbox.item').prop('checked', true);
+                var checkboxes = $(':checkbox.item');
+                checkboxes.prop('checked', !checkboxes.prop('checked'));
             });
 
             @if (isset($errors) && count($errors) > 0)
