@@ -80,7 +80,7 @@ class ProcessContract implements ShouldQueue
             $characterIds->diff($knownCharacters->keys())->each(function ($characterId) use (&$now, &$x) {
                 $class = \ESIK\Jobs\ESI\GetCharacter::class;
                 $params = collect(['id' => $characterId]);
-                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
                     $this->dataCont->getCharacter($characterId);
                 }
@@ -93,7 +93,7 @@ class ProcessContract implements ShouldQueue
             $corporationIds->diff($knownCorporations->keys())->each(function ($corporationId) use (&$now, &$x) {
                 $class = \ESIK\Jobs\ESI\GetCorporation::class;
                 $params = collect(['id' => $corporationId]);
-                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
                     $this->dataCont->getCorporation($corporationId);
                 }
@@ -106,7 +106,7 @@ class ProcessContract implements ShouldQueue
             $allianceIds->diff($knownAlliances->keys())->each(function ($allianceId) use (&$now, &$x) {
                 $class = \ESIK\Jobs\ESI\GetAlliance::class;
                 $params = collect(['id' => $allianceId]);
-                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
                     $this->dataCont->getAlliance($allianceId);
                 }
@@ -133,7 +133,7 @@ class ProcessContract implements ShouldQueue
             if ($member->scopes->contains(config('services.eve.scopes.readUniverseStructures'))) {
                 $class = \ESIK\Jobs\ESI\GetStructure::class;
                 $params = collect(['memberId' => $member->id, 'id' => $structureId]);
-                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
                     $this->dataCont->getStructure($member, $structureId);
                 }
@@ -150,7 +150,7 @@ class ProcessContract implements ShouldQueue
             $this->dataCont->getStation($stationId);
             $class = \ESIK\Jobs\ESI\GetStructure::class;
             $params = collect(['id' => $stationId]);
-            $shouldDispatch = $this->shouldDispatchJob($class, $params);
+            $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
             if ($shouldDispatch) {
                 $this->dataCont->getStation($stationId);
             }

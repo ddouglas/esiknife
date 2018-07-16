@@ -788,7 +788,7 @@ class DataController extends Controller
         $response->pluck('type_id')->unique()->values()->each(function ($type) use(&$now, &$x, $dispatchedJobs) {
             $class = \ESIK\Jobs\ESI\GetType::class;
             $params = collect(['id' => $type]);
-            $shouldDispatch = $this->shouldDispatchJob($class, $params);
+            $shouldDispatch = $this->shouldDispatchJob($class, $params->toArray());
             if ($shouldDispatch) {
                 $this->getType($type);
             }

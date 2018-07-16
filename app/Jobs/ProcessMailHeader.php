@@ -59,7 +59,7 @@ class ProcessMailHeader implements ShouldQueue
             if ($recipient->get('recipient_type') === "character") {
                 $class = \ESIK\Jobs\ESI\GetCharacter::class;
                 $params = collect(['id' => $recipient->get('recipient_id')]);
-                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
                     $this->dataCont->getCharacter($recipient->get('recipient_id'));
                 }
@@ -67,7 +67,7 @@ class ProcessMailHeader implements ShouldQueue
             if ($recipient->get('recipient_type') === "corporation") {
                 $class = \ESIK\Jobs\ESI\GetCorporation::class;
                 $params = collect(['id' => $recipient->get('recipient_id')]);
-                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
                     $this->dataCont->getCharacter($recipient->get('recipient_id'));
                 }
@@ -75,7 +75,7 @@ class ProcessMailHeader implements ShouldQueue
             if ($recipient->get('recipient_type') === "alliance") {
                 $class = \ESIK\Jobs\ESI\GetAlliance::class;
                 $params = collect(['id' => $recipient->get('recipient_id')]);
-                $shouldDispatch = $this->shouldDispatchJob($class, $params);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
                     $this->dataCont->getCharacter($recipient->get('recipient_id'));
                 }
