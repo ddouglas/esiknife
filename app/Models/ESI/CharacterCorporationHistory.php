@@ -12,13 +12,13 @@ class CharacterCorporationHistory extends Model
     public $incrementing = false;
     protected static $unguarded = true;
 
-    protected $with = ['corporation'];
+    protected $with = ['info'];
 
     protected $dates = [
         'start_date'
     ];
 
-    public function corporation ()
+    public function info ()
     {
         return $this->hasOne(Corporation::class, 'id', 'corporation_id');
     }
