@@ -784,10 +784,12 @@ class DataController extends Controller
         $response->pluck('type_id')->unique()->values()->each(function ($type) use(&$now, &$x, $dispatchedJobs) {
             $class = \ESIK\Jobs\ESI\GetType::class;
             $params = collect(['id' => $type]);
-            $jobId = $this->dispatchJob($class, $params, $now);
-            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
+            $shouldDispatch = $this->shouldDispatchJob($class, $params);
+            if ($shouldDispatch) {
+                $this->getType($type);
+            }
             if ($x%10==0) {
-                $now->addSecond();
+                usleep(50000);
             }
             $x++;
         });
