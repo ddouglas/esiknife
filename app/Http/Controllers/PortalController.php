@@ -39,7 +39,7 @@ class PortalController extends Controller
         return view('portal.dashboard');
     }
 
-    public function overview ($member)
+    public function overview (int $member)
     {
         $member = Member::findOrFail($member);
         return view('portal.overview', [
@@ -47,7 +47,7 @@ class PortalController extends Controller
         ]);
     }
 
-    public function assets ($member)
+    public function assets (int $member)
     {
         $member = Member::findOrFail($member);
         $dbAssets = $member->assets->keyBy('item_id')->toArray();
@@ -107,7 +107,7 @@ class PortalController extends Controller
         ])->withMember($member);
     }
 
-    public function bookmarks ($member) {
+    public function bookmarks (int $member) {
         $member = Member::findOrFail($member);
         $member->load('bookmarkFolders.bookmarks');
 
@@ -122,7 +122,7 @@ class PortalController extends Controller
         return view('portal.bookmarks')->withMember($member)->withUniqueLocations($uniqueLocations);
     }
 
-    public function clones ($member)
+    public function clones (int $member)
     {
         $member = Member::findOrFail($member);
         if ($member->scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
@@ -134,7 +134,7 @@ class PortalController extends Controller
         return view('portal.clones')->withMember($member);
     }
 
-    public function contacts ($member)
+    public function contacts (int $member)
     {
         $member = Member::findOrFail($member);
         $member->load(['contacts' => function ($query) {
@@ -154,7 +154,7 @@ class PortalController extends Controller
         return view('portal.contacts')->withMember($member);
     }
 
-    public function contracts ($member)
+    public function contracts (int $member)
     {
         $member = Member::findOrFail($member);
         $member->load('contracts', 'contracts.issuer.corporation', 'contracts.acceptor', 'contracts.assignee', 'contracts.start', 'contracts.end');
@@ -173,7 +173,7 @@ class PortalController extends Controller
         ])->withMember($member);
     }
 
-    public function flyable ($member)
+    public function flyable (int $member)
     {
         $member = Member::findOrFail($member);
         $skillz = $member->skillz->keyBy('id');
@@ -219,7 +219,7 @@ class PortalController extends Controller
         ])->withMember($member);
     }
 
-    public function mails ($member)
+    public function mails (int $member)
     {
         $member = Member::findOrFail($member);
         $mails = $member->mail();
@@ -257,7 +257,7 @@ class PortalController extends Controller
         ])->withMember($member);
     }
 
-    public function queue ($member)
+    public function queue (int $member)
     {
         $member = Member::findOrFail($member);
         $groupsTraining = collect();
@@ -288,7 +288,7 @@ class PortalController extends Controller
         ])->withMember($member);
     }
 
-    public function skills ($member)
+    public function skills (int $member)
     {
         $member = Member::findOrFail($member);
         $skillz = collect();
@@ -306,7 +306,7 @@ class PortalController extends Controller
         ])->withMember($member);
     }
 
-    public function wallet_transactions ($member)
+    public function wallet_transactions (int $member)
     {
         $member = Member::findOrFail($member);
         $transactions = $member->transactions()->paginate(25);
@@ -315,7 +315,7 @@ class PortalController extends Controller
         ])->withMember($member);
     }
 
-    public function wallet_journal ($member)
+    public function wallet_journal (int $member)
     {
         $member = Member::findOrFail($member);
         $journal = $member->journals()->orderby('date', 'desc')->paginate(25);
