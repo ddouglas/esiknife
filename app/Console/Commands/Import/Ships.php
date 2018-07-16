@@ -47,7 +47,8 @@ class Ships extends Command
     {
         $shipGroups = Group::where('category_id', 6)->where('published', 1)->get();
         if ($shipGroups->count() < 43) {
-            dd("43 groups are suppose to be in the database to conduct this operation. Please run Import:SDE before runnig this command.");
+            $this->warning("43 groups are suppose to be in the database to conduct this operation. Please run Import:SDE before runnig this command.");
+            return false;
         }
         $bar = $this->output->createProgressBar($shipGroups->count());
         $types = collect();
@@ -69,7 +70,8 @@ class Ships extends Command
             $status = $getType->status;
             $payload = $getType->payload;
             if (!$status) {
-                dump($payload->message);
+                $this->warning($payload->message);
+                $bar->advance();
                 return true;
             }
             $bar->advance();
