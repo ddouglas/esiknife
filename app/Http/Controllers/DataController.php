@@ -131,7 +131,6 @@ class DataController extends Controller
                     $class = \ESIK\Jobs\ESI\GetCorporation::class;
                     $params = collect(['id' => $corporation]);
                     $jobId = $this->dispatchJob($class, $params, $now);
-                    $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
 
                     if ($x%10==0) {
                         $now->addSecond();
