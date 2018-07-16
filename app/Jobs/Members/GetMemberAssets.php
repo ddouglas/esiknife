@@ -19,8 +19,6 @@ class GetMemberAssets implements ShouldQueue
 
     public $id, $page, $dataCont;
 
-    public $timeout = 160;
-
     /**
      * Create a new job instance.
      *
@@ -32,7 +30,6 @@ class GetMemberAssets implements ShouldQueue
         $this->page = $page;
         $this->dataCont = new DataController;
         $this->prepareStatus();
-        $this->setInput(['id' => $id]);
         if (!is_null($page)) {
             $this->setInput(['id' => $id, 'page' => $page]);
         } else {
@@ -47,8 +44,6 @@ class GetMemberAssets implements ShouldQueue
      */
     public function handle()
     {
-        $this->dataCont->disableJobDispatch();
-
         $member = Member::find($this->id);
         if (is_null($this->page)) {
             $headMemberAssets = $this->dataCont->headMemberAssets($member);

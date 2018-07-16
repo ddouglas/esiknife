@@ -16,9 +16,6 @@ class GetMemberBookmarks implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Trackable;
 
-    public $id, $dataCont;
-
-    public $timeout = 160;
 
     /**
      * Create a new job instance.
@@ -30,7 +27,6 @@ class GetMemberBookmarks implements ShouldQueue
         $this->id = $id;
         $this->dataCont = new DataController;
         $this->prepareStatus();
-        $this->setInput(['id' => $id]);
     }
 
     /**
@@ -40,7 +36,6 @@ class GetMemberBookmarks implements ShouldQueue
      */
     public function handle()
     {
-        // $this->dataCont->disableJobDispatch();
         $member = Member::findOrFail($this->id);
         $getMemberBookmarks = $this->dataCont->getMemberBookmarks($member);
         $status = $getMemberBookmarks->status;

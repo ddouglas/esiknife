@@ -18,8 +18,6 @@ class GetMemberMailHeaders implements ShouldQueue
 
     public $id, $dataCont;
 
-    public $timeout = 160;
-
     /**
      * Create a new job instance.
      *
@@ -40,7 +38,6 @@ class GetMemberMailHeaders implements ShouldQueue
      */
     public function handle()
     {
-        // $this->dataCont->disableJobDispatch();
         $member = Member::findOrFail($this->id);
         $getMemberMailLabels = $this->dataCont->getMemberMailHeaders($member);
         $status = $getMemberMailLabels->status;

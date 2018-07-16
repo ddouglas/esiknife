@@ -18,8 +18,6 @@ class GetMemberContacts implements ShouldQueue
 
     public $id, $dataCont;
 
-    public $timeout = 160;
-
     /**
      * Create a new job instance.
      *
@@ -40,7 +38,6 @@ class GetMemberContacts implements ShouldQueue
      */
     public function handle()
     {
-        // $this->dataCont->disableJobDispatch();
         $member = Member::findOrFail($this->id);
         $getMemberContacts = $this->dataCont->getMemberContacts($member);
         $status = $getMemberContacts->status;

@@ -40,7 +40,6 @@ class GetMemberWallet implements ShouldQueue
      */
     public function handle()
     {
-        // $this->dataCont->disableJobDispatch();
         $member = Member::findOrFail($this->id);
         $getMemberWallet = $this->dataCont->getMemberWallet($member);
         $status = $getMemberWallet->status;
