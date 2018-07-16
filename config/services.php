@@ -20,7 +20,7 @@ return [
     ],
 
     'eve' => [
-        'userAgent' => "ESIKnife (ESIK) || David Davaham (David Douglas) || ddouglas@douglaswebdev.net",
+        'userAgent' => env("USER_AGENT", "ESIKnife (ESIK) || SELF HOSTED VERSION"),
         'sso' => [
             'id' => env('EVESSO_CLIENT_ID'),
             'secret' => env('EVESSO_CLIENT_SECRET'),
