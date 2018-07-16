@@ -143,7 +143,7 @@ class HttpController extends Controller
         ]);
     }
 
-    public function headCharacterCharacterIdAssets(int $id, string $token)
+    public function headCharactersCharacterIdAssets(int $id, string $token)
     {
         return $this->request([
             "Authorization" => "Bearer ". $token,
@@ -170,13 +170,24 @@ class HttpController extends Controller
         ], 'post', config('services.eve.urls.esi'),"/v1/characters/{$id}/assets/names/", json_encode($ids));
     }
 
-    public function getCharactersCharacterIdBookmarks($id, $token)
+    public function headCharactersCharacterIdBookmarks(int $id, string $token)
     {
         return $this->request([
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
             "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.esi'),"/v2/characters/{$id}/bookmarks/", []);
+        ], 'head', config('services.eve.urls.esi'),"/v2/characters/{$id}/bookmarks/", []);
+    }
+
+    public function getCharactersCharacterIdBookmarks(int $id, string $token, int $page)
+    {
+        return $this->request([
+            "Authorization" => "Bearer ". $token,
+            "Content-Type" => "application/json",
+            "User-Agent" => config("services.eve.userAgent")
+        ], 'get', config('services.eve.urls.esi'),"/v2/characters/{$id}/bookmarks/", [
+            'page' => $page
+        ]);
     }
 
     public function getCharactersCharacterIdBookmarksFolders($id, $token)
