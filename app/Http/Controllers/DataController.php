@@ -273,6 +273,10 @@ class DataController extends Controller
         $systemIds = $assets->where('location_type', 'solar_system')->pluck('location_id')->unique()->values();
         $knownSystems = System::whereIn('id', $systemIds->toArray())->get()->keyBy('id');
         $systemIds->diff($knownSystems->keys())->each(function ($systemId) use ($dispatchedJobs, &$now, &$x) {
+            if ($systemId == 2004) {
+                return true;
+                // https://github.com/esi/esi-issues/issues/966
+            }
             $class = \ESIK\Jobs\ESI\GetSystem::class;
             $params = collect(['id' => $systemId]);
             $jobId = $this->dispatchJob($class, $params, $now);
