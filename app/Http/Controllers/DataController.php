@@ -1609,6 +1609,9 @@ class DataController extends Controller
                 $dbAttributes = $type->attributes()->whereIn('attribute_id', $attributes->pluck('attribute_id')->toArray())->get()->keyBy('attribute_id');
                 $missingAttributes = collect();
                 $attributes->each(function ($attribute) use ($dbAttributes, $type, $missingAttributes) {
+                    if ($attribute->get('attribute_id') == 4) {
+                        return true;
+                    }
                     if (!$dbAttributes->has($attribute->get('attribute_id'))) {
                         $attribute->toArray();
                         $missingAttributes->push($attribute->toArray());
