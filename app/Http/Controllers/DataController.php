@@ -241,6 +241,11 @@ class DataController extends Controller
             return $request;
         }
         $assets = collect($payload->response)->recursive()->keyBy('item_id');
+        $knownAssets = MemberAsset::where('id', $member->id)->whereIn('item_id', $assets->keys()->toArray())->get()->keyBy('item_id');
+        $assets = $assets->whereNotIn('item_id', $knownAssets->keys()->toArray());
+        if ($assets->isEmpty()) {
+            return $request;
+        }
         $dispatchedJobs = collect();
         $typeIds = $assets->pluck('type_id')->unique()->values();
 
