@@ -150,6 +150,7 @@ class SettingController extends Controller
                                 return redirect(route('settings.access'))->withErrors($validator)->withInput();
                             }
                             $access = collect(Request::get('access'))->recursive();
+
                             $access->each(function ($scopes, $charId) use ($access) {
                                 $scopes->keys()->each(function ($scope) use ($charId, $access) {
                                     $access->get($charId)->push($scope);
@@ -242,7 +243,8 @@ class SettingController extends Controller
     {
         if (Request::isMethod('post')) {
             $validator = Validator::make(Request::all(), [
-                'name' => "sometimes|nullable|min:4|max:32"
+                'name' => "sometimes|nullable|min:4|max:32",
+                'scopes' => "required|array"
             ]);
             if ($validator->fails()) {
                 return redirect(route('settings.urls'))->withInput()->withErrors($validator);

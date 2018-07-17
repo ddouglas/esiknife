@@ -18,7 +18,7 @@ class PortalController extends Controller
 
     public function dashboard ()
     {
-        Auth::user()->load('accessee.info', 'jobs');
+        Auth::user()->load('accessee.info', 'alts.jobs');
         if (Request::has('action')) {
             $action = Request::get('action');
             if ($action === "delete_pending_grant") {
@@ -36,7 +36,14 @@ class PortalController extends Controller
                 }
             }
         }
-        return view('portal.dashboard');
+        $jobs = collect([
+            'pending' => Auth::user()->alts->pluck('jobs')->flatten()->whereIn('status', ['queued', 'executing'])->count(),
+            'finished' => Auth::user()->alts->pluck('jobs')->flatten()->whereIn('status', ['finished'])->count(),
+            'failed' => Auth::user()->alts->pluck('jobs')->flatten()->whereIn('status', ['failed'])->count()
+        ]);
+        return view('portal.dashboard', [
+            'jobs' => $jobs
+        ]);
     }
 
     public function overview (int $member)
@@ -390,6 +397,7 @@ class PortalController extends Controller
 
             $memberData = $getMemberData->payload;
             $member = Member::firstOrNew(['id' => $memberData->id])->fill([
+                'main' => Auth::check() ? Auth::user()->id : $payload->get('id'),
                 'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
                 'access_token' => $ssoResponse->get('access_token'),
                 'refresh_token' => $ssoResponse->get('storeRefreshToken') ? $ssoResponse->get('refresh_token') : null,

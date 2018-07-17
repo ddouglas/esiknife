@@ -18,11 +18,25 @@ class RedirectIfNotAuthorized
         if ($request->user() && $request->route()->hasParameter('member')) {
             $memberId = (int)$request->route()->parameter('member');
             if ($request->user()->id != $memberId) {
+                // Assume false until a statement below sets true
+                $authorized = false;
                 // Set User to variable and load accessee's keyed by their id
                 $user = $request->user();
-                $user->load('accessee');
+                $user->load('alts', 'accessee');
+                $alts = $user->alts->keyBy('id');
                 $accessees = $user->accessee->keyBy('id');
-                if (!$accessees->has($memberId)) {
+                if ($alts->has($memberId)) {
+                    $authorized = true;
+                } else if ($accessees->has($memberId)) {
+                    if (!is_null($scope)) {
+                        $accessee = $accessees->get($memberId);
+                        $accesseeScopes = collect(json_decode($accessees->get($memberId)->pivot->access, true));
+                        if ($accesseeScopes->containsStrict($scope)) {
+                            $authorized = true;
+                        }
+                    }
+                }
+                if (!$authorized) {
                     Session::flash('alert', [
                         'header' => "Unauthorized Request",
                         'message' => "You are not authorized to view data associated with that ID",
@@ -30,19 +44,6 @@ class RedirectIfNotAuthorized
                         'close' => 1
                     ]);
                     return redirect(route('dashboard'));
-                }
-                if (!is_null($scope)) {
-                    $accessee = $accessees->get($memberId);
-                    $accesseeScopes = collect(json_decode($accessees->get($memberId)->pivot->access, true));
-                    if (!$accesseeScopes->containsStrict($scope)) {
-                        Session::flash('alert', [
-                            'header' => "Unauthorized Request",
-                            'message' => "You are not authorized to view data associated with that page",
-                            'type' => "danger",
-                            'close' => 1
-                        ]);
-                        return redirect(route('dashboard'));
-                    }
                 }
             }
         }

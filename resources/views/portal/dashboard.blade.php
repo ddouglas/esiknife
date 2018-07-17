@@ -31,26 +31,34 @@
                 @endif
                 @include('extra.alert')
                 <ul class="list-group">
-                    <li class="list-group-item">
-                        <div class="float-right">
-                            <a href="{{ route('overview', ['id' => Auth::user()->id]) }}" class="btn btn-primary">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                        </div>
-                        <div class="media mt-0">
-                            <img src="{{ config('services.eve.urls.img') }}/Character/{{ Auth::user()->id }}_64.jpg" class="rounded img-fluid mr-3" />
-                            <div class="media-body align-center">
-                                <h4>{{ Auth::user()->info->name }}</h4>
-                                <p>
-                                    {{ Auth::user()->info->corporation->name }} / @if(!is_null(Auth::user()->info->alliance)) {{ Auth::user()->info->alliance->name }} @endif
-                                </p>
+                    @foreach(Auth::user()->alts as $alt)
+                        <li class="list-group-item">
+                            <div class="float-right">
+                                <a href="{{ route('welcome') }}" class="btn btn-primary">
+                                    <i class="fas fa-sync"></i>
+                                </a>
+                                <a href="{{ route('overview', ['id' => $alt->id]) }}" class="btn btn-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                             </div>
-                        </div>
-                    </li>
+                            <div class="media mt-0">
+                                <img src="{{ config('services.eve.urls.img') }}/Character/{{ $alt->id }}_64.jpg" class="rounded img-fluid mr-3" />
+                                <div class="media-body align-center">
+                                    <h4>{{ $alt->info->name }}</h4>
+                                    <p>
+                                        {{ $alt->info->corporation->name }} / @if(!is_null($alt->info->alliance)) {{ $alt->info->alliance->name }} @endif
+                                    </p>
+                                </div>
+                            </div>
+                        </li>
+                    @endforeach
                 </ul>
                 <div class="row">
                     <div class="col-12 mt-3">
-                        <a href="{{ route('settings.access') }}" class="btn btn-info float-right">Manage Access</a>
+                        <div class="btn-group float-right">
+                            <a href="{{ route('welcome') }}" class="btn btn-secondary ">Add Character</a>
+                            <a href="{{ route('settings.access') }}" class="btn btn-info">Manage Access</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -62,24 +70,24 @@
                     <div class="list-group">
                         <li class="list-group-item">
                             <div class="float-right">
-                                <span id="countPending">{{ Auth::user()->jobs->whereIn('status', ['queued', 'executing'])->count() }}</span>
+                                <span id="countPending">{{ $jobs->get('pending') }}</span>
                             </div>
                             Pending Jobs
                         </li>
                         <li class="list-group-item">
                             <div class="float-right">
-                                <span id="countFinished">{{ Auth::user()->jobs->whereIn('status', ['finished'])->count() }}</span>
+                                <span id="countFinished">{{ $jobs->get('finished') }}</span>
                             </div>
                             Completed Jobs
                         </li>
                         <li class="list-group-item">
                             <div class="float-right">
-                                <span id="countFailed">{{ Auth::user()->jobs->whereIn('status', ['failed'])->count() }}</span>
+                                <span id="countFailed">{{ $jobs->get('failed') }}</span>
                             </div>
                              Jobs That Failed
                         </li>
-                        <li class="list-group-item text-center">
-                            <em>This module updates every {{ config('services.eve.updateInterval') }} seconds</em>
+                        <li class="list-group-item">
+                            <em>This module updates every {{ config('services.eve.updateInterval') }} seconds</em><br>
                         </li>
                     </div>
                 </div>
@@ -121,7 +129,7 @@
 
 @section('js')
     <script>
-        @if (Auth::user()->jobs->where('status', 'queued')->count() > 0)
+        @if ($jobs->get('pending') > 0)
             interval = {{ config('services.eve.updateInterval') * 1000 }};
             function updateJobs() {
                 $.ajax({

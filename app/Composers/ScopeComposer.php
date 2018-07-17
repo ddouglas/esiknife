@@ -13,15 +13,24 @@ class ScopeComposer
                 $memberId = Route::getFacadeRoot()->current()->parameter('member');
                 $member = Member::findOrFail($memberId);
                 if (Auth::user()->id == $memberId) {
-                    $view->with('scopes', Auth::user()->scopes);
+                    $scopes = Auth::user()->scopes;
                 } else {
-                    $accessee = Auth::user()->accessee->keyBy('id')->get($memberId);
-                    $accessableScopes = collect(json_decode($accessee->pivot->access, true));
-                    $view->with('scopes', $accessableScopes);
+                    $alt = $member->alts()->where('id', $memberId)->first();
+                    $accessee = $member->accessee()->where('id', $memberId)->first();
+                    if (!is_null($alt)) {
+                        $scopes = $alt->scopes;
+                    }
+                    if (!is_null($accessee)) {
+                        $scopes = collect(json_decode($accessee->pivot->access, true));
+                    }
                 }
             } else {
-                $view->with('scopes', Auth::user()->scopes);
+                $scopes = Auth::user()->scopes;
             }
+            if (!isset($scopes)) {
+                throw new Exception("There are no scopes available for this view.");
+            }
+            $view->with('scopes', $scopes);
         }
         $view->with('currentRouteName', Route::currentRouteName());
     }

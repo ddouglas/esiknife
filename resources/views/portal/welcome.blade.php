@@ -105,7 +105,12 @@
                                 <li class="list-group-item text-center"><strong>Utility Classes</strong></li>
                                 <label for="readUniverseStructures" class="mb-0">
                                     <li class="list-group-item py-auto">
-                                        <input type="checkbox" id="readUniverseStructures" name="scopes[readUniverseStructures]" /> <span class="ml-2">Read Structure Names</span>
+                                        <input type="checkbox" id="readUniverseStructures" name="scopes[readUniverseStructures]" class="item" /> <span class="ml-2">Read Structure Names</span>
+                                    </li>
+                                </label>
+                                <label for="storeRefreshToken" class="mb-0">
+                                    <li class="list-group-item py-auto">
+                                        <input type="checkbox" id="storeRefreshToken" name="storeRefreshToken" class="item" /> <span class="ml-2">Store My Refresh Token</span>
                                     </li>
                                 </label>
                             </ul>
