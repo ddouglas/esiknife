@@ -5,7 +5,7 @@ namespace ESIK\Http\Controllers;
 use Carbon, DOMDocument, Request, Session;
 use ESIK\Jobs\{ProcessContract,ProcessMailHeader};
 use ESIK\Jobs\ESI\{GetCharacter, GetCorporation, GetAlliance, GetSystem, GetType, GetStation, GetStructure};
-use ESIK\Models\{Member, MemberAsset, JobStatus};
+use ESIK\Models\{Member, MemberAsset, MemberBookmark, JobStatus};
 use ESIK\Models\ESI\{Alliance, Character, Contract, Corporation, MailHeader, MailingList, Station, Structure, System, Type};
 use ESIK\Models\SDE\{Region, Constellation};
 
@@ -382,17 +382,19 @@ class DataController extends Controller
         if (!$status) {
             return $request;
         }
-        $bookmarks = collect($payload->response)->recursive();
-        unset($status, $payload);
+
+        $bookmarks = collect($payload->response)->recursive()->keyBy('bookmark_id');
+        $knownBookmarks = MemberBookmark::where('id', $member->id)->whereIn('bookmark_id', $bookmarks->keys()->toArray())->get()->keyBy('bookmark_id');
+        $bookmarks = $bookmarks->whereNotIn('bookmark_id', $knownBookmarks->keys()->toArray());
+
         $itemTypeIds = $bookmarks->pluck('item.type_id')->unique()->reject(function ($item) {
             return is_null($item);
         })->values();
         $locationIds = $bookmarks->pluck('location_id')->unique()->values();
         $creatorIds = $bookmarks->pluck('creator_id')->unique()->values();
 
-
         $ids = $itemTypeIds->merge($locationIds)->merge($creatorIds)->unique()->values();
-        $dictionary = collect();
+
         if ($ids->isNotEmpty()) {
             $request = $this->postUniverseNames($ids);
             $status = $request->status;
@@ -401,9 +403,8 @@ class DataController extends Controller
                 return $request;
             }
 
-            $dictionary = $dictionary->merge(collect($payload->response)->recursive()->keyBy('id'));
-            $dispatchedJobs = collect();
-            $now = now(); $x = 0;
+            $dictionary = collect($payload->response)->recursive()->keyBy('id');
+            $now = now(); $x = 0; $dispatchedJobs = collect();
             $characterIds = $dictionary->where('category', 'character')->pluck('id');
             if ($characterIds->isNotEmpty()) {
                 $knownCharacters = Character::whereIn('id', $characterIds->toArray())->get()->keyBy('id');
@@ -474,7 +475,9 @@ class DataController extends Controller
                     $memBookmarks->get($bookmark->get('bookmark_id'))->put('coordinates', $bookmark->get('coordinates')->toJson());
                 }
             });
-            $member->bookmarks()->delete();
+            if ($page == 1) {
+                $member->bookmarks()->delete();
+            }
             $member->bookmarks()->createMany($memBookmarks->toArray());
         }
 
