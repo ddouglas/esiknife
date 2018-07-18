@@ -25,12 +25,12 @@
                 @foreach ($member->bookmarkFolders as $folder)
                     <div class="card">
                         <div class="card-header" data-toggle="collapse" data-target="#folder{{ $folder->folder_id }}">
-                            <h5 class="mb-0">{{ $folder->name }} ({{ $folder->bookmarks->count() }})</h5>
+                            <h5 class="mb-0">{{ $folder->name }} ({{ $bookmarks->where('folder_id', $folder->folder_id)->count() }})</h5>
                         </div>
                         <div id="folder{{ $folder->folder_id }}" class="collapse">
                             <div class="card-body p-0">
                                 <table class="table mb-0">
-                                    @forelse ($folder->bookmarks as $bookmark)
+                                    @forelse ($bookmarks->where('folder_id', $folder->folder_id) as $bookmark)
                                         <tr>
                                             <td>
                                                 {{ $bookmark->label }}

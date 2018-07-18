@@ -116,8 +116,8 @@ class PortalController extends Controller
 
     public function bookmarks (int $member) {
         $member = Member::findOrFail($member);
-        $member->load('bookmarkFolders.bookmarks');
-        $bookmarks = $member->bookmarkFolders->pluck('bookmarks')->flatten();
+        $member->load('bookmarkFolders');
+        $bookmarks = $member->bookmarks;
         $uniqueLocations = $bookmarks->pluck('location')->keyBy('id');
 
         foreach ($uniqueLocations as $location) {
@@ -127,7 +127,10 @@ class PortalController extends Controller
 
         $uniqueLocations = $uniqueLocations->sortByDesc('count');
 
-        return view('portal.bookmarks')->withMember($member)->withUniqueLocations($uniqueLocations);
+        return view('portal.bookmarks', [
+            'uniqueLocations' => $uniqueLocations,
+            'bookmarks' => $bookmarks
+        ])->withMember($member);
     }
 
     public function clones (int $member)
