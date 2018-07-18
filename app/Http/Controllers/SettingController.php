@@ -95,7 +95,7 @@ class SettingController extends Controller
                     }
                 });
             });
-            Auth::user()->delete();
+            Auth::user()->alts()->delete();
             Session::flash('alert', [
                 'header' => "Token Deleted Successfully",
                 'message' => "Your token has been successfully deleted from the system. Please login to register a new token and continue using the site",
