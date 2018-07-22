@@ -25,6 +25,7 @@ class RedirectIfNotAuthorized
                 $user->load('alts', 'accessee');
                 $alts = $user->alts->keyBy('id');
                 $accessees = $user->accessee->keyBy('id');
+
                 if ($alts->has($memberId)) {
                     $authorized = true;
                 } else if ($accessees->has($memberId)) {
@@ -34,6 +35,8 @@ class RedirectIfNotAuthorized
                         if ($accesseeScopes->containsStrict($scope)) {
                             $authorized = true;
                         }
+                    } else {
+                        $authorized = true;
                     }
                 }
                 if (!$authorized) {
