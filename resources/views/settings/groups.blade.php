@@ -12,85 +12,80 @@
             <div class="col-lg-9">
                 <div class="card">
                     <div class="card-header">
-                        Access Urls
+                        Access Groups
                     </div>
                     <div class="card-body">
-                        Access Urls are links that you can send to another character that they can click on, acknowledge the access that is being granted and have you added to their account as an accessor. This method is meant to ease the process of auditing a character.
+                        Access Groups are groups of members that a character can grant access to instead of just a single member. The group has its own url that is sent out and the group is listed on the dashboard instead of the character(s) that it grants access to.
                     </div>
-                </div>
-                <hr />
-                <div class="card">
-                    <div class="card-header">
-                        My Current Urls
-                    </div>
+                    @if ($errors->count() > 0)
+                        <div class="card-body">
+                            @include('extra.alert')
+                        </div>
+                    @endif
+
                     <div class="card-body p-0">
                         <table class="table table-bordered m-0">
                             <tr>
-                                <th>
+                                <th width=35%>
                                     Name (If Applicable)
                                 </th>
-                                <th>
+                                <th width=25%>
                                     Copy Url
-                                </th>
-                                <th>
-                                    Scopes
                                 </th>
                                 <th>
                                     &nbsp;
                                 </th>
                             </tr>
-                            @forelse (Auth::user()->urls as $url)
+                            @forelse (Auth::user()->groups as $group)
                                 <tr>
                                     <td class="align-middle">
-                                        <span>{{ $url->name ?: "N/A" }}</span>
+                                        <span>{{ $group->name ?: "N/A" }}</span>
                                     </td>
                                     <td class="align-middle">
-                                        <span><a href="#" class="copyMe" data-toggle="tooltip" title="{{ route('settings.grant', ['grant' => Auth::user()->id.":".$url->hash]) }}" data-clipboard-text="{{ route('settings.grant', ['grant' => Auth::user()->id.":".$url->hash]) }}">Click To Copy URL</a></span>
-                                    </td>
-                                    <td>
-                                        @forelse($url->scopes as $scope)
-                                            <li>{{ $scope }}</li>
-                                        @empty
-                                            <li>There are no scopes associated with this url</li>
-                                        @endforelse
+                                        <span><a href="#" class="copyMe" data-toggle="tooltip" title="{{ route('settings.grant', ['hash' => $group->creator_id . ":" . $group->id]) }}" data-clipboard-text="{{ route('settings.grant', ['hash' => $group->creator_id . ":" . $group->id]) }}">Click To Copy URL</a></span>
                                     </td>
                                     <td class="align-middle">
-                                        <form action="{{ route('settings.urls', ['hash' => $url->hash]) }}" method="post">
-                                            {{ method_field('DELETE') }}
-                                            {{ csrf_field() }}
-                                            <button type="submit" class="btn btn-danger btn-block">Delete This URL</button>
-                                        </form>
+                                        @if ($group->creator_id == Auth::user()->id)
+                                            <a href="{{ route('settings.group', ['id' => $group->id]) }}" class="btn btn-primary btn-block">Url Admin</a>
+                                        @else
+                                            &nbsp;
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4">
-                                        You do not currently have any urls setup
+                                    <td colspan="3">
+                                        You have not created any groups yet.
                                     </td>
                                 </tr>
                             @endforelse
                         </table>
+
                     </div>
                     <div class="card-footer">
-                        <button class="btn btn-primary btn-sm float-right" data-toggle="collapse" data-target="#urlGenerator">Generate New URL</button>
+                        <button class="btn btn-primary btn-sm float-right" data-toggle="collapse" data-target="#urlGenerator">Create New Group</button>
                     </div>
                 </div>
+
                 <div class="row">
                     <div class="col-md-8 offset-md-2">
-                        <div class="collapse" id="urlGenerator">
+                        <div class="collapse @if(Auth::user()->groups->count() == 0) {{ "show" }} @endif" id="urlGenerator">
                             <div class="card mt-2">
                                 <div class="card-header">
-                                    Url Generator
+                                    Group Creator
                                 </div>
                                 <div class="card-body">
-                                    @include('extra.alert')
-                                    <form action="{{ route('settings.urls') }}" method="post">
+                                    <form action="{{ route('settings.groups') }}" method="post">
                                         <div class="form-group">
-                                            <label for="name">Name of URL (optional)</label>
+                                            <label for="name">Name of Group</label>
                                             <input type="text" name="name" id="name" class="form-control" placeholder="Url for Corporation Recruitment" value="{{ old('name') }}"/>
                                         </div>
                                         <div class="form-group">
-                                            <label>Scopes Requesting:</label> <a href="#" id="all">[Un/Select All]</a>
+                                            <label for="name">Group Description (optional)</label>
+                                            <textarea type="text" name="description" id="description" class="form-control" placeholder="Group of Recruiters that will assess you account for recruitment" value="">{{ old('description') }}</textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Scopes The Group Needs Access To:</label> <a href="#" id="all">[Un/Select All]</a>
                                             <ul class="list-unstyled">
                                                 @foreach (config('services.eve.scopes') as $key => $scope)
                                                     <li>

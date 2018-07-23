@@ -38,6 +38,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET'], '/settings', 'SettingController@index')->name('settings.index');
     Route::match(['GET', 'DELETE'], '/settings/token', 'SettingController@token')->name('settings.token');
     Route::match(['GET', 'POST'], '/settings/access', 'SettingController@access')->name('settings.access');
+    Route::match(['GET', 'POST', "DELETE"], '/settings/group/{hash}', 'SettingController@group')->name('settings.group');
+    Route::match(['GET', 'POST'], '/settings/groups', 'SettingController@groups')->name('settings.groups');
     Route::match(['GET', 'POST'], '/settings/grant/{grant}', 'SettingController@grant')->name('settings.grant');
     Route::match(['GET', 'POST', 'DELETE'], '/settings/urls', 'SettingController@urls')->name('settings.urls');
 });

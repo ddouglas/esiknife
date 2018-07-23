@@ -3,8 +3,7 @@
 namespace ESIK\Http\Controllers;
 
 use Auth, Request, Session, Validator;
-use ESIK\Models\{Member, MemberUrl};
-use ESIK\Models\ESI\{Mailheader, Contract};
+use ESIK\Models\{Member, MemberUrl, AccessGroup};
 use ESIK\Http\Controllers\{DataController, SSOController};
 
 class SettingController extends Controller
@@ -42,40 +41,199 @@ class SettingController extends Controller
             ]);
             return redirect(route('settings.access'));
         }
-        $grant = MemberUrl::whereId($memberId)->whereHash($hash[1])->firstOrFail();
-        $grantExists = Auth::user()->accessor()->where('accessor_id', $grant->id)->count();
-        if ($grantExists > 0) {
-            Session::flash('alert', [
-                'header' => "Access Granted",
-                'message' => "You have successfully granted access to ". $grant->member->info->name .".",
-                'type' => 'success',
-                'close' => 1
-            ]);
-            return redirect(route('settings.access'));
+        $grant = $hash[1];
+        $isGroup = false;
+        if (starts_with($grant, "G-")) {
+            $grant = AccessGroup::where(['creator_id' => $memberId, 'id' => $grant])->with('members')->firstOrFail();
+            $isGroup = true;
+        } else {
+            $grant = MemberUrl::where(['id' => $memberId, 'hash' => $grant])->firstOrFail();
+            $grantExists = Auth::user()->accessor()->where('accessor_id', $grant->id)->count();
+            if ($grantExists > 0) {
+                Session::flash('alert', [
+                    'header' => "Access Granted",
+                    'message' => "You have successfully granted access to ". $grant->member->info->name .".",
+                    'type' => 'success',
+                    'close' => 1
+                ]);
+                return redirect(route('settings.access'));
+            }
         }
         if (Request::isMethod('post')) {
             if (Session::has('to')) {
-                if (!starts_with(Session::get('to'), url('/settings/grant/'))) {
+                if (starts_with(Session::get('to'), url('/settings/grant'))) {
                     Session::forget('to');
                 }
             }
             $grantScopes = $grant->scopes->filter(function ($scope) {
                 return Auth::user()->scopes->containsStrict($scope);
             });
-            Auth::user()->accessor()->attach(collect([
-                $grant->id => [
+            $attach = collect();
+            $currentAccessors = Auth::user()->accessor->keyBy('id');
+            if ($isGroup) {
+                $grant->members->each(function ($member) use ($currentAccessors, $attach, $grantScopes) {
+                    if (!$currentAccessors->has($member->id) && !$attach->has($member->id) && Auth::user()->id != $member->id) {
+                        $attach->put($member->id, [
+                            'access' => $grantScopes->toJson()
+                        ]);
+                    }
+                });
+            } else {
+                $attach->put($grant->id, [
                     'access' => $grantScopes->toJson()
-                ]
-            ]));
+                ]);
+            }
+            Auth::user()->accessor()->attach($attach->toArray());
             Session::flash('alert', [
                 'header' => "Access Granted",
-                'message' => "You have successfully granted access to ". $grant->member->info->name .".",
+                'message' => "You have successfully granted access to ". ($isGroup ? $grant->name : $grant->member->info->name) .".",
                 'type' => 'success',
                 'close' => 1
             ]);
             return redirect(route('settings.access'));
         }
-        return view('settings.grant', ['grant' => $grant]);
+        return view('settings.grant', [
+            'grant' => $grant,
+            'isGroup' => $isGroup
+        ]);
+    }
+
+    public function groups()
+    {
+        if (Request::isMethod('post')) {
+            $validator = Validator::make(Request::all(), [
+                'name' => "required|min:5|max:32|unique:access_groups,name",
+                'scopes' => "required|array",
+                'description' => "sometimes|nullable|min:16|max:512"
+            ],[
+                'name.required' => "A name is required for the group",
+                'name.min' => "The name must be at least :min characters long",
+                'name.max' => "The name can be no longer than :max characters long",
+                'description.min' => "The description must be at least :min characters long",
+                'description.max' => "The description can be no longer than :max characters long",
+                'scopes.required' => "The group must have atleast one group associated with it.",
+                'scopes.array' => "The request was not formatted correctly. Please try again."
+            ]);
+            if ($validator->fails()) {
+                return redirect(route('settings.groups'))->withInput()->withErrors($validator);
+            }
+            $scopes = collect(Request::get('scopes'))->keys();
+            $scopes = collect(config('services.eve.scopes'))->only($scopes->toArray())->values();
+
+            $id = "G-" . str_random(14);
+            Auth::user()->groups()->create([
+                'id' => $id,
+                'name' => Request::get('name'),
+                'description' => Request::has('description') ? Request::get('description') : null,
+                'scopes' => $scopes->toJson()
+            ]);
+            $group = AccessGroup::find($id);
+            $group->members()->attach(Auth::user()->id);
+            return redirect(route('settings.group', [
+                'group' => $id
+            ]));
+        }
+        return view('settings.groups');
+    }
+
+    public function group(string $group)
+    {
+        $group = Auth::user()->groups()->where('id', $group)->with('members')->firstOrFail();
+        if (Request::isMethod('delete')) {
+            $group->delete();
+            Session::flash('alert', [
+                'header' => "Group Deleted Successfully",
+                'message' => "The group " . $group->name . " has been deleted successfully",
+                'type' => 'success',
+                'close' => 1
+            ]);
+            return redirect(route('settings.groups'));
+        }
+        if (Request::isMethod('post')) {
+            $validator = Validator::make(Request::all(), [
+                'action' => "required|in:search,add,remove",
+                'name' => "required_if:action,search|min:1",
+                'id' => "required_if:action,add|numeric"
+            ]);
+            if ($validator->fails()) {
+                return redirect(route('settings.group', ['group' => $group->id]))->withInput()->withErrors($validator);
+            }
+            $action = Request::get('action');
+
+            if ($action === "search") {
+                $search = $this->search(Request::get('name'));
+                $status = $search->status;
+                $payload = $search->payload;
+                if (!$status) {
+                    Session::flash('alert', [
+                        'header' => "No Results Returned",
+                        'message' => "We received 0 results for the term ". Request::get('char_name') . ". Please try again with a different or more refined  name",
+                        'type' => 'danger',
+                        'close' => 1
+                    ]);
+                    return redirect(route('settings.group', ['group' => $group->id]));
+                }
+                return view('settings.group', [
+                    'group' => $group,
+                    'results' => collect($payload->response)->recursive()
+                ]);
+            }
+            if ($action === "add") {
+                $id = Request::get('id');
+                $member = Member::find($id);
+                if (is_null($member)) {
+                    Session::flash('alert', [
+                        'header' => "Invalid Selection",
+                        'message' => "The character you selected does not have account registered with ESI Knife. Please have the character log into ESI Knife first, then attempt to add them to the group",
+                        'type' => 'danger',
+                        'close' => 1
+                    ]);
+                    return redirect(route('settings.group', ['group' => $group->id]));
+                }
+                $memberOfGroup = $group->members->where('id', $id)->count();
+                if ($memberOfGroup) {
+                    Session::flash('alert', [
+                        'header' => "Already Member of Group",
+                        'message' => "The character that you selected, <strong>" . $member->info->name . "</strong>, is already a member of this group. Please do not do this. Only attempt to add members that are not apart of the group.",
+                        'type' => 'danger',
+                        'close' => 1
+                    ]);
+                    return redirect(route('settings.group', ['group' => $group->id]));
+                }
+                $group->members()->attach($id);
+                Session::flash('alert', [
+                    'header' => "Member Added Successfully",
+                    'message' => "The character that you selected, <strong>" . $member->info->name . "</strong>, has successfully been added to the group <strong>". $group->name . "</strong>",
+                    'type' => 'success',
+                    'close' => 1
+                ]);
+                return redirect(route('settings.group', ['group' => $group->id]));
+            }
+            if ($action === "remove") {
+                $id = Request::get('id');
+                $member = Member::find($id);
+                if (is_null($member)) {
+                    Session::flash('alert', [
+                        'header' => "Invalid Selection",
+                        'message' => "The character you selected does not have account registered with ESI Knife. Please have the character log into ESI Knife first, then attempt to add them to the group",
+                        'type' => 'danger',
+                        'close' => 1
+                    ]);
+                    return redirect(route('settings.group', ['group' => $group->id]));
+                }
+                $group->members()->detach($id);
+                Session::flash('alert', [
+                    'header' => "Member Removed Successfully",
+                    'message' => "The character that you selected, <strong>" . $member->info->name . "</strong>, has successfully been removed from the group <strong>". $group->name . "</strong>",
+                    'type' => 'danger',
+                    'close' => 1
+                ]);
+                return redirect(route('settings.group', ['group' => $group->id]));
+            }
+        }
+        return view('settings.group', [
+            'group' => $group
+        ]);
     }
 
     public function token ()
@@ -204,15 +362,6 @@ class SettingController extends Controller
 
                     if (Request::has('remove')) {
                         $selection = (int) Request::get('remove');
-                        if (Auth::user()->id == $selection) {
-                            Session::flash('alert', [
-                                'header' => "You bein serious?",
-                                'message' => "You cannot revoke access to your own data. Please don't do this again.",
-                                'type' => 'danger',
-                                'close' => 1
-                            ]);
-                            return redirect(route('settings.access'));
-                        }
                         $isMember = Member::find($selection);
                         if (is_null($isMember)) {
                             Session::flash('alert', [
@@ -232,6 +381,9 @@ class SettingController extends Controller
                         ]);
                         return redirect(route('settings.access'));
                     }
+                }
+                if ($scope === "accessee") {
+
                 }
             }
         }

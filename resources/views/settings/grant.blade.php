@@ -12,7 +12,9 @@
                         Granting Access to your data
                     </div>
                     <div class="card-body">
-                        {{ $grant->member->info->name }} is requesting access to your data with the following scopes. Please review this entire screen before clicking <strong>"Grant Access to Data"</strong> or <strong>"Do not grant Access to Data"</strong>
+                        @if ($isGroup)
+                            {{ $isGroup ? $grant->name : $grant->member->info->name }} is requesting access to your data with the following scopes. Please review this entire screen before clicking <strong>"Grant Access to Data"</strong> or <strong>"Do not grant Access to Data"</strong>
+                        @endif
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group">
@@ -34,14 +36,15 @@
                     </div>
                     <div class="card-body">
                         <ul>
-                            <li>If a scope is labeled as <strong>Scope is Registered</strong> this means that ESIKnife has access to the data on your account that this scope gives access to, and <strong>{{ $grant->member->info->name }}</strong> will be able to see this data if access is granted.</li>
-                            <li>If a scope is labeled as <strong>Scope is not Registered</strong>, this means that ESIKnife does access to the data that the scope provides access to and <strong>{{ $grant->member->info->name }}</strong> will not be able to access this data either.</li>
+                            <li>If a scope is labeled as <strong>Scope is Registered</strong> this means that ESIKnife has access to the data on your account that this scope gives access to, and <strong>{{ $isGroup ? $grant->name : $grant->member->info->name }}</strong> will be able to see this data if access is granted.</li>
+                            <li>If a scope is labeled as <strong>Scope is not Registered</strong>, this means that ESIKnife does access to the data that the scope provides access to and <strong>{{ $isGroup ? $grant->name : $grant->member->info->name }}</strong> will not be able to access this data either.</li>
                         </ul>
                     </div>
                     <div class="card-footer">
                         <div class="row">
                             <div class="col-md-6">
-                                <form action="{{ route('settings.grant', ['hash' => $grant->id.":".$grant->hash]) }}" method="post">
+
+                                <form action="{{ route('settings.grant', ['hash' => $isGroup ? $grant->creator_id . ":" . $grant->id : $grant->id.":".$grant->hash]) }}" method="post">
                                     {{ csrf_field() }}
                                     <button type="submit" class="btn btn-success btn-block">Grant Access to Data</button>
                                 </form>
