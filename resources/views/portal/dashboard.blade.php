@@ -46,7 +46,7 @@
                                 <div class="media-body align-center">
                                     <h4>{{ $alt->info->name }}</h4>
                                     <p>
-                                        {{ $alt->info->corporation->name }} / @if(!is_null($alt->info->alliance)) {{ $alt->info->alliance->name }} @endif
+                                        {{ $alt->info->corporation->name }} @if(!is_null($alt->info->alliance)) {{ "/ ". $alt->info->alliance->name }} @endif
                                     </p>
                                 </div>
                             </div>
