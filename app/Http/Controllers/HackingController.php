@@ -2,7 +2,7 @@
 
 namespace ESIK\Http\Controllers;
 
-use Bus, Carbon, DB, Request, Session;
+use Auth, Bus, Carbon, DB, Request, Session;
 use ESIK\Models\{Member};
 use ESIK\Jobs\ESI\GetCharacter;
 use ESIK\Models\ESI\{Character, Corporation, System};
@@ -20,7 +20,7 @@ class HackingController extends Controller
 
     public function index()
     {
-
+        
     }
 
     public function typesWithAttributes ($type_id)

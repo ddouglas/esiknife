@@ -112,7 +112,7 @@
                                     <div class="media-body align-center">
                                         <h4>{{ $accessee->info->name }}</h4>
                                         <p>
-                                            {{ $accessee->info->corporation->name }} / @if(!is_null($accessee->info->alliance)) {{ $accessee->info->alliance->name }} @endif
+                                            {{ !is_null( $accessee->info->corporation) ? $accessee->info->corporation->name : "Unknown Corporation ".  $accessee->info->corporation_id }} @if(!is_null($accessee->info->alliance)) {{ "/ ".$accessee->info->alliance->name }} @endif
                                         </p>
                                     </div>
                                 </div>
