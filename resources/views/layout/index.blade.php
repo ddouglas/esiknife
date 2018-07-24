@@ -87,7 +87,7 @@
                         <!-- Footer -->
                         <p>
                             Brought to you by <a href="https://evewho.com/pilot/David+Davaham">David Davaham</a><br />
-                            <a href="https://bitbucket.org/devoverlord/esiknife/src/development/">Bitbucket</a>
+                            <a href="{{ config('services.github.urls.repo') }}">Github</a>
                         </p>
                     </div>
                 </div>

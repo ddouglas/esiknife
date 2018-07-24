@@ -94,6 +94,14 @@ return [
             "commit" => "https://bitbucket.org/devoverlord/esiknife/commits",
             "branches" => "https://bitbucket.org/devoverlord/esiknife/branches"
         ]
+    ],
+    'github' => [
+        'urls' => [
+            "repo" => "https://github.com/ddavaham/esiknife",
+            "issues" => "https://github.com/ddavaham/esiknife/issues",
+            "commit" => "https://github.com/ddavaham/esiknife/commits",
+            "branches" => "https://github.com/ddavaham/esiknife/branches"
+        ]
     ]
 
 ];
