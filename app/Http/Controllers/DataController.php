@@ -1039,7 +1039,7 @@ class DataController extends Controller
                 ]);
             });
 
-            $member->mail()->syncWithoutDetaching($attach->toArray());
+            $member->mail()->attach($attach->toArray());
         });
 
         return (object)[
