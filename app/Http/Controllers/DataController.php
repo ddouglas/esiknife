@@ -1696,7 +1696,7 @@ class DataController extends Controller
     public function shouldDispatchJob(string $class, array $args) {
         $check = JobStatus::where('type', $class);
         foreach ($args as $key=>$value) {
-            $check=$check->where('input->'.$key, $value);
+            $check=$check->whereRaw("JSON_EXTRACT(input, '$.". $key ."') = '" . $value . "'");
         }
         $check = $check->whereIn('status',[JobStatus::STATUS_EXECUTING, JobStatus::STATUS_QUEUED]);
         $check = $check->first();
