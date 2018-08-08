@@ -46,11 +46,8 @@ class ProcessContract implements ShouldQueue
     {
         $member = Member::findOrFail($this->memberId);
         $contract = collect(json_decode($this->contract, true));
-        $dbContract = Contract::find($contract->get('contract_id'));
-        if (is_null($dbContract)) {
-            return false;
-        }
-        $now = now(); $x = 0;
+        $dbContract = Contract::findOrFail($contract->get('contract_id'));
+        $now = now(); $x = 0; $dispatchedJobs = collect();
         $entities = $contract->filter(function ($entity, $key) {
             if (in_array($key, ['issuer_id', 'issuer_corporation_id', 'assignee_id', 'acceptor_id']) && $entity != 0) {
                 return true;
@@ -77,41 +74,35 @@ class ProcessContract implements ShouldQueue
             $knownCorporations = Corporation::whereIn('id', $corporationIds->toArray())->get()->keyBy('id');
             $knownAlliances = Alliance::whereIn('id', $allianceIds->toArray())->get()->keyBy('id');
             $x = 0;
-            $characterIds->diff($knownCharacters->keys())->each(function ($characterId) use (&$now, &$x) {
+            $characterIds->diff($knownCharacters->keys())->each(function ($characterId) use (&$now, &$x, $dispatchedJobs) {
                 $class = \ESIK\Jobs\ESI\GetCharacter::class;
                 $params = collect(['id' => $characterId]);
-                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
-                if ($shouldDispatch) {
-                    $this->dataCont->getCharacter($characterId);
-                }
+                $jobId = $this->dataCont->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
-                    usleep(50000);
+                    $now->addSecond();
                 }
                 $x++;
             });
             $x = 0;
-            $corporationIds->diff($knownCorporations->keys())->each(function ($corporationId) use (&$now, &$x) {
+            $corporationIds->diff($knownCorporations->keys())->each(function ($corporationId) use (&$now, &$x, $dispatchedJobs) {
                 $class = \ESIK\Jobs\ESI\GetCorporation::class;
                 $params = collect(['id' => $corporationId]);
-                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
-                if ($shouldDispatch) {
-                    $this->dataCont->getCorporation($corporationId);
-                }
+                $jobId = $this->dataCont->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
-                    sleep(1);
+                    $now->addSecond();
                 }
                 $x++;
             });
             $x = 0;
-            $allianceIds->diff($knownAlliances->keys())->each(function ($allianceId) use (&$now, &$x) {
+            $allianceIds->diff($knownAlliances->keys())->each(function ($allianceId) use (&$now, &$x, $dispatchedJobs) {
                 $class = \ESIK\Jobs\ESI\GetAlliance::class;
                 $params = collect(['id' => $allianceId]);
-                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
-                if ($shouldDispatch) {
-                    $this->dataCont->getAlliance($allianceId);
-                }
+                $jobId = $this->dataCont->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
-                    sleep(1);
+                    $now->addSecond();
                 }
                 $x++;
             });
@@ -129,16 +120,14 @@ class ProcessContract implements ShouldQueue
         $structureIds = $structureIds->unique()->values();
         $knownStructures = Structure::whereIn('id', $structureIds->toArray())->get()->keyBy('id');
         $x = 0;
-        $structureIds->diff($knownStructures->keys())->each(function ($structureId) use ($member, &$now, &$x) {
+        $structureIds->diff($knownStructures->keys())->each(function ($structureId) use ($member, &$now, &$x, $dispatchedJobs) {
             if ($member->scopes->contains(config('services.eve.scopes.readUniverseStructures'))) {
                 $class = \ESIK\Jobs\ESI\GetStructure::class;
                 $params = collect(['memberId' => $member->id, 'id' => $structureId]);
-                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
-                if ($shouldDispatch) {
-                    $this->dataCont->getStructure($member, $structureId);
-                }
+                $jobId = $this->dataCont->dispatchJob($class, $params, $now);
+                $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
                 if ($x%10==0) {
-                    sleep(1);
+                    $now->addSecond();
                 }
                 $x++;
             }
@@ -146,22 +135,22 @@ class ProcessContract implements ShouldQueue
         $stationIds = $stationIds->unique()->values();
         $knownStations = Station::whereIn('id', $stationIds->toArray())->get()->keyBy('id');
         $x = 0;
-        $stationIds->diff($knownStations->keys())->each(function ($stationId) use (&$now, &$x) {
-            $this->dataCont->getStation($stationId);
-            $class = \ESIK\Jobs\ESI\GetStructure::class;
-            $params = collect(['id' => $stationId]);
-            $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
-            if ($shouldDispatch) {
-                $this->dataCont->getStation($stationId);
-            }
+        $stationIds->diff($knownStations->keys())->each(function ($stationId) use (&$now, &$x, $dispatchedJobs) {
+            $class = \ESIK\Jobs\ESI\GetStation::class;
+            $params = collect(['id' => $systemId]);
+            $jobId = $this->dataCont->dispatchJob($class, $params, $now);
+            $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             if ($x%10==0) {
-                sleep(1);
+                $now->addSecond();
             }
             $x++;
         });
         $dbContract->save();
-        $job = new GetContractItems($this->memberId, $contract->get('contract_id'));
-        Bus::dispatch($job);
-        $member->jobs()->attach($job->getJobStatusId());
+
+        $class = \ESIK\Jobs\ESI\GetContractItems::class;
+        $params = collect(['memberId' => $this->memberId, 'contractId' => $contract->get('contract_id')]);
+        $jobId = $this->dataCont->dispatchJob($class, $params, $now);
+        $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
+        $member->jobs()->attach($dispatchedJobs->toArray());
     }
 }
