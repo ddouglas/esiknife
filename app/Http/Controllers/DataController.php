@@ -241,8 +241,10 @@ class DataController extends Controller
             return $request;
         }
         $assets = collect($payload->response)->recursive()->keyBy('item_id');
-        $knownAssets = MemberAsset::where('id', $member->id)->whereIn('item_id', $assets->keys()->toArray())->get()->keyBy('item_id');
-        $assets = $assets->whereNotIn('item_id', $knownAssets->keys()->toArray());
+        if ($page == 1) {
+            $knownAssets = MemberAsset::where('id', $member->id)->whereIn('item_id', $assets->keys()->toArray())->get()->keyBy('item_id');
+            $assets = $assets->whereNotIn('item_id', $knownAssets->keys()->toArray());
+        }
         if ($assets->isEmpty()) {
             return $request;
         }
@@ -292,6 +294,9 @@ class DataController extends Controller
             $x++;
         });
         $member->jobs()->attach($dispatchedJobs->toArray());
+        if ($page == 1) {
+            $member->assets()->delete();
+        }
         $assets->chunk(250)->each(function ($assetChunk) use ($member) {
             $member->assets()->createMany($assetChunk->toArray());
         });
@@ -301,41 +306,6 @@ class DataController extends Controller
             'payload' => $assets
         ];
     }
-
-    public function postAssetLocations(Member $member, Collection $ids)
-    {
-        $request = $this->httpCont->postCharactersCharacterIdAssetsLocations($member->id, $member->access_token, $ids->toArray());
-        $status = $request->status;
-        $payload = $request->payload;
-        if (!$status) {
-            return $request;
-        }
-        $response = collect($payload->response)->recursive()->keyBy('item_id');
-
-        return (object)[
-            'status' => true,
-            'payload' => $response
-        ];
-    }
-
-    public function postAssetNames(Member $member, Collection $ids)
-    {
-        $request = $this->httpCont->postCharactersCharacterIdAssetsNames($member->id, $member->access_token, $ids->toArray());
-        $status = $request->status;
-        $payload = $request->payload;
-        if (!$status) {
-            return $request;
-        }
-        $response = collect($payload->response)->recursive()->reject(function ($item) {
-            return $item->get('name') === "None";
-        })->keyBy('item_id');
-
-        return (object)[
-            'status' => true,
-            'payload' => $response
-        ];
-    }
-
 
     // Method from the Character Bookmarks Namespace
     /**
@@ -1069,7 +1039,7 @@ class DataController extends Controller
                 ]);
             });
 
-            $member->mail()->syncWithoutDetaching($attach->toArray());
+            $member->mail()->attach($attach->toArray());
         });
 
         return (object)[

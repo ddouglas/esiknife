@@ -52,16 +52,15 @@
             </div>
         </div>
         <div class="row mt-3">
-
-            <div class="row">
-                <div class="col-lg-12">
-                    <h4 class="text-center">Corporation History</h4>
-                    <hr />
-                    <div class="row">
-                        @if ($member->info->history->isNotEmpty())
-                            <?php $corpHistory = $member->info->history->sortByDesc('record_id')->values(); ?>
-                            @foreach($corpHistory as $key=>$corp)
-                                <div class="list-group-item col-lg-4">
+            <div class="col-lg-12">
+                <h4 class="text-center">Corporation History</h4>
+                <hr />
+                @if ($member->info->history->isNotEmpty())
+                    <?php $corpHistory = $member->info->history->sortByDesc('record_id')->values(); ?>
+                    @foreach($corpHistory as $key=>$corp)
+                        <div class="row">
+                            <div class="col-lg-6 offset-lg-3">
+                                <div class="list-group-item">
                                     <div class="media">
                                         <div class="float-left">
                                             <img src="{{ config('services.eve.urls.img') }}/Corporation/{{ $corp->corporation_id }}_64.png" />
@@ -77,17 +76,16 @@
                                                 Started on {{ $corp->start_date->format("m/d/Y") }}
                                             </p>
                                         </div>
-
                                     </div>
                                     <div class="text-center align-bottom">
                                         <a href="{{ config('services.eve.urls.km') }}corporation/{{ $corp->corporation_id }}/" class="btn btn-primary" target="_blank">zKillboard</a>
                                         <a href="{{ config('services.eve.urls.who') }}corp/{{ $corp->info->name }}/" class="btn btn-primary" target="_blank">Eve Who</a>
                                     </div>
                                 </div>
-                            @endforeach
-                        @endif
-                    </div>
-                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
             </div>
         </div>
     </div>
