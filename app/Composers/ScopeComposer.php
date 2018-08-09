@@ -28,7 +28,7 @@ class ScopeComposer
                 $scopes = Auth::user()->scopes;
             }
             if (!isset($scopes)) {
-                throw new Exception("There are no scopes available for this view.");
+                throw new \Exception("There are no scopes available for this view.");
             }
             $view->with('scopes', $scopes);
         }
