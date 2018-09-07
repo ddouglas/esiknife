@@ -1048,6 +1048,56 @@ class DataController extends Controller
         ];
     }
 
+    public function processMailHeader(int $memberId, array $header)
+    {
+        $member = Member::findOrFail($memberId);
+        $header = collect(json_decode($header, true))->recursive();
+        $header = MailHeader::findOrFail($header->get('id'));
+        $recipients = collect(json_decode($recipients, true))->recursive();
+        $getMemberMailBody = $this->dataCont->getMemberMailBody($member, $header->id);
+        $status = $getMemberMailBody->status;
+        $payload = $getMemberMailBody->payload;
+        if (!$status) {
+            return $status;
+        }
+        unset($status, $payload);
+        $recipients->each(function ($recipient) use ($header) {
+            if ($recipient->get('recipient_type') === "character") {
+                $class = \ESIK\Jobs\ESI\GetCharacter::class;
+                $params = collect(['id' => $recipient->get('recipient_id')]);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
+                if ($shouldDispatch) {
+                    $this->dataCont->getCharacter($recipient->get('recipient_id'));
+                }
+            }
+            if ($recipient->get('recipient_type') === "corporation") {
+                $class = \ESIK\Jobs\ESI\GetCorporation::class;
+                $params = collect(['id' => $recipient->get('recipient_id')]);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
+                if ($shouldDispatch) {
+                    $this->dataCont->getCharacter($recipient->get('recipient_id'));
+                }
+            }
+            if ($recipient->get('recipient_type') === "alliance") {
+                $class = \ESIK\Jobs\ESI\GetAlliance::class;
+                $params = collect(['id' => $recipient->get('recipient_id')]);
+                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
+                if ($shouldDispatch) {
+                    $this->dataCont->getCharacter($recipient->get('recipient_id'));
+                }
+            }
+
+            if ($recipient->get('recipient_type') === "mailing_list") {
+                $getMailingList = MailingList::firstOrNew(['id' => $recipient->get('recipient_id')]);
+                $header->fill(['is_on_mailing_list' => 1, 'mailing_list_id' => $recipient->get('recipient_id')]);
+            }
+        });
+
+        $header->fill(['is_ready' => 1]);
+        $header->save();
+        return true;
+    }
+
     public function getMemberMailingLists($member)
     {
         $request = $this->httpCont->getCharactersCharacterIdMailLists($member->id, $member->access_token);
