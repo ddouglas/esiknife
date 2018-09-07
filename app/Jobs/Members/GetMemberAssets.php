@@ -50,7 +50,8 @@ class GetMemberAssets implements ShouldQueue
             $status = $headMemberAssets->status;
             $payload = $headMemberAssets->payload;
             if (!$status) {
-                throw new \Exception($payload->message, 1);
+                Log::alert($payload->message);
+                return false;
             }
 
             $responseHeaders = collect($payload->headers->response)->recursive();
@@ -74,7 +75,7 @@ class GetMemberAssets implements ShouldQueue
             $status = $getMemberAssets->status;
             $payload = $getMemberAssets->payload;
             if (!$status) {
-                throw new \Exception($payload->message, 1);
+                Log::alert($payload->message);
             }
         }
     }

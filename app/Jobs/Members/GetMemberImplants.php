@@ -43,7 +43,7 @@ class GetMemberImplants implements ShouldQueue
         $status = $getMemberImplants->status;
         $payload = $getMemberImplants->payload;
         if (!$status) {
-            throw new \Exception($payload->message, 1);
+            Log::alert($payload->message);
         }
     }
 }

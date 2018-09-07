@@ -43,7 +43,7 @@ class GetMemberMailLabels implements ShouldQueue
         $status = $getMemberMailLabels->status;
         $payload = $getMemberMailLabels->payload;
         if (!$status) {
-            throw new \Exception($payload->message, 1);
+            Log::alert($payload->message);
         }
     }
 }

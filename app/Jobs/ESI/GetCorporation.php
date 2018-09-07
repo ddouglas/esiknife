@@ -41,7 +41,7 @@ class GetCorporation implements ShouldQueue
         $status = $getCorporation->status;
         $payload = $getCorporation->payload;
         if (!$status) {
-            throw new \Exception($payload->message, 1);
+            Log::alert($payload->message);
         }
     }
 }

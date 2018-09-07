@@ -50,7 +50,7 @@ class GetMemberBookmarks implements ShouldQueue
             $status = $headMemberAssets->status;
             $payload = $headMemberAssets->payload;
             if (!$status) {
-                throw new \Exception($payload->message, 1);
+                Log::alert($payload->message);
             }
 
             $responseHeaders = collect($payload->headers->response)->recursive();
@@ -78,7 +78,7 @@ class GetMemberBookmarks implements ShouldQueue
             $status = $getMemberAssets->status;
             $payload = $getMemberAssets->payload;
             if (!$status) {
-                throw new \Exception($payload->message, 1);
+                Log::alert($payload->message);
             }
         }
     }

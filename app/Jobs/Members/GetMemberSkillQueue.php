@@ -43,7 +43,7 @@ class GetMemberSkillQueue implements ShouldQueue
         $status = $getMemberSkillQueue->status;
         $payload = $getMemberSkillQueue->payload;
         if (!$status) {
-            throw new \Exception($payload->message, 1);
+            Log::alert($payload->message);
         }
     }
 }

@@ -41,7 +41,7 @@ class GetCharacter implements ShouldQueue
         $status = $getCharacter->status;
         $payload = $getCharacter->payload;
         if (!$status) {
-            throw new \Exception($payload->message, 1);
+            Log::alert($payload->message);
         }
     }
 }

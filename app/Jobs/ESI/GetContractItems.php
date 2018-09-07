@@ -44,7 +44,7 @@ class GetContractItems implements ShouldQueue
         $status = $getMemberContractItems->status;
         $payload = $getMemberContractItems->payload;
         if (!$status) {
-            throw new \Exception($payload->message, 1);
+            Log::alert($payload->message);
         }
     }
 }

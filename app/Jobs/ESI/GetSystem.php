@@ -41,7 +41,7 @@ class GetSystem implements ShouldQueue
         $status = $getSystem->status;
         $payload = $getSystem->payload;
         if (!$status) {
-            throw new \Exception($payload->message, 1);
+            Log::alert($payload->message);
         }
     }
 }

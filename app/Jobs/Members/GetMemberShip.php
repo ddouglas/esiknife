@@ -43,7 +43,7 @@ class GetMemberShip implements ShouldQueue
         $status = $getMemberShip->status;
         $payload = $getMemberShip->payload;
         if (!$status) {
-            throw new \Exception($payload->message, 1);
+            Log::alert($payload->message);
         }
     }
 }

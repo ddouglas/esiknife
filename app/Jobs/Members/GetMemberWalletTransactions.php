@@ -43,7 +43,7 @@ class GetMemberWalletTransactions implements ShouldQueue
         $status = $getMemberWalletJournals->status;
         $payload = $getMemberWalletJournals->payload;
         if (!$status) {
-            throw new \Exception($payload->message, 1);
+            Log::alert($payload->message);
         }
     }
 }
