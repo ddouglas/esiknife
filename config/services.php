@@ -85,6 +85,9 @@ return [
                 ]
             ]
         ],
+        'mails' => [
+            'pages' => env('MAILHEADER_PAGES', 1)
+        ]
         'updateInterval' => env('JOB_STATUS_REFRESH_INTERVAL', 10)
     ],
 

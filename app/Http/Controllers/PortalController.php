@@ -513,7 +513,7 @@ class PortalController extends Controller
                 $dispatchedJobs->push($job->getJobStatusId());
                 $now = $now->addSeconds(1);
 
-                $job = new \ESIK\Jobs\Members\GetMemberMailHeaders($member->id);
+                $job = new \ESIK\Jobs\Members\GetMemberMailHeaders($member->id, config('services.eve.mails.pages'));
                 $job->delay($now);
                 $this->dispatch($job);
                 $dispatchedJobs->push($job->getJobStatusId());
