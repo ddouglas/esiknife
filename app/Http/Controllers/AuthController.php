@@ -51,7 +51,7 @@ class AuthController extends Controller
             "redirectTo" => "auth.login"
         ]);
         Session::put($state_hash, $state);
-        $ssoUrl = config("services.eve.urls.sso")."/oauth/authorize?response_type=code&redirect_uri=" . route(config('services.eve.sso.callback')) . "&client_id=".config('services.eve.sso.id')."&state={$state_hash}";
+        $ssoUrl = config("services.eve.urls.sso")."/oauth/authorize?response_type=code&redirect_uri=" . route('sso.callback') . "&client_id=".config('services.eve.sso.id')."&state={$state_hash}";
         return view("auth.login", [
            'ssoUrl' => $ssoUrl
        ]);
