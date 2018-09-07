@@ -137,7 +137,7 @@ class ProcessContract implements ShouldQueue
         $x = 0;
         $stationIds->diff($knownStations->keys())->each(function ($stationId) use (&$now, &$x, $dispatchedJobs) {
             $class = \ESIK\Jobs\ESI\GetStation::class;
-            $params = collect(['id' => $systemId]);
+            $params = collect(['id' => $stationId]);
             $jobId = $this->dataCont->dispatchJob($class, $params, $now);
             $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
             if ($x%10==0) {
