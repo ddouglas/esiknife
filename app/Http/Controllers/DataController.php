@@ -1501,7 +1501,12 @@ class DataController extends Controller
                 'pos_z' => $response->position->z,
                 'cached_until' => isset($responseHeaders['Expires']) ? Carbon::parse($responseHeaders['Expires'])->toDateTimeString() : Carbon::now()->addHour()->toDateTimeString()
             ]);
-            $structure->save();
+            try {
+                $structure->save();
+            } catch (\Exception $e) {
+                //
+            }
+
         }
         return (object)[
             'status' => true,
@@ -1534,7 +1539,12 @@ class DataController extends Controller
                 'pos_y' => $response->position->y,
                 'pos_z' => $response->position->z,
                 'cached_until' => isset($responseHeaders['Expires']) ? Carbon::parse($responseHeaders['Expires'])->toDateTimeString() : Carbon::now()->addHour()->toDateTimeString()
-            ])->save();
+            ]);
+            try {
+                $station->save();
+            } catch (\Exception $e) {
+                //
+            }
         }
         return (object)[
             'status' => true,
@@ -1568,7 +1578,12 @@ class DataController extends Controller
                 'constellation_id' => $response->constellation_id,
                 'cached_until' => isset($responseHeaders['Expires']) ? Carbon::parse($responseHeaders['Expires'])->toDateTimeString() : Carbon::now()->addHour()->toDateTimeString()
             ]);
-            $system->save();
+            try {
+                $system->save();
+            } catch (\Exception $e) {
+                //
+            }
+
         }
         return (object)[
             'status' => true,
