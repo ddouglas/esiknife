@@ -70,9 +70,8 @@ class Ships extends Command
             $status = $getType->status;
             $payload = $getType->payload;
             if (!$status) {
-                $this->warning($payload->message);
+                $this->error($payload->message);
                 $bar->advance();
-                return true;
             }
             $bar->advance();
             if ($x%20==0) {
