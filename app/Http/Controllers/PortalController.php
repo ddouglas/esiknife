@@ -36,10 +36,11 @@ class PortalController extends Controller
                 }
             }
         }
+        $allJobs = Auth::user()->alts->pluck('jobs')->flatten();
         $jobs = collect([
-            'pending' => Auth::user()->alts->pluck('jobs')->flatten()->whereIn('status', ['queued', 'executing'])->count(),
-            'finished' => Auth::user()->alts->pluck('jobs')->flatten()->whereIn('status', ['finished'])->count(),
-            'failed' => Auth::user()->alts->pluck('jobs')->flatten()->whereIn('status', ['failed'])->count()
+            'pending' => $allJobs->whereIn('status', ['queued', 'executing'])->count(),
+            'finished' => $allJobs->whereIn('status', ['finished'])->count(),
+            'failed' => $allJobs->whereIn('status', ['failed'])->count()
         ]);
         return view('portal.dashboard', [
             'jobs' => $jobs
