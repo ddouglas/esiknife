@@ -11,10 +11,10 @@ class ScopeComposer
         if (Auth::check()) {
             if (Route::getFacadeRoot()->current()->hasParameter('member')) {
                 $memberId = Route::getFacadeRoot()->current()->parameter('member');
-                $member = Member::findOrFail($memberId);
                 if (Auth::user()->id == $memberId) {
                     $scopes = Auth::user()->scopes;
                 } else {
+                    $member = Member::with('alts')->findOrFail($memberId);
                     $alt = $member->alts()->where('id', $memberId)->first();
                     $accessee = $member->accessee()->where('id', $memberId)->first();
                     if (!is_null($alt)) {
