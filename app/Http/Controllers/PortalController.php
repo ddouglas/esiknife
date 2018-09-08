@@ -308,13 +308,20 @@ class PortalController extends Controller
             if (!$skillz->has($skill->group_id)) {
                 $skillz->put($skill->group_id, collect([
                     'name' => $skill->group->name,
+                    'key' => strtolower(implode('_', explode(' ', $skill->group->name))),
+                    'info' => collect([
+                        'total_sp' => 0
+                    ]),
                     'skills' => collect()
                 ]));
             }
             $skillz->get($skill->group_id)->get('skills')->put($skill->skill_id, $skill);
+            $skillz->get($skill->group_id)->get('info')->put('total_sp', $skillz->get($skill->group_id)->get('info')->get('total_sp') + $skill->pivot->skillpoints_in_skill);
         });
+        $skillz = $skillz->sortBy('name');
         return view('portal.skillz.list', [
-            'skillz' => $skillz
+            'skillz' => $skillz,
+            'total_count' => $member->skillz->count()
         ])->withMember($member);
     }
 
