@@ -74,6 +74,7 @@ class GetMemberBookmarks implements ShouldQueue
                 }
                 $member->jobs()->attach($dispatchedJobs->toArray());
             }
+            return $status;
         } else {
             $getMemberAssets = $this->dataCont->getMemberBookmarksByPage($member, $this->page);
             $status = $getMemberAssets->status;
@@ -81,6 +82,7 @@ class GetMemberBookmarks implements ShouldQueue
             if (!$status) {
                 Log::alert($payload->message);
             }
+            return $status;
         }
     }
 }

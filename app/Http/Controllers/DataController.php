@@ -1001,10 +1001,11 @@ class DataController extends Controller
         }
         $now = now();
         $recipients = collect();
-        $headers = $headers->recursive();
+        $headers = $headers->recursive()->keyBy('mail_id');
         $headers->chunk(25)->each(function($chunk) use(&$now, $member, &$recipients) {
-            $mail_ids = $chunk->pluck('mail_id');
-            $knownMails = $member->mails()->whereIn('id', $mail_ids->toArray())->get()->keyBy('id');
+            $mail_ids = $chunk->keys();
+            $knownMails = MailHeader::whereIn('id', $mail_ids->toArray())->get()->keyBy('id');
+            $chunk = $chunk->diffKeys($knownMails);
             $attach = collect();
             $chunk->each(function ($header) use ($knownMails, &$now, $member, $attach, &$recipients) {
                 if (!$knownMails->has($header->get('mail_id'))) {
@@ -1030,7 +1031,7 @@ class DataController extends Controller
                     $mailHeader->save();
                     $mailHeader->recipients()->createMany($header->get('recipients')->toArray());
 
-                    ProcessMailHeader::dispatch($member->id, $mailHeader->toJson(), $header->get('recipients')->toJson())->delay($now);
+                    ProcessMailHeader::dispatch($member->id, $header->recursive())->delay($now);
                     $now->addSecond();
                 }
                 $attach->put($header->get('mail_id'), [
@@ -1048,13 +1049,12 @@ class DataController extends Controller
         ];
     }
 
-    public function processMailHeader(int $memberId, array $header)
+    public function processMailHeader(int $memberId, Collection $header)
     {
         $member = Member::findOrFail($memberId);
-        $header = collect(json_decode($header, true))->recursive();
-        $header = MailHeader::findOrFail($header->get('id'));
-        $recipients = collect(json_decode($recipients, true))->recursive();
-        $getMemberMailBody = $this->dataCont->getMemberMailBody($member, $header->id);
+        $dbHeader = MailHeader::findOrFail($header->get('mail_id'));
+        $recipients = $header->get('recipients');
+        $getMemberMailBody = $this->getMemberMailBody($member, $header->get('mail_id'));
         $status = $getMemberMailBody->status;
         $payload = $getMemberMailBody->payload;
         if (!$status) {
@@ -1065,37 +1065,40 @@ class DataController extends Controller
             if ($recipient->get('recipient_type') === "character") {
                 $class = \ESIK\Jobs\ESI\GetCharacter::class;
                 $params = collect(['id' => $recipient->get('recipient_id')]);
-                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
+                $shouldDispatch = $this->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
-                    $this->dataCont->getCharacter($recipient->get('recipient_id'));
+                    $this->getCharacter($recipient->get('recipient_id'));
                 }
             }
             if ($recipient->get('recipient_type') === "corporation") {
                 $class = \ESIK\Jobs\ESI\GetCorporation::class;
                 $params = collect(['id' => $recipient->get('recipient_id')]);
-                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
+                $shouldDispatch = $this->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
-                    $this->dataCont->getCharacter($recipient->get('recipient_id'));
+                    $this->getCharacter($recipient->get('recipient_id'));
                 }
             }
             if ($recipient->get('recipient_type') === "alliance") {
                 $class = \ESIK\Jobs\ESI\GetAlliance::class;
                 $params = collect(['id' => $recipient->get('recipient_id')]);
-                $shouldDispatch = $this->dataCont->shouldDispatchJob($class, $params->toArray());
+                $shouldDispatch = $this->shouldDispatchJob($class, $params->toArray());
                 if ($shouldDispatch) {
-                    $this->dataCont->getCharacter($recipient->get('recipient_id'));
+                    $this->getCharacter($recipient->get('recipient_id'));
                 }
             }
 
             if ($recipient->get('recipient_type') === "mailing_list") {
                 $getMailingList = MailingList::firstOrNew(['id' => $recipient->get('recipient_id')]);
-                $header->fill(['is_on_mailing_list' => 1, 'mailing_list_id' => $recipient->get('recipient_id')]);
+                $dbHeader->fill(['is_on_mailing_list' => 1, 'mailing_list_id' => $recipient->get('recipient_id')]);
             }
         });
 
-        $header->fill(['is_ready' => 1]);
-        $header->save();
-        return true;
+        $dbHeader->fill(['is_ready' => 1]);
+        $dbHeader->save();
+        return (object)[
+            'status' => true,
+            'payload' => $dbHeader
+        ];
     }
 
     public function getMemberMailingLists($member)

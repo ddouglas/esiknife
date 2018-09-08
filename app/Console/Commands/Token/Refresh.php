@@ -2,6 +2,7 @@
 
 namespace ESIK\Console\Commands\Token;
 
+use Carbon, Log;
 use ESIK\Models\Member;
 use Illuminate\Console\Command;
 use ESIK\Http\Controllers\SSOController;
@@ -13,7 +14,7 @@ class Refresh extends Command
      *
      * @var string
      */
-    protected $signature = 'token:refresh';
+    protected $signature = 'token:refresh {id? : Id of token to refresh}';
 
     /**
      * The console command description.
@@ -40,8 +41,44 @@ class Refresh extends Command
      */
     public function handle()
     {
-        Member::whereNotNull('refresh_token')->where('disabled', 0)->get()->each(function ($member) {
-            $this->ssoCont->refresh($member);
-        });
+        $id = $this->argument('id');
+        if (!is_null($id)) {
+            $member = Member::findOrFail($id);
+            if (is_null($member->refresh_token)) {
+                $this->error("Member ". $id . " does not have a refresh token saved. Canceling refresh request");
+                return false;
+            }
+            $refresh = $this->ssoCont->refresh($member);
+            $status = $refresh->status;
+            $payload = $refresh->payload;
+            if (!$status) {
+                $this->error($payload->message);
+                Log::alert($payload->message);
+                return false;
+            } else {
+                $this->info('Token for '. $member->id. " Refreshed Successfully.");
+            }
+        } else {
+            $success = 0; $fail = 0;
+            Member::whereNotNull('refresh_token')->where('disabled', 0)->where('expires', '<', Carbon::now()->subMinutes(30))->chunk(250, function ($chunk) use (&$success, &$fail) {
+                $chunk->each(function ($member) use (&$success, &$fail) {
+                    $refresh = $this->ssoCont->refresh($member);
+                    $status = $refresh->status;
+                    $payload = $refresh->payload;
+                    if (!$status) {
+                        $fail++;
+                        $this->error($payload->message. " || Attempts Failed: {$fail}");
+                        Log::alert($payload->message);
+                    } else {
+                        $success++;
+                        $this->info('Token for '. $member->id. " Refreshed Successfully. || Attempts Successful: {$success}");
+                    }
+                    usleep(5000);
+                });
+                usleep(500000);
+            });
+        }
+
+        return true;
     }
 }

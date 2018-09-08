@@ -152,5 +152,6 @@ class ProcessContract implements ShouldQueue
         $jobId = $this->dataCont->dispatchJob($class, $params, $now);
         $jobId->get('dispatched') ? $dispatchedJobs->push($jobId->get('job')) : "";
         $member->jobs()->attach($dispatchedJobs->toArray());
+        return true;
     }
 }

@@ -24,7 +24,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('token:refresh')->everyTenMinutes();
+        // $schedule->command('token:refresh')->everyTenMinutes();
+        $schedule->command('clean:stale')->weekly(7, '11:00');
+        $schedule->command('clean:disabled')->weekly(7, '11:05');
     }
 
     /**

@@ -51,12 +51,15 @@ class GetMemberAssets implements ShouldQueue
             $payload = $headMemberAssets->payload;
             if (!$status) {
                 Log::alert($payload->message);
-                return false;
+                return $status;
             }
 
             $responseHeaders = collect($payload->headers->response)->recursive();
             if ($responseHeaders->has('X-Pages')) {
                 $pages = (int)$responseHeaders->get('X-Pages');
+            } else {
+                Log::alert($payload->message);
+                return $status;
             }
 
             if (isset($pages)) {
@@ -70,6 +73,8 @@ class GetMemberAssets implements ShouldQueue
                 }
                 $member->jobs()->attach($dispatchedJobs->toArray());
             }
+
+            return $status;
         } else {
             $getMemberAssets = $this->dataCont->getMemberAssetsByPage($member, $this->page);
             $status = $getMemberAssets->status;
@@ -77,6 +82,7 @@ class GetMemberAssets implements ShouldQueue
             if (!$status) {
                 Log::alert($payload->message);
             }
+            return $status;
         }
     }
 }

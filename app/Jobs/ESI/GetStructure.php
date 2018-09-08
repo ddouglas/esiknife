@@ -42,10 +42,11 @@ class GetStructure implements ShouldQueue
     {
         $member = Member::findOrFail($this->memberId);
         $getStructure = $this->dataCont->getStructure($member, $this->id);
-        // $status = $getStructure->status;
-        // $payload = $getStructure->payload;
-        // if (!$status) {
-        //     Log::alert($payload->message);
-        // }
+        $status = $getStructure->status;
+        $payload = $getStructure->payload;
+        if (!$status) {
+            Log::alert($payload->message);
+        }
+        return $status;
     }
 }

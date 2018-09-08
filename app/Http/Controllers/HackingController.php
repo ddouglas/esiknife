@@ -2,7 +2,7 @@
 
 namespace ESIK\Http\Controllers;
 
-use Auth, Bus, Carbon, DB, Request, Session;
+use Auth, Bus, Carbon, DB, Request, Redis, Session;
 use ESIK\Models\{Member};
 use ESIK\Jobs\ESI\GetCharacter;
 use ESIK\Models\ESI\{Character, Corporation, System};
@@ -20,7 +20,10 @@ class HackingController extends Controller
 
     public function index()
     {
-        
+        $member = Member::find(95923084);
+        $header = $this->dataCont->getMemberMailHeaders($member, 1);
+        dd($header);
+
     }
 
     public function typesWithAttributes ($type_id)

@@ -46,5 +46,6 @@ class GetMemberContracts implements ShouldQueue
         if (!$status) {
             Log::alert($payload->message);
         }
+        return $status;
     }
 }
