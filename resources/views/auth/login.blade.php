@@ -13,9 +13,6 @@
                     </div>
                     <div class="card-body">
                         @include('extra.alert')
-                        <div class="alert alert-danger">
-                            This website is under heavy maintenance right now. Please try again later. Thank You.
-                        </div>
                         <p>Welcome to ESI Knife. To get started, use the button below to login using CCP's SSO. From there, we will get you account setup.</p>
                         <a href="{{ $ssoUrl }}" class="text-center">
                             <img src="https://web.ccpgamescdn.com/eveonlineassets/developers/eve-sso-login-white-large.png" class="rounded mx-auto d-block"/>
