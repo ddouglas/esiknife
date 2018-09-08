@@ -8,7 +8,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
-use Bus;
+use Bus, Log;
 use ESIK\Models\Member;
 use ESIK\Traits\Trackable;
 use ESIK\Http\Controllers\DataController;
