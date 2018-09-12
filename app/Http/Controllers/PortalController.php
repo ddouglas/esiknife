@@ -49,7 +49,7 @@ class PortalController extends Controller
 
     public function overview (int $member)
     {
-        $member = Member::findOrFail($member);
+        $member = Member::with('info.history')->findOrFail($member);
         return view('portal.overview', [
             'member' => $member
         ]);
@@ -169,8 +169,7 @@ class PortalController extends Controller
     public function contracts (int $member)
     {
         $member = Member::findOrFail($member);
-        $member->load('contracts', 'contracts.issuer.corporation', 'contracts.acceptor', 'contracts.assignee', 'contracts.start', 'contracts.end');
-        $contracts = $member->contracts()->paginate(25);
+        $contracts = $member->contracts()->with('issuer', 'issuer_corp', 'acceptor', 'assignee', 'start', 'end')->paginate(25);
         return view('portal.contracts.list', [
             'contracts' => $contracts
         ])->withMember($member);
