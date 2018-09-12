@@ -34,17 +34,35 @@
                     @foreach(Auth::user()->alts as $alt)
                         <li class="list-group-item">
                             <div class="float-right">
-                                <a href="{{ route('welcome') }}" class="btn btn-primary">
-                                    <i class="fas fa-sync"></i>
-                                </a>
-                                <a href="{{ route('overview', ['id' => $alt->id]) }}" class="btn btn-primary">
-                                    <i class="fas fa-eye"></i>
-                                </a>
+                                <div class="btn-group">
+                                    <a href="{{ route('overview', ['id' => $alt->id]) }}" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <div class="dropdown">
+                                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                                            <i class="fas fa-cog"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            <a class="dropdown-item" href="#">
+                                                <i class="fas fa-sync"></i> Refresh Token
+                                            </a>
+                                            @if ($alt->id != $alt->main)
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-sync"></i> Swap Main
+                                                </a>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-sync"></i> Remove Alt
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                             <div class="media mt-0">
                                 <img src="{{ config('services.eve.urls.img') }}/Character/{{ $alt->id }}_64.jpg" class="rounded img-fluid mr-3" />
                                 <div class="media-body align-center">
-                                    <h4>{{ $alt->info->name }}</h4>
+                                    <h4>{{ $alt->info->name }} {{ $alt->id == $alt->main ? "[Main]" : "[Alt]" }}</h4>
                                     <p>
                                         {{ $alt->info->corporation->name }} @if(!is_null($alt->info->alliance)) {{ "/ ". $alt->info->alliance->name }} @endif
                                     </p>
