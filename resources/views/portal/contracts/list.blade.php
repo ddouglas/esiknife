@@ -36,9 +36,6 @@
                 <table class="table table-bordered table-stripped">
                     <tbody>
                         <tr>
-                            <th rowspan="2" class="align-middle">
-                                Id
-                            </th>
                             <th>
                                 Type
                             </th>
@@ -49,10 +46,10 @@
                                 [Corp Ticker] <br />Issued By
                             </th>
                             <th>
-                                [Corp Ticker] <br />Assigned To
+                                Assigned To
                             </th>
                             <th>
-                                [Corp Ticker] <br />Accepted By
+                                Accepted By
                             </th>
                         </tr>
                         <tr>
@@ -74,11 +71,8 @@
                         </tr>
                     </tbody>
                     @foreach($contracts as $contract)
-                        <tbody>
+                        <tbody class="click-row" data-href="{{ route('contract.view', ['member' => $member->id, 'contract_id' => $contract->id]) }}">
                             <tr>
-                                <td rowspan="2" class="align-middle">
-                                    <a href="{{ route('contract.view', ['member' => $member->id, 'contract_id' => $contract->id]) }}">{{ $contract->id }}</a>
-                                </td>
                                 <td>
                                     {{ $contract->type }}
                                 </td>
@@ -105,16 +99,16 @@
                             <tr>
                                 <td>
                                     @if ($contract->getOriginal('type') === "item_exchange")
-                                        {{ number_format($contract->price) }}
+                                        {{ number_format($contract->price) }} ISK
                                     @elseif ($contract->getOriginal('type') === "courier")
-                                        {{ number_format($contract->reward) }}
+                                        {{ number_format($contract->reward) }} ISK
                                     @endif
                                 </td>
                                 <td>
                                     @if ($contract->getOriginal('type') === "item_exchange")
                                         N/A
                                     @elseif ($contract->getOriginal('type') === "courier")
-                                        {{ number_format($contract->collateral) }}
+                                        {{ number_format($contract->collateral) }} ISK
                                     @endif
                                 </td>
                                 <td>
@@ -132,5 +126,22 @@
                 </table>
             </div>
         </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="justify-content-center">
+                    {{ $contracts->links() }}
+                </div>
+            </div>
+        </div>
     </div>
+@endsection
+
+@section('js')
+    <script>
+        $(document).ready(function ($) {
+            $(".click-row").click(function () {
+                window.location = $(this).data('href');
+            })
+        });
+    </script>
 @endsection
