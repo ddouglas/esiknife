@@ -117,26 +117,32 @@
                     <hr />
                     <h3>Character You Are Authorized to Access</h3>
                     <hr />
-                    <ul class="list-group">
-                        @foreach (Auth::user()->accessee as $accessee)
-                            <li class="list-group-item">
-                                <div class="float-right">
-                                    <a href="{{ route('overview', ['member' => $accessee->id]) }}" class="btn btn-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </div>
-                                <div class="media mt-0">
-                                    <img src="{{ config('services.eve.urls.img') }}/Character/{{ $accessee->id }}_64.jpg" class="rounded img-fluid mr-3" />
-                                    <div class="media-body align-center">
-                                        <h4>{{ $accessee->info->name }}</h4>
-                                        <p>
-                                            {{ !is_null( $accessee->info->corporation) ? $accessee->info->corporation->name : "Unknown Corporation ".  $accessee->info->corporation_id }} @if(!is_null($accessee->info->alliance)) {{ "/ ".$accessee->info->alliance->name }} @endif
-                                        </p>
+                    <form action="{{ route('settings.access', ['scope' => "accessee"]) }}" method="post">
+                        <ul class="list-group">
+                            @foreach (Auth::user()->accessee as $accessee)
+                                <li class="list-group-item">
+                                    <div class="float-right">
+                                        <a href="{{ route('overview', ['member' => $accessee->id]) }}" class="btn btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {{ csrf_field() }}
+                                        <button type="submit" class="btn btn-danger" name="remove" value="{{ $accessee->id }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                     </div>
-                                </div>
-                            </li>
-                        @endforeach
-                    </ul>
+                                    <div class="media mt-0">
+                                        <img src="{{ config('services.eve.urls.img') }}/Character/{{ $accessee->id }}_64.jpg" class="rounded img-fluid mr-3" />
+                                        <div class="media-body align-center">
+                                            <h4>{{ $accessee->info->name }}</h4>
+                                            <p>
+                                                {{ !is_null( $accessee->info->corporation) ? $accessee->info->corporation->name : "Unknown Corporation ".  $accessee->info->corporation_id }} @if(!is_null($accessee->info->alliance)) {{ "/ ".$accessee->info->alliance->name }} @endif
+                                            </p>
+                                        </div>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </form>
                 </div>
             </div>
         @endif
