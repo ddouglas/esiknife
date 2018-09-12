@@ -384,7 +384,28 @@ class SettingController extends Controller
                     }
                 }
                 if ($scope === "accessee") {
-
+                    if (Request::has('remove')) {
+                        $remove = Request::get('remove');
+                        $accessees = Auth::user()->accessee->keyBy('id');
+                        if ($accessees->has($remove)) {
+                            Auth::user()->accessee()->detach($remove);
+                            Session::flash('alert', [
+                                'header' => "Access Revoked Successfully",
+                                'message' => "You have successfully revoke your access to that character with the id of  {$remove}.",
+                                'type' => 'success',
+                                'close' => 1
+                            ]);
+                            return redirect(route('settings.access'));
+                        } else {
+                            Session::flash('alert', [
+                                'header' => "Unable to revoke access",
+                                'message' => "We are unable to revoke your access to the character {$remove} because you do not have access to a character with that id.",
+                                'type' => 'danger',
+                                'close' => 1
+                            ]);
+                            return redirect(route('settings.access'));
+                        }
+                    }
                 }
             }
         }
