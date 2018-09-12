@@ -1061,7 +1061,7 @@ class DataController extends Controller
             return $status;
         }
         unset($status, $payload);
-        $recipients->each(function ($recipient) use ($header) {
+        $recipients->each(function ($recipient) use ($header, $dbHeader) {
             if ($recipient->get('recipient_type') === "character") {
                 $class = \ESIK\Jobs\ESI\GetCharacter::class;
                 $params = collect(['id' => $recipient->get('recipient_id')]);
