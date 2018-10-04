@@ -39,19 +39,19 @@
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <div class="dropdown">
-                                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                                        <button class="btn btn-primary" type="button" data-toggle="dropdown">
                                             <i class="fas fa-cog"></i>
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-right">
-                                            <a class="dropdown-item" href="#">
-                                                <i class="fas fa-sync"></i> Refresh Token
+                                            <a class="dropdown-item" href="{{ route('portal.dashboard', ['action' => "refresh", 'id' => $alt->id]) }}">
+                                                <i class="fas fa-sync mr-2"></i> Refresh Character
                                             </a>
                                             @if ($alt->id != $alt->main)
-                                                <a class="dropdown-item" href="#">
-                                                    <i class="fas fa-sync"></i> Swap Main
+                                                <a class="dropdown-item" href="{{ route('portal.dashboard', ['action' => "swap_main", 'id' => $alt->id]) }}">
+                                                    <i class="fas fa-random mr-2"></i> Swap Main
                                                 </a>
-                                                <a class="dropdown-item" href="#">
-                                                    <i class="fas fa-sync"></i> Remove Alt
+                                                <a class="dropdown-item" href="{{ route('alt.remove', ['id' => $alt->id]) }}">
+                                                    <i class="fas fa-trash mr-2"></i> Remove Alt
                                                 </a>
                                             @endif
                                         </div>
@@ -74,7 +74,7 @@
                 <div class="row">
                     <div class="col-12 mt-3">
                         <div class="btn-group float-right">
-                            <a href="{{ route('welcome') }}" class="btn btn-secondary ">Add Character</a>
+                            <a href="{{ route('alt.add') }}" class="btn btn-secondary">Add Character</a>
                             <a href="{{ route('settings.access') }}" class="btn btn-info">Manage Access</a>
                         </div>
                     </div>

@@ -299,6 +299,11 @@ class PortalController extends Controller
         ])->withMember($member);
     }
 
+    public function refresh(int $main, int $alt)
+    {
+        
+    }
+
     public function skills (int $member)
     {
         $member = Member::findOrFail($member);
@@ -448,128 +453,8 @@ class PortalController extends Controller
             ]);
 
             $member->save();
-            $alert = collect();
-            $now = now();
-            $dispatchedJobs = collect();
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterAssets'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberAssets($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
+            $this->dispatchJobs($member);
 
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterBookmarks'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberBookmarks($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterClones'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberClones($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterContacts'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberContacts($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterContracts'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberContracts($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberImplants($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterLocation'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberLocation($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterMails'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberMailLabels($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-
-                $job = new \ESIK\Jobs\Members\GetMemberMailingLists($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-
-                $job = new \ESIK\Jobs\Members\GetMemberMailHeaders($member->id, config('services.eve.mails.pages'));
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterShip'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberShip($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkills'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberSkillz($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkillQueue'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberSkillQueue($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-
-            if ($member->scopes->contains(config('services.eve.scopes.readCharacterWallet'))) {
-                $job = new \ESIK\Jobs\Members\GetMemberWallet($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-
-                $job = new \ESIK\Jobs\Members\GetMemberWalletJournals($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-
-                $job = new \ESIK\Jobs\Members\GetMemberWalletTransactions($member->id);
-                $job->delay($now);
-                $this->dispatch($job);
-                $dispatchedJobs->push($job->getJobStatusId());
-                $now = $now->addSeconds(1);
-            }
-            $member->jobs()->attach($dispatchedJobs->toArray());
             Session::flash('alert', [
                 "header" => "Welcome to ESI Knife ". Auth::user()->info->name,
                 'message' => "You account has been setup successfully. However, there is a lot of data we need to pull in from the API to properly display your profile to you, so bare with us while we talk with ESI and whip our slaves to get that data for you. It shouldn't take long. You can use the Job Status module to the right to check on the status of these jobs. When you have zero (0) pending jobs, it is okay to load up your character, otherwise, one of pages you visit may crash because we don't have all the data yet.",
@@ -589,5 +474,135 @@ class PortalController extends Controller
             return redirect(route('dashboard'));
         }
         return view('portal.welcome');
+    }
+
+    public function dispatchJobs (Member $member)
+    {
+        $now = now(); $dispatchedJobs = collect();
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterAssets'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberAssets($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterBookmarks'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberBookmarks($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterClones'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberClones($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterContacts'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberContacts($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterContracts'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberContracts($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberImplants($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterLocation'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberLocation($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterMails'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberMailLabels($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+
+            $job = new \ESIK\Jobs\Members\GetMemberMailingLists($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+
+            $job = new \ESIK\Jobs\Members\GetMemberMailHeaders($member->id, config('services.eve.mails.pages'));
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterShip'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberShip($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkills'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberSkillz($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkillQueue'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberSkillQueue($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterWallet'))) {
+            $job = new \ESIK\Jobs\Members\GetMemberWallet($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+
+            $job = new \ESIK\Jobs\Members\GetMemberWalletJournals($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+
+            $job = new \ESIK\Jobs\Members\GetMemberWalletTransactions($member->id);
+            $job->delay($now);
+            $this->dispatch($job);
+            $dispatchedJobs->push($job->getJobStatusId());
+            $now = $now->addSeconds(1);
+        }
+
+        $member->jobs()->attach($dispatchedJobs->toArray());
+
+        return collect([
+            'status' => true,
+            'payload' => $member
+        ]);
     }
 }

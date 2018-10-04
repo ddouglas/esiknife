@@ -18,6 +18,11 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET'], '/dashboard', 'PortalController@dashboard')->name('dashboard');
     Route::match(['GET', 'POST'], '/welcome', 'PortalController@welcome')->name('welcome');
     Route::match(['GET', 'POST'], '/switch', 'PortalController@switch')->name('switch');
+    Route::match(['GET', 'POST'], '/refresh', 'PortalController@refresh')->name('refresh');
+
+    Route::match(['GET', 'POST'], '/alt/add', 'AltController@add')->name('alt.add');
+    Route::match(['GET', 'POST'], '/alt/remove/{id}', 'AltController@id')->name('alt.remove');
+
 
     Route::match(['GET'], '/{member}/overview', 'PortalController@overview')->name('overview')->middleware("authorized");
     Route::match(['GET'], '/{member}/assets', 'PortalController@assets')->name('assets')->middleware("authorized:esi-assets.read_assets.v1");
