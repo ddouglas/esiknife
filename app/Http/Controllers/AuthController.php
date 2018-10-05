@@ -16,6 +16,7 @@ class AuthController extends Controller
     {
         if (Request::has('state') && Session::has(Request::get('state'))) {
             $ssoResponse = Session::get(Request::get('state'));
+
             Session::forget(Request::get('state'));
             $getMemberData = $this->dataCont->getMemberData($ssoResponse->get('CharacterID'), true);
             if (!$getMemberData->status) {
@@ -46,12 +47,22 @@ class AuthController extends Controller
                 return redirect(route('welcome'));
             }
         }
+
         $state_hash = str_random(16);
         $state = collect([
-            "redirectTo" => "auth.login"
+            "redirectTo" => route('auth.login')
         ]);
+
+        $params = collect([
+            'response_type' => 'code',
+            'redirect_uri' => route('sso.callback'),
+            'client_id' => config('services.eve.sso.id'),
+            'state' => $state_hash,
+            'scope' => "publicData"
+        ]);
+
         Session::put($state_hash, $state);
-        $ssoUrl = config("services.eve.urls.sso")."/oauth/authorize?response_type=code&redirect_uri=" . route('sso.callback') . "&client_id=".config('services.eve.sso.id')."&state={$state_hash}";
+        $ssoUrl = config('services.eve.urls.sso.authorize')."?".http_build_query($params);
         return view("auth.login", [
            'ssoUrl' => $ssoUrl
        ]);

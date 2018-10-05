@@ -18,7 +18,12 @@ class PortalController extends Controller
 
     public function dashboard ()
     {
-        Auth::user()->load('accessee.info', 'alts.jobs');
+        Auth::user()->load('accessee.info', 'alts.jobs');$allJobs = Auth::user()->alts->pluck('jobs')->flatten();
+        $jobs = collect([
+            'pending' => $allJobs->whereIn('status', ['queued', 'executing'])->count(),
+            'finished' => $allJobs->whereIn('status', ['finished'])->count(),
+            'failed' => $allJobs->whereIn('status', ['failed'])->count()
+        ]);
         if (Request::has('action')) {
             $action = Request::get('action');
             if ($action === "delete_pending_grant") {
@@ -34,6 +39,47 @@ class PortalController extends Controller
                         return redirect(route('dashboard'));
                     }
                 }
+            }
+
+            if ($action === "refresh") {
+                if ($jobs->get('pending') > 0) {
+                    Session::flash('alert', [
+                        'header' => "Invalid Refresh Attempt",
+                        'message' => "There are currently jobs for this account in Pending Status. Please wait until all jobs for this account currently in this queue have been processed before dispatching additional jobs.",
+                        'type' => 'info',
+                        'close' => 1
+                    ]);
+                    return redirect(route('dashboard'));
+                }
+                if (!Request::has('id')) {
+                    Session::flash('alert', [
+                        'header' => "Parameters Missing",
+                        'message' => "Insufficient Parameters were provided to complete the refresh request. Please try again using the button on the dashboard.",
+                        'type' => 'danger',
+                        'close' => 1
+                    ]);
+                    return redirect(route('dashboard'));
+                }
+                $targetID = Request::get('id');
+                $alts = Auth::user()->alts->keyBy('id');
+                if (!$alts->has($targetID)) {
+                    Session::flash('alert', [
+                        'header' => "Unauthorized Refresh Attempt",
+                        'message' => "The character you are attempting to refresh is not a character associated with this the currently authenticated user. Please only attempt to refresh Ids associated with this character.",
+                        'type' => 'danger',
+                        'close' => 1
+                    ]);
+                    return redirect(route('dashboard'));
+                }
+                $target = $alts->get($targetID);
+                $refresh = $this->dispatchJobs($target);
+                Session::flash('alert', [
+                    'header' => "Alt Refreshed Successfully",
+                    'message' => "Jobs to refresh your character have been dispatched successfully. Please monitor the model to the right and refresh the page when the jobs are complete.",
+                    'type' => 'success',
+                    'close' => 1
+                ]);
+                return redirect(route('dashboard'));
             }
         }
         $allJobs = Auth::user()->alts->pluck('jobs')->flatten();
@@ -299,11 +345,6 @@ class PortalController extends Controller
         ])->withMember($member);
     }
 
-    public function refresh(int $main, int $alt)
-    {
-        
-    }
-
     public function skills (int $member)
     {
         $member = Member::findOrFail($member);
@@ -393,18 +434,29 @@ class PortalController extends Controller
                 return config('services.eve.scopes')[$scope];
             });
 
+
             $authorized = $authorized->sort()->values()->implode(' ');
 
             $state_hash = str_random(16);
             $state = collect([
-                "redirectTo" => "welcome",
-                "additionalData" => collect([
+                "redirectTo" => route('welcome'),
+                "additionalData" => [
                     'authorizedScopesHash' => hash('sha1', $authorized),
                     'storeRefreshToken' => Request::has('storeRefreshToken')
-                ])
+                ]
+            ])->recursive();
+
+
+            $params = collect([
+                'response_type' => 'code',
+                'redirect_uri' => route('sso.callback'),
+                'client_id' => config('services.eve.sso.id'),
+                'state' => $state_hash,
+                'scope' => $authorized
             ]);
+
             Session::put($state_hash, $state);
-            $ssoUrl = config("services.eve.urls.sso")."/oauth/authorize?response_type=code&redirect_uri=" . route(config('services.eve.sso.callback')) . "&client_id=".config('services.eve.sso.id')."&state={$state_hash}&scope=".$authorized;
+            $ssoUrl = config('services.eve.urls.sso.authorize')."?".http_build_query($params->toArray());
             return redirect($ssoUrl);
         }
 
@@ -419,6 +471,20 @@ class PortalController extends Controller
                 return redirect(route('welcome'));
             }
             $ssoResponse = Session::get(Request::get('state'));
+
+            dd($ssoResponse);
+
+            $ssoResponseExplode = collect(explode('.', $ssoResponse->get('access_token')))->recursive();
+            $header = json_decode(base64_decode($ssoResponseExplode->get(0)), true);
+            $payload = json_decode(base64_decode($ssoResponseExplode->get(1)), true);
+
+
+
+            $headerEncoded = urlencode(base64_encode(json_encode($header)));
+            $payloadEncoded = urlencode(base64_encode(json_encode($payload)));
+
+            dd("Done", $header, $payload, $ssoResponseExplode, $headerEncoded, $payloadEncoded);
+
             Session::forget(Request::get('state'));
             $hashedResponseScopes = hash('sha1', collect(explode(' ', $ssoResponse->get('Scopes')))->sort()->values()->implode(' '));
             if ($hashedResponseScopes !== $ssoResponse->get('authorizedScopesHash')) {

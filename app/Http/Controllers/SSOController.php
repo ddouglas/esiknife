@@ -40,27 +40,18 @@ class SSOController extends Controller
                 'type' => 'danger',
                 'close' => 1
             ]);
-            return redirect(route($stateSession->get("redirectTo")));
+            return redirect($stateSession->get("redirectTo"));
         }
-        $response = collect($verifyAuthCode->payload->response);
 
-        //Authorization Code has been verified and we got back an Access Token and Refresh Token. Lets Verify those now and retrieve the some basic Character Data.
-        $verifyAccessToken = $this->dataCont->verifyAccessToken($response->get('access_token'));
-        if (!$verifyAccessToken->status) {
-            Session::flash('alert', [
-                "header" => "SSO Error",
-                'message' => "Access Token Verification with CCP SSO Failed. Please try again. If errors persists, contact David Davaham. These errors have been logged.",
-                'type' => 'danger',
-                'close' => 1
-            ]);
-            return redirect(route($stateSession->get("redirectTo")));
-        }
-        $response = $response->merge(collect($verifyAccessToken->payload->response));
+
+        $response = collect($verifyAuthCode->payload->response)->recursive();
+
         $state = str_random(16);
 
         $response = $response->merge($stateSession->get('additionalData'));
         Session::put($state, $response);
-        return redirect(route($stateSession->get("redirectTo"), ['state' => $state]));
+        $url = $stateSession->get("redirectTo") . "?" . http_build_query(['state' => $state]);
+        return redirect($url);
     }
 
     public function refresh(Member $member)

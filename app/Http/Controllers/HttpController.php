@@ -59,7 +59,7 @@ class HttpController extends Controller
             "Content-Type" => "application/x-www-form-urlencoded",
             "Host" => "login.eveonline.com",
             "User-Agent" => config("services.eve.userAgent")
-        ], 'post', config('services.eve.urls.sso'),"/oauth/token", [
+        ], 'post', config('services.eve.urls.sso.token'), "", [
             'grant_type' => "authorization_code",
             'code' => $code
         ]);
@@ -81,7 +81,7 @@ class HttpController extends Controller
             "Content-Type" => "application/json",
             "Host" => "login.eveonline.com",
             "User-Agent" => config("services.eve.userAgent")
-        ], 'post', config("services.eve.urls.sso"),"/oauth/token", json_encode([
+        ], 'post', config("services.eve.urls.sso.token"),"", json_encode([
             "grant_type" => "refresh_token",
             "refresh_token" => $token
         ]));
@@ -94,7 +94,7 @@ class HttpController extends Controller
             "Content-Type" => "application/json",
             "Host" => "login.eveonline.com",
             "User-Agent" => config("services.eve.userAgent")
-        ], 'post', config("services.eve.urls.sso"),"/oauth/revoke", json_encode([
+        ], 'post', config("services.eve.urls.sso.revoke"),"", json_encode([
             "token_type_hint" => $hint,
             "token" => $token
         ]));

@@ -43,11 +43,11 @@
                                             <i class="fas fa-cog"></i>
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-right">
-                                            <a class="dropdown-item" href="{{ route('portal.dashboard', ['action' => "refresh", 'id' => $alt->id]) }}">
+                                            <a class="dropdown-item" href="{{ route('dashboard', ['action' => "refresh", 'id' => $alt->id]) }}">
                                                 <i class="fas fa-sync mr-2"></i> Refresh Character
                                             </a>
                                             @if ($alt->id != $alt->main)
-                                                <a class="dropdown-item" href="{{ route('portal.dashboard', ['action' => "swap_main", 'id' => $alt->id]) }}">
+                                                <a class="dropdown-item" href="{{ route('dashboard', ['action' => "swap_main", 'id' => $alt->id]) }}">
                                                     <i class="fas fa-random mr-2"></i> Swap Main
                                                 </a>
                                                 <a class="dropdown-item" href="{{ route('alt.remove', ['id' => $alt->id]) }}">

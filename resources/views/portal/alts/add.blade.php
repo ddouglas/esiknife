@@ -17,7 +17,7 @@
                 <h3 class="mb-1">Select the Scopes!</h3>
                 <hr />
                 @include('extra.alert')
-                <form action="{{ route('welcome') }}" method="post">
+                <form action="{{ route('alt.add') }}" method="post">
                     <div class="row">
                         <div class="col-md-6 offset-lg-3">
                             <ul class="list-group">
@@ -28,7 +28,7 @@
                                     <strong>Character Information</strong>
                                 </li>
 
-                                
+
                                 <label for="readCharacterAssets" class="mb-0">
                                     <li class="list-group-item py-auto">
                                         <input type="checkbox" id="readCharacterAssets" name="scopes[readCharacterAssets]" class="item" /> <span class="ml-2">Read Character Assets</span>
