@@ -26,7 +26,7 @@ class DropIsBlockColumnFromContacts extends Migration
     public function down()
     {
         Schema::table('member_contacts', function (Blueprint $table) {
-            $table->boolean('is_blocked')->default(0)->nullable()->after('stading');
+            $table->boolean('is_blocked')->default(0)->nullable()->after('standing');
         });
     }
 }
