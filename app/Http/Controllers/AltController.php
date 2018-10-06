@@ -39,10 +39,16 @@ class AltController extends Controller
                 ])
             ]);
 
-            $parms = http_build_query();
+            $params = collect([
+                'response_type' => 'code',
+                'redirect_uri' => route('sso.callback'),
+                'client_id' => config('services.eve.sso.id'),
+                'state' => $state_hash,
+                'scope' => $authorized
+            ]);
 
             Session::put($state_hash, $state);
-            $ssoUrl = config("services.eve.urls.sso.authorize")."?response_type=code&redirect_uri=" . route(config('services.eve.sso.callback')) . "&client_id=".config('services.eve.sso.id')."&state={$state_hash}&scope=".$authorized;
+            $ssoUrl = config('services.eve.urls.sso.authorize')."?".http_build_query($params->toArray());
             return redirect($ssoUrl);
         }
         $scopes = collect(config('services.eve.scopes'))->keys();

@@ -34,6 +34,7 @@ class AuthController extends Controller
             $member = Member::firstOrNew(['id' => $getMemberData->id]);
             if ($member->exists) {
                 Auth::login($member);
+                Auth::user()->touch();
                 if (Session::has('to')) {
                     $to = Session::get('to');
                     Session::forget('to');
@@ -62,7 +63,7 @@ class AuthController extends Controller
         ]);
 
         Session::put($state_hash, $state);
-        $ssoUrl = config('services.eve.urls.sso.authorize')."?".http_build_query($params);
+        $ssoUrl = config('services.eve.urls.sso.authorize')."?".http_build_query($params->toArray());
         return view("auth.login", [
            'ssoUrl' => $ssoUrl
        ]);
