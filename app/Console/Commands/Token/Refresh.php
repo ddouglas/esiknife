@@ -60,7 +60,7 @@ class Refresh extends Command
             }
         } else {
             $success = 0; $fail = 0;
-            Member::whereNotNull('refresh_token')->where('disabled', 0)->where('expires', '<', Carbon::now()->subMinutes(30))->chunk(250, function ($chunk) use (&$success, &$fail) {
+            Member::whereNotNull('refresh_token')->where('disabled', 0)->chunk(250, function ($chunk) use (&$success, &$fail) {
                 $chunk->each(function ($member) use (&$success, &$fail) {
                     $refresh = $this->ssoCont->refresh($member);
                     $status = $refresh->status;
