@@ -40,9 +40,9 @@ class GetMemberWalletTransactions implements ShouldQueue
     public function handle()
     {
         $member = Member::findOrFail($this->id);
-        $getMemberWalletJournals = $this->dataCont->getMemberWalletTransactions($member);
-        $status = $getMemberWalletJournals->status;
-        $payload = $getMemberWalletJournals->payload;
+        $getMemberWalletTransactions = $this->dataCont->getMemberWalletTransactions($member);
+        $status = $getMemberWalletTransactions->status;
+        $payload = $getMemberWalletTransactions->payload;
         if (!$status) {
             Log::alert($payload->message);
         }
