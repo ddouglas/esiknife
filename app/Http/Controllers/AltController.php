@@ -50,4 +50,41 @@ class AltController extends Controller
             'scopes' => $scopes
         ]);
     }
+
+    public function remove(int $id)
+    {
+        if ($id == Auth::user()->id) {
+            Session::flash('alert', [
+                'header' => "Unable to Main Character",
+                'message' => "You're currently authenticated with the character that you are attempting to delete. If you're attempting to delete your account, this is not the correct way. Please go to the Settings Menu to delete your account.",
+                'type' => 'danger',
+                'close' => 1
+            ]);
+            return redirect(route('dashboard'));
+        }
+
+        $alt = Auth::user()->alts()->where('id', $id)->first();
+        if (is_null($alt)) {
+            Session::flash('alert', [
+                'header' => "Unable to Remove Alt",
+                'message' => "Unable to remove alt that does not belong to the currently authenticated character",
+                'type' => 'danger',
+                'close' => 1
+            ]);
+            return redirect(route('dashboard'));
+        }
+        if (Request::isMethod('delete')) {
+            $alt->delete();
+            Session::flash('alert', [
+                'header' => "Alt Removed Successfully",
+                'message' => "You have successfully removed the alt ". $alt->info->name . " from your account",
+                'type' => 'success',
+                'close' => 1
+            ]);
+            return redirect(route('dashboard'));
+        }
+        return view('portal.alts.remove', [
+            'alt' => $alt
+        ]);
+    }
 }

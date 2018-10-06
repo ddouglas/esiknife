@@ -21,7 +21,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET', 'POST'], '/refresh', 'PortalController@refresh')->name('refresh');
 
     Route::match(['GET', 'POST'], '/alt/add', 'AltController@add')->name('alt.add');
-    Route::match(['GET', 'POST'], '/alt/remove/{id}', 'AltController@id')->name('alt.remove');
 
 
     Route::match(['GET'], '/{member}/overview', 'PortalController@overview')->name('overview')->middleware("authorized");
@@ -39,6 +38,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET'], '/{member}/skillqueue', 'PortalController@queue')->name('skillqueue')->middleware("authorized:esi-skills.read_skillqueue.v1");
     Route::match(['GET'], '/{member}/wallet/transactions', 'PortalController@wallet_transactions')->name('wallet.transactions')->middleware("authorized:esi-wallet.read_character_wallet.v1");
     Route::match(['GET'], '/{member}/wallet/journal', 'PortalController@wallet_journal')->name('wallet.journal')->middleware("authorized:esi-wallet.read_character_wallet.v1");
+    Route::match(['GET', 'DELETE'], '/alt/remove/{id}', 'AltController@remove')->name('alt.remove');
 
     Route::match(['GET'], '/settings', 'SettingController@index')->name('settings.index');
     Route::match(['GET', 'DELETE'], '/settings/token', 'SettingController@token')->name('settings.token');
