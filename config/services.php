@@ -32,7 +32,12 @@ return [
             ]
         ],
         'urls' => [
-            'sso' => "https://login.eveonline.com",
+            'sso' => [
+                'authorize' => 'https://login.eveonline.com/v2/oauth/authorize',
+                'token' => 'https://login.eveonline.com/v2/oauth/token',
+                'revoke' => 'https://login.eveonline.com/v2/oauth/revoke',
+                'meta' => 'https://login.eveonline.com/oauth/jwks',
+            ],
             'esi' => "https://esi.evetech.net",
             'img' => "https://imageserver.eveonline.com",
             'km' => "https://zkillboard.com/",

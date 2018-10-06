@@ -40,8 +40,9 @@ class SSOController extends Controller
                 'type' => 'danger',
                 'close' => 1
             ]);
-            return redirect(route($stateSession->get("redirectTo")));
+            return redirect($stateSession->get("redirectTo"));
         }
+
         $response = collect($verifyAuthCode->payload->response);
 
         //Authorization Code has been verified and we got back an Access Token and Refresh Token. Lets Verify those now and retrieve the some basic Character Data.
@@ -56,11 +57,14 @@ class SSOController extends Controller
             return redirect(route($stateSession->get("redirectTo")));
         }
         $response = $response->merge(collect($verifyAccessToken->payload->response));
-        $state = str_random(16);
 
-        $response = $response->merge($stateSession->get('additionalData'));
+        if ($stateSession->has('additionalData')) {
+            $response = $response->merge($stateSession->get('additionalData'));
+        }
+        $state = str_random(16);
         Session::put($state, $response);
-        return redirect(route($stateSession->get("redirectTo"), ['state' => $state]));
+        $url = $stateSession->get("redirectTo") . "?" . http_build_query(['state' => $state]);
+        return redirect($url);
     }
 
     public function refresh(Member $member)

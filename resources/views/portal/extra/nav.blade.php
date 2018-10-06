@@ -55,7 +55,7 @@
 
             @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterWallet')))
                 <li class="nav-item ml-2">
-                    <a class="nav-link {{ $currentRouteName === 'wallet.transactions' || $currentRouteName === 'wallet.journal' ? 'active' : null }}" href="{{ route('wallet.transactions', ['member' => $member->id]) }}">Wallet</a>
+                    <a class="nav-link {{ $currentRouteName === 'transactions' || $currentRouteName === 'journal' ? 'active' : null }}" href="{{ route('transactions', ['member' => $member->id]) }}">Wallet</a>
                 </li>
             @endif
         </ul>
