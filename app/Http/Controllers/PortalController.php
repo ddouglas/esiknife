@@ -3,6 +3,7 @@
 namespace ESIK\Http\Controllers;
 
 use Auth, Carbon, Request, Session, Validator;
+use ESIK\Models\Member;
 use ESIK\Http\Controllers\DataController;
 
 class PortalController extends Controller
@@ -10,6 +11,7 @@ class PortalController extends Controller
     public function __construct()
     {
         $this->dataCont = new DataController;
+        $this->ssoCont = new SSOController;
     }
 
     public function dashboard ()
@@ -68,6 +70,16 @@ class PortalController extends Controller
                     return redirect(route('dashboard'));
                 }
                 $target = $alts->get($targetID);
+                $refresh = $this->ssoCont->refresh($target);
+                if (!$refresh->status) {
+                    Session::flash('alert', [
+                        'header' => "Unable to refresh token",
+                        'message' => "We are unable to refresh your token at this time. Please navigate to the settings menu to update your token.",
+                        'type' => 'danger',
+                        'close' => 1
+                    ]);
+                    return redirect(route('dashboard'));
+                }
                 $refresh = $this->dispatchJobs($target);
                 Session::flash('alert', [
                     'header' => "Alt Refreshed Successfully",
