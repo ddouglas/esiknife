@@ -11,24 +11,16 @@
             </div>
         </div>
         <div class="row">
-            <p>
-                Below is a list of characters that you are authorized to access, including your own character. To view the character, click the eye.
-            </p>
+            <div class="col-12">
+                <p>
+                    Below is a list of characters that you are authorized to access, including your own character. To view the character, click the eye.
+                </p>
+            </div>
         </div>
         <div class="row">
             <div class="col-md-8">
-                <h3>Your Character</h3>
+                <h3>My Character(s)</h3>
                 <hr />
-                @if (Session::has('to'))
-                    @if (starts_with(Session::get('to'), url('/settings/grant/')))
-                        <div class="alert alert-info">
-                            <h5>You have a pending grant URL</h5>
-                            <p>
-                                You have grant url pending. To finish the process of granting another character access to your data, click <a href="{{ Session::get('to') }}">here</a>.<br />If you no longer want to grant access to your data, click <a href="{{ route('dashboard', ['action' => 'delete_pending_grant']) }}">here</a>
-                            </p>
-                        </div>
-                    @endif
-                @endif
                 @include('extra.alert')
                 <ul class="list-group">
                     @foreach(Auth::user()->alts as $alt)
@@ -81,6 +73,22 @@
                 </div>
             </div>
             <div class="col-md-4">
+                @if (Session::has('to'))
+                    @if (starts_with(Session::get('to'), url('/settings/grant/')))
+                        <div class="card">
+                            <div class="card-header text-center">
+                                Pending Grant Notice
+                            </div>
+                            <div class="card-body">
+                                You currently have a pending grant. To complete the grant process, please click the "Go To Grant" button below, other click on the "Delete Grant" button to delete the grant.
+                            </div>
+                            <div class="card-footer text-center">
+                                <a href="{{ Session::get('to') }}" class="btn btn-primary btn-sm">Go To Grant</a>
+                                <a href="{{ route('dashboard', ['action' => 'delete_pending_grant']) }}" class="btn btn-danger btn-sm">Delete Grant</a>
+                            </div>
+                        </div>
+                    @endif
+                @endif
                 <div class="card">
                     <div class="card-header">
                         Job Status
@@ -111,12 +119,16 @@
                 </div>
             </div>
         </div>
-        @if (Auth::user()->accessee->isNotEmpty())
-            <div class="row">
-                <div class="col-8">
-                    <hr />
-                    <h3>Character You Are Authorized to Access</h3>
-                    <hr />
+        <div class="row">
+            <div class="col-12">
+                <hr />
+                <h3>Character You Are Authorized to Access</h3>
+                <hr />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-8">
+                @if (Auth::user()->accessee->isNotEmpty())
                     <form action="{{ route('settings.access', ['scope' => "accessee"]) }}" method="post">
                         <ul class="list-group">
                             @foreach (Auth::user()->accessee as $accessee)
@@ -143,11 +155,28 @@
                             @endforeach
                         </ul>
                     </form>
+                @else
+                    <p>
+                        Currently, you do not have access to any other characters data other than your own
+                    </p>
+                @endif
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        Accessor Menu
+                    </div>
+                    <div class="list-group">
+                        <a href="#" class="list-group-item">
+                            Fitting Manager
+                        </a>
+                        <a href="#" class="list-group-item">
+                            Skill List Manager
+                        </a>
+                    </div>
                 </div>
             </div>
-        @endif
-
-
+        </div>
     </div>
 @endsection
 

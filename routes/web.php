@@ -21,24 +21,24 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET', 'POST'], '/refresh', 'PortalController@refresh')->name('refresh');
 
     Route::match(['GET', 'POST'], '/alt/add', 'AltController@add')->name('alt.add');
-
-
-    Route::match(['GET'], '/{member}/overview', 'PortalController@overview')->name('overview')->middleware("authorized");
-    Route::match(['GET'], '/{member}/assets', 'PortalController@assets')->name('assets')->middleware("authorized:esi-assets.read_assets.v1");
-    Route::match(['GET'], '/{member}/bookmarks', 'PortalController@bookmarks')->name('bookmarks')->middleware("authorized:esi-bookmarks.read_character_bookmarks.v1");
-    Route::match(['GET'], '/{member}/clones', 'PortalController@clones')->name('clones')->middleware("authorized:esi-clones.read_clones.v1");
-    Route::match(['GET'], '/{member}/contacts', 'PortalController@contacts')->name('contacts')->middleware("authorized:esi-characters.read_contacts.v1");
-    Route::match(['GET'], '/{member}/contracts', 'PortalController@contracts')->name('contracts')->middleware("authorized:esi-contracts.read_character_contracts.v1");
-    Route::match(['GET'], '/{member}/contract/{contract_id}', 'PortalController@contract')->name('contract.view')->middleware("authorized:esi-contracts.read_character_contracts.v1");
-    Route::match(['GET'], '/{member}/contracts/interactions', 'PortalController@contractInteractions')->name('contracts.interactions')->middleware("authorized:esi-contracts.read_character_contracts.v1");
-    Route::match(['GET'], '/{member}/mails', 'PortalController@mails')->name('mails')->middleware("authorized:esi-mail.read_mail.v1");
-    Route::match(['GET'], '/{member}/mail/{mail_id}', 'PortalController@mail')->name('mail')->middleware("authorized:esi-mail.read_mail.v1");
-    Route::match(['GET'], '/{member}/skills', 'PortalController@skills')->name('skillz')->middleware("authorized:esi-skills.read_skills.v1");
-    Route::match(['GET'], '/{member}/skills/flyable', 'PortalController@flyable')->name('skillz.flyable')->middleware("authorized:esi-skills.read_skills.v1");
-    Route::match(['GET'], '/{member}/skillqueue', 'PortalController@queue')->name('skillqueue')->middleware("authorized:esi-skills.read_skillqueue.v1");
-    Route::match(['GET'], '/{member}/wallet/transactions', 'PortalController@wallet_transactions')->name('wallet.transactions')->middleware("authorized:esi-wallet.read_character_wallet.v1");
-    Route::match(['GET'], '/{member}/wallet/journal', 'PortalController@wallet_journal')->name('wallet.journal')->middleware("authorized:esi-wallet.read_character_wallet.v1");
     Route::match(['GET', 'DELETE'], '/alt/remove/{id}', 'AltController@remove')->name('alt.remove');
+
+
+    Route::match(['GET'], '/{member}/overview', 'MemberController@overview')->name('overview')->middleware("authorized");
+    Route::match(['GET'], '/{member}/assets', 'MemberController@assets')->name('assets')->middleware("authorized:esi-assets.read_assets.v1");
+    Route::match(['GET'], '/{member}/bookmarks', 'MemberController@bookmarks')->name('bookmarks')->middleware("authorized:esi-bookmarks.read_character_bookmarks.v1");
+    Route::match(['GET'], '/{member}/clones', 'MemberController@clones')->name('clones')->middleware("authorized:esi-clones.read_clones.v1");
+    Route::match(['GET'], '/{member}/contacts', 'MemberController@contacts')->name('contacts')->middleware("authorized:esi-characters.read_contacts.v1");
+    Route::match(['GET'], '/{member}/contracts', 'MemberController@contracts')->name('contracts')->middleware("authorized:esi-contracts.read_character_contracts.v1");
+    Route::match(['GET'], '/{member}/contract/{contract_id}', 'MemberController@contract')->name('contract.view')->middleware("authorized:esi-contracts.read_character_contracts.v1");
+    Route::match(['GET'], '/{member}/contracts/interactions', 'MemberController@contractInteractions')->name('contracts.interactions')->middleware("authorized:esi-contracts.read_character_contracts.v1");
+    Route::match(['GET'], '/{member}/mails', 'MemberController@mails')->name('mails')->middleware("authorized:esi-mail.read_mail.v1");
+    Route::match(['GET'], '/{member}/mail/{mail_id}', 'MemberController@mail')->name('mail')->middleware("authorized:esi-mail.read_mail.v1");
+    Route::match(['GET'], '/{member}/skills', 'MemberController@skills')->name('skillz')->middleware("authorized:esi-skills.read_skills.v1");
+    Route::match(['GET'], '/{member}/skills/flyable', 'MemberController@flyable')->name('skillz.flyable')->middleware("authorized:esi-skills.read_skills.v1");
+    Route::match(['GET'], '/{member}/skillqueue', 'MemberController@queue')->name('skillqueue')->middleware("authorized:esi-skills.read_skillqueue.v1");
+    Route::match(['GET'], '/{member}/transactions', 'MemberController@transactions')->name('transactions')->middleware("authorized:esi-wallet.read_character_wallet.v1");
+    Route::match(['GET'], '/{member}/journal', 'MemberController@journal')->name('journal')->middleware("authorized:esi-wallet.read_character_wallet.v1");
 
     Route::match(['GET'], '/settings', 'SettingController@index')->name('settings.index');
     Route::match(['GET', 'DELETE'], '/settings/token', 'SettingController@token')->name('settings.token');
