@@ -23,6 +23,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET', 'POST'], '/alt/add', 'AltController@add')->name('alt.add');
     Route::match(['GET', 'DELETE'], '/alt/remove/{id}', 'AltController@remove')->name('alt.remove');
 
+    Route::match(['GET', 'DELETE'], '/fittings', 'FittingController@list')->name('fittings.list');
+    Route::match(['GET', 'DELETE'], '/fitting/{fitting}', 'FittingController@view')->name('fittings.list');
+    Route::match(['GET', 'POST'], '/fittings/load', 'FittingController@load')->name('fittings.load');
 
     Route::match(['GET'], '/{member}/overview', 'MemberController@overview')->name('overview')->middleware("authorized");
     Route::match(['GET'], '/{member}/assets', 'MemberController@assets')->name('assets')->middleware("authorized:esi-assets.read_assets.v1");
@@ -41,7 +44,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET'], '/{member}/journal', 'MemberController@journal')->name('journal')->middleware("authorized:esi-wallet.read_character_wallet.v1");
 
     Route::match(['GET'], '/settings', 'SettingController@index')->name('settings.index');
-    Route::match(['GET', 'DELETE'], '/settings/token', 'SettingController@token')->name('settings.token');
+    Route::match(['GET', 'POST', 'DELETE'], '/settings/token', 'SettingController@token')->name('settings.token');
     Route::match(['GET', 'POST'], '/settings/access', 'SettingController@access')->name('settings.access');
     Route::match(['GET', 'POST', "DELETE"], '/settings/group/{hash}', 'SettingController@group')->name('settings.group');
     Route::match(['GET', 'POST'], '/settings/groups', 'SettingController@groups')->name('settings.groups');

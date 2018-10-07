@@ -112,6 +112,11 @@ class Member extends Authenticatable
         return $this->belongsToMany(Contract::class, 'member_contracts', 'member_id', 'contract_id');
     }
 
+    public function fittings ()
+    {
+        return $this->hasMany(Fitting::class, 'id');
+    }
+
     public function groups()
     {
         return $this->hasMany(AccessGroup::class, 'creator_id', 'id');

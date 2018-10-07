@@ -2,7 +2,7 @@
 
 namespace ESIK\Http\Controllers;
 
-use Auth, Request, Session, Validator;
+use Auth, Carbon, Request, Session, Validator;
 use ESIK\Models\{Member, MemberUrl, AccessGroup};
 use ESIK\Http\Controllers\{DataController, SSOController};
 
@@ -239,22 +239,25 @@ class SettingController extends Controller
     public function token ()
     {
         if (Request::isMethod('delete')) {
-            $contracts = Auth::user()->contracts()->with('members')->chunk(50, function ($chunk) {
+            $contracts = Auth::user()->contracts()->withCount('members')->chunk(50, function ($chunk) {
                 $chunk->each(function ($contract) {
-                    if ($contract->members->count() <= 1) {
+                    if ($contract->members_count <= 1) {
                         $contract->delete();
                     }
                 });
             });
-            $headers = Auth::user()->mail()->with('members')->chunk(50, function ($chunk) {
+            $headers = Auth::user()->mail()->withCount('members')->chunk(50, function ($chunk) {
                 $chunk->each(function ($header) {
-                    if ($header->members->count() <= 1) {
+                    if ($header->members_count <= 1) {
                         $header->delete();
                     }
                 });
             });
+            $revoke = $this->ssoCont->revoke(Auth::user()->refresh_token);
+            echo collect($revoke)->recursive()->toJson();
+
+            dd("Hi");
             Auth::user()->alts()->delete();
-            Auth::user()->delete();
             Session::flash('alert', [
                 'header' => "Token Deleted Successfully",
                 'message' => "Your token has been successfully deleted from the system. Please login to register a new token and continue using the site",
@@ -262,6 +265,81 @@ class SettingController extends Controller
                 'close' => 1
             ]);
             return redirect(route('auth.login'));
+        }
+        if (Request::isMethod('post')) {
+            $validator = Validator::make(Request::all(), [
+                'scopes' => "array|required|min:1"
+            ]);
+            if ($validator->failed()) {
+                return redirect(route('welcome'))->withErrors($validator);
+            }
+            $selected = collect(Request::get('scopes'))->keys();
+            $authorized = $selected->map(function($scope) {
+                return config('services.eve.scopes')[$scope];
+            });
+
+            $authorized = $authorized->sort()->values()->implode(' ');
+
+            $state_hash = str_random(16);
+            $state = collect([
+                "redirectTo" => route('settings.token'),
+                "additionalData" => collect([
+                    'authorizedScopesHash' => hash('sha1', $authorized),
+                    'storeRefreshToken' => Request::has('storeRefreshToken')
+                ])
+            ]);
+
+            $params = collect([
+                'response_type' => 'code',
+                'redirect_uri' => route('sso.callback'),
+                'client_id' => config('services.eve.sso.id'),
+                'state' => $state_hash,
+                'scope' => $authorized
+            ]);
+
+            Session::put($state_hash, $state);
+            $ssoUrl = config('services.eve.urls.sso.authorize')."?".http_build_query($params->toArray());
+            return redirect($ssoUrl);
+        }
+        if (Request::has('state')) {
+            if (!Session::has(Request::get('state'))) {
+                Session::flash('alert', [
+                    "header" => "Unable to Verify Response",
+                    'message' => "Something went wrong parsing the response from the API",
+                    'type' => 'danger',
+                    'close' => 1
+                ]);
+                return redirect(route('settings.token'));
+            }
+            $ssoResponse = Session::get(Request::get('state'));
+            Session::forget(Request::get('state'));
+            $hashedResponseScopes = hash('sha1', collect(explode(' ', $ssoResponse->get('Scopes')))->sort()->values()->implode(' '));
+            if ($hashedResponseScopes !== $ssoResponse->get('authorizedScopesHash')) {
+                Session::flash('alert', [
+                    "header" => "Unable to Verify Requested Scopes",
+                    'message' => "We are unable to verify that the scopes requested were the scopes that were authorized. Please use the link below to attempt the authentication again. If this error persists, contact IT.",
+                    'type' => 'danger',
+                    'close' => 1
+                ]);
+                return redirect(route('settings.token'));
+            }
+
+            $member = Member::firstOrNew(['id' => $ssoResponse->get('CharacterID')])->fill([
+                'main' => Auth::user()->id,
+                'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
+                'access_token' => $ssoResponse->get('access_token'),
+                'refresh_token' => $ssoResponse->get('refresh_token'),
+                'expires' => Carbon::now()->addHours(48)
+            ]);
+
+            $member->save();
+            Session::flash('alert', [
+                "header" => "Token Updated Successfully",
+                'message' => "Your token has been updated successfully and you have been redirected back to the dashboard. If you want, you can now refresh your characters data using the new scope set.",
+                'type' => 'success',
+                'close' => 1
+            ]);
+            return redirect(route('settings.token'));
         }
         return view('settings.token');
     }

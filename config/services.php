@@ -52,20 +52,77 @@ return [
                 'chrRaces', 'chrFactions'
             ]
         ],
-        'scopes'=>[
-            'readCharacterAssets' => "esi-assets.read_assets.v1",
-            'readCharacterBookmarks' => "esi-bookmarks.read_character_bookmarks.v1",
-            'readCharacterClones' => "esi-clones.read_clones.v1",
-            'readCharacterContacts' => "esi-characters.read_contacts.v1",
-            'readCharacterContracts' => "esi-contracts.read_character_contracts.v1",
-            'readCharacterImplants' => "esi-clones.read_implants.v1",
-            'readCharacterLocation' => "esi-location.read_location.v1",
-            'readCharacterMails' => "esi-mail.read_mail.v1",
-            'readCharacterShip' => "esi-location.read_ship_type.v1",
-            'readCharacterSkills' => "esi-skills.read_skills.v1",
-            'readCharacterSkillQueue' => "esi-skills.read_skillqueue.v1",
-            'readCharacterWallet' => "esi-wallet.read_character_wallet.v1",
-            'readUniverseStructures' => "esi-universe.read_structures.v1",
+        'scopes'=> [
+            [
+                'key' => 'readCharacterAssets',
+                'display' => "Read Character Assets",
+                'scope' => "esi-assets.read_assets.v1"
+            ],
+            [
+                'key' => 'readCharacterBookmarks',
+                'display' => "Read Character Bookmarks",
+                'scope' => "esi-bookmarks.read_character_bookmarks.v1"
+            ],
+            [
+                'key' => 'readCharacterClones',
+                'display' => "Read Character Clones",
+                'scope' => "esi-clones.read_clones.v1"
+            ],
+            [
+                'key' => 'readCharacterContacts',
+                'display' => "Read Character Contacts",
+                'scope' => "esi-characters.read_contacts.v1"
+            ],
+            [
+                'key' => 'readCharacterContracts',
+                'display' => "Read Character Contracts",
+                'scope' => "esi-contracts.read_character_contracts.v1"
+            ],
+            [
+                'key' => 'readCharacterFittings',
+                'display' => "Read Character Fittings",
+                'scope' => "esi-fittings.read_fittings.v1"
+            ],
+            [
+                'key' => 'readCharacterImplants',
+                'display' => "Read Character Implants",
+                'scope' => "esi-clones.read_implants.v1"
+            ],
+            [
+                'key' => 'readCharacterLocation',
+                'display' => "Read Character Location",
+                'scope' => "esi-location.read_location.v1"
+            ],
+            [
+                'key' => 'readCharacterMails',
+                'display' => "Read Character Mails",
+                'scope' => "esi-mail.read_mail.v1"
+            ],
+            [
+                'key' => 'readCharacterShip',
+                'display' => "Read Character Ship",
+                'scope' => "esi-location.read_ship_type.v1"
+            ],
+            [
+                'key' => 'readCharacterSkills',
+                'display' => "Read Character Skills",
+                'scope' => "esi-skills.read_skills.v1"
+            ],
+            [
+                'key' => 'readCharacterSkillQueue',
+                'display' => "Read Character SkillQueue",
+                'scope' => "esi-skills.read_skillqueue.v1"
+            ],
+            [
+                'key' => 'readCharacterWallet',
+                'display' => "Read Character Wallet",
+                'scope' => "esi-wallet.read_character_wallet.v1"
+            ],
+            [
+                'key' => 'readUniverseStructures',
+                'display' => "Read Universe Structures",
+                'scope' => "esi-universe.read_structures.v1"
+            ],
         ],
         'dogma' => [
             'attributes' => [

@@ -19,7 +19,7 @@
                         </a>
                     </div>
                 </div>
-                <h4 class="mt-2">Patch Notes</h4>
+                {{-- <h4 class="mt-2">Patch Notes</h4>
                 <hr class="mt-0" />
                 <div id="accordion">
                     <div class="card">
@@ -132,7 +132,7 @@
                         </div>
                     </div>
 
-                </div>
+                </div> --}}
             </div>
         </div>
     </div>
