@@ -53,72 +53,72 @@ return [
             ]
         ],
         'scopes'=> [
-            [
+            "readCharacterAssets" => [
                 'key' => 'readCharacterAssets',
                 'display' => "Read Character Assets",
                 'scope' => "esi-assets.read_assets.v1"
             ],
-            [
+            "readCharacterBookmarks" => [
                 'key' => 'readCharacterBookmarks',
                 'display' => "Read Character Bookmarks",
                 'scope' => "esi-bookmarks.read_character_bookmarks.v1"
             ],
-            [
+            "readCharacterClones" => [
                 'key' => 'readCharacterClones',
                 'display' => "Read Character Clones",
                 'scope' => "esi-clones.read_clones.v1"
             ],
-            [
+            "readCharacterContacts" => [
                 'key' => 'readCharacterContacts',
                 'display' => "Read Character Contacts",
                 'scope' => "esi-characters.read_contacts.v1"
             ],
-            [
+            "readCharacterContracts" => [
                 'key' => 'readCharacterContracts',
                 'display' => "Read Character Contracts",
                 'scope' => "esi-contracts.read_character_contracts.v1"
             ],
-            [
+            "readCharacterFittings" => [
                 'key' => 'readCharacterFittings',
                 'display' => "Read Character Fittings",
                 'scope' => "esi-fittings.read_fittings.v1"
             ],
-            [
+            "readCharacterImplants" => [
                 'key' => 'readCharacterImplants',
                 'display' => "Read Character Implants",
                 'scope' => "esi-clones.read_implants.v1"
             ],
-            [
+            "readCharacterLocation" => [
                 'key' => 'readCharacterLocation',
                 'display' => "Read Character Location",
                 'scope' => "esi-location.read_location.v1"
             ],
-            [
+            "readCharacterMails" => [
                 'key' => 'readCharacterMails',
                 'display' => "Read Character Mails",
                 'scope' => "esi-mail.read_mail.v1"
             ],
-            [
+            "readCharacterShip" => [
                 'key' => 'readCharacterShip',
                 'display' => "Read Character Ship",
                 'scope' => "esi-location.read_ship_type.v1"
             ],
-            [
+            "readCharacterSkills" => [
                 'key' => 'readCharacterSkills',
                 'display' => "Read Character Skills",
                 'scope' => "esi-skills.read_skills.v1"
             ],
-            [
+            "readCharacterSkillQueue" => [
                 'key' => 'readCharacterSkillQueue',
                 'display' => "Read Character SkillQueue",
                 'scope' => "esi-skills.read_skillqueue.v1"
             ],
-            [
+            "readCharacterWallet" => [
                 'key' => 'readCharacterWallet',
                 'display' => "Read Character Wallet",
                 'scope' => "esi-wallet.read_character_wallet.v1"
             ],
-            [
+            "readUniverseStructures" => [
                 'key' => 'readUniverseStructures',
                 'display' => "Read Universe Structures",
                 'scope' => "esi-universe.read_structures.v1"

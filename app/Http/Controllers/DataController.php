@@ -1775,7 +1775,7 @@ class DataController extends Controller
     public function dispatchJobs (Member $member)
     {
         $now = now(); $dispatchedJobs = collect();
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterAssets'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterAssets')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberAssets($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1783,7 +1783,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterBookmarks'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterBookmarks')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberBookmarks($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1791,7 +1791,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterClones'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterClones')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberClones($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1799,7 +1799,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterContacts'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterContacts')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberContacts($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1807,7 +1807,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterContracts'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterContracts')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberContracts($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1815,7 +1815,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterImplants'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterImplants')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberImplants($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1823,7 +1823,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterLocation'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterLocation')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberLocation($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1831,7 +1831,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterMails'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterMails')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberMailLabels($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1850,7 +1850,7 @@ class DataController extends Controller
             $dispatchedJobs->push($job->getJobStatusId());
             $now = $now->addSeconds(1);
         }
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterShip'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterShip')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberShip($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1858,7 +1858,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkills'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkills')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberSkillz($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1866,7 +1866,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkillQueue'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterSkillQueue')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberSkillQueue($member->id);
             $job->delay($now);
             $this->dispatch($job);
@@ -1874,7 +1874,7 @@ class DataController extends Controller
             $now = $now->addSeconds(1);
         }
 
-        if ($member->scopes->contains(config('services.eve.scopes.readCharacterWallet'))) {
+        if ($member->scopes->contains(config('services.eve.scopes.readCharacterWallet')['scope'])) {
             $job = new \ESIK\Jobs\Members\GetMemberWallet($member->id);
             $job->delay($now);
             $this->dispatch($job);

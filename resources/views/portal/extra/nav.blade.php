@@ -5,13 +5,13 @@
                 <a class="nav-link {{ $currentRouteName === 'dashboard' ? 'active' : null }}" href="{{ route('overview', ['member' => $member->id]) }}">Overview</a>
             </li>
 
-            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterAssets')))
+            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterAssets')['scope']))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ $currentRouteName === 'assets' ? 'active' : null }}" href="{{ route('assets', ['member' => $member->id]) }}">Assets</a>
                 </li>
             @endif
 
-            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterBookmarks')))
+            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterBookmarks')['scope']))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ $currentRouteName === 'bookmarks' ? 'active' : null }}" href="{{ route('bookmarks', ['member' => $member->id]) }}">Bookmarks</a>
                 </li>
@@ -23,37 +23,37 @@
                 </li>
             @endif
 
-            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterContacts'))))
+            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterContacts')['scope'])))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ $currentRouteName === 'contacts' ? 'active' : null }}" href="{{ route('contacts', ['member' => $member->id]) }}">Contacts</a>
                 </li>
             @endif
 
-            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterMails'))))
+            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterMails')['scope'])))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ $currentRouteName === 'mails' ? 'active' : null }}" href="{{ route('mails', ['member' => $member->id]) }}">Evemail</a>
                 </li>
             @endif
 
-            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterContracts'))))
+            @if (isset($scopes) && ($scopes->contains(config('services.eve.scopes.readCharacterContracts')['scope'])))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ $currentRouteName === 'contracts' ? 'active' : null }}" href="{{ route('contracts', ['member' => $member->id]) }}">Contracts</a>
                 </li>
             @endif
 
-            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterSkills')))
+            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterSkills')['scope']))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ in_array($currentRouteName, ['skillz', 'skillz.flyable']) ? 'active' : null }}" href="{{ route('skillz', ['member' => $member->id]) }}">Skills</a>
                 </li>
             @endif
 
-            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterSkillQueue')))
+            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterSkillQueue')['scope']))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ $currentRouteName === 'skillqueue' ? 'active' : null }}" href="{{ route('skillqueue', ['member' => $member->id]) }}">Skill Queue</a>
                 </li>
             @endif
 
-            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterWallet')))
+            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterWallet')['scope']))
                 <li class="nav-item ml-2">
                     <a class="nav-link {{ $currentRouteName === 'transactions' || $currentRouteName === 'journal' ? 'active' : null }}" href="{{ route('transactions', ['member' => $member->id]) }}">Wallet</a>
                 </li>
