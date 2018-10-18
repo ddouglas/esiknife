@@ -526,6 +526,27 @@ class DataController extends Controller
         return $request;
     }
 
+    public function getMemberFittings(Member $member)
+    {
+        $request = $this->httpCont->getCharactersCharacterIdFittings($member->id, $member->access_token);
+        if (!$request->status) {
+            return $request;
+        }
+        $fittings = collect($request->payload->response)->recursive();
+        $types = $fittings->pluck('ship_type_id')->unique();
+        $types = Type::whereIn('id', $types->toArray())->with('group')->get()->keyBy('id');
+        $fittings->map(function ($fitting) use ($types) {
+            $fitting->put('hull', $types->get($fitting->get('ship_type_id')));
+            // $fitting->put('hull_group_id', $types->get($fitting->get('ship_type_id'))->group_id);
+            $fitting->put('hull_group', $types->get($fitting->get('ship_type_id'))->group);
+            return $fitting;
+        });
+        return (object)[
+            'status' => true,
+            'payload' => $fittings
+        ];
+    }
+
     public function getMemberImplants(Member $member)
     {
         $request = $this->httpCont->getCharactersCharacterIdImplants($member->id, $member->access_token);

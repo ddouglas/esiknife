@@ -14,7 +14,7 @@
                     </div>
                     <div class="list-group">
                         @foreach ($uniqueLocations as $location)
-                            <a href="{{ config('services.eve.urls.dotlan') }}search?q={{ urlencode($location->name) }}" class="list-group-item list-group-item-action" target="_blank">
+                            <a href="{{ config('services.eve.urls.dotlan') }}map/{{ $location->id }}/" class="list-group-item list-group-item-action" target="_blank">
                                 {{ $location->name }} ({{ $location->count }})
                             </a>
                         @endforeach

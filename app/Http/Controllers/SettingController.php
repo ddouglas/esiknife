@@ -275,7 +275,7 @@ class SettingController extends Controller
             }
             $selected = collect(Request::get('scopes'))->keys();
             $authorized = $selected->map(function($scope) {
-                return config('services.eve.scopes')[$scope];
+                return config('services.eve.scopes')[$scope]['scope'];
             });
 
             $authorized = $authorized->sort()->values()->implode(' ');
@@ -323,7 +323,15 @@ class SettingController extends Controller
                 ]);
                 return redirect(route('settings.token'));
             }
-
+            if ($ssoResponse->get('CharacterID') !== Auth::user()->id) {
+                Session::flash('alert', [
+                    "header" => "Invalid Character Information Returned",
+                    'message' => "That character information that we received back does not match that of the character that is current logged in. Please only authorize with the character that is currently logged into ESIKnife.",
+                    'type' => 'danger',
+                    'close' => 1
+                ]);
+                return redirect(route('settings.token'));
+            }
             $member = Member::firstOrNew(['id' => $ssoResponse->get('CharacterID')])->fill([
                 'main' => Auth::user()->id,
                 'scopes' => json_encode(explode(' ', $ssoResponse->get('Scopes'))),
@@ -339,7 +347,7 @@ class SettingController extends Controller
                 'type' => 'success',
                 'close' => 1
             ]);
-            return redirect(route('settings.token'));
+            return redirect(route('dashboard'));
         }
         return view('settings.token');
     }

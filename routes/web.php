@@ -24,7 +24,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET', 'DELETE'], '/alt/remove/{id}', 'AltController@remove')->name('alt.remove');
 
     Route::match(['GET', 'DELETE'], '/fittings', 'FittingController@list')->name('fittings.list');
-    Route::match(['GET', 'DELETE'], '/fitting/{fitting}', 'FittingController@view')->name('fittings.list');
+    Route::match(['GET', 'DELETE'], '/fitting/{fitting}', 'FittingController@view')->name('fittings.view');
     Route::match(['GET', 'POST'], '/fittings/load', 'FittingController@load')->name('fittings.load');
 
     Route::match(['GET'], '/{member}/overview', 'MemberController@overview')->name('overview')->middleware("authorized");

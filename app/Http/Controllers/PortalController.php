@@ -80,7 +80,7 @@ class PortalController extends Controller
                     ]);
                     return redirect(route('dashboard'));
                 }
-                $refresh = $this->dispatchJobs($target);
+                $refresh = $this->dataCont->dispatchJobs($target);
                 Session::flash('alert', [
                     'header' => "Alt Refreshed Successfully",
                     'message' => "Jobs to refresh your character have been dispatched successfully. Please monitor the model to the right and refresh the page when the jobs are complete.",

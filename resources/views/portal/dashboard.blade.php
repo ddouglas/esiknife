@@ -167,7 +167,7 @@
                         Accessor Menu
                     </div>
                     <div class="list-group">
-                        <a href="#" class="list-group-item">
+                        <a href="{{ route('fittings.list') }}" class="list-group-item">
                             Fitting Manager
                         </a>
                         <a href="#" class="list-group-item">

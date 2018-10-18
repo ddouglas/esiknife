@@ -41,7 +41,7 @@
                                             @foreach (config('services.eve.scopes') as $name=>$scope)
                                                 <li>
                                                     <label for="{{ $name }}">
-                                                        <input type="checkbox" id="{{ $name }}" name="scopes[{{ $name }}]" {{ $scopes->containsStrict($scope) ? "checked" : "" }} /> {{ $scope }}
+                                                        <input type="checkbox" id="{{ $name }}" name="scopes[{{ $name }}]" {{ $scopes->containsStrict($scope['scope']) ? "checked" : "" }} /> {{ $scope['scope'] }}
                                                     </label>
                                                 </li>
                                             @endforeach
