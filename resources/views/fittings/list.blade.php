@@ -24,6 +24,7 @@
                 </div>
             </div>
             <div class="col-lg-8">
+                @include('extra.alert')
                 <div class="list-group">
                     @forelse (Auth::user()->fittings as $fitting)
                         <a href="{{ route('fitting.view', ['id' => $fitting->id]) }}">{{ $fitting->name }}</a>

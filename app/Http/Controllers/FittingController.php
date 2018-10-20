@@ -44,7 +44,7 @@ class FittingController extends Controller
                 ]);
                 return redirect(route('fittings.list'));
             }
-            $fittings = $fittings->payload;
+            $fittings = $fittings->payload->recursive()->keyBy('fitting_id');
             $groups = $fittings->pluck('hull_group')->unique('name');
             Session::put('fittings', $fittings);
             Session::put('groups', $groups);
@@ -56,6 +56,23 @@ class FittingController extends Controller
                 Session::forget('fittings');
                 Session::forget('groups');
                 return redirect(route('fittings.load'));
+            }
+            if ($action === "save" && Request::has('id') && Session::has('fittings')) {
+                $id = Request::get('id');
+                $fittings = Session::get('fittings');
+                if (!$fittings->has($id)) {
+                    Session::flash('alert', [
+                        "header" => "Unknown Fitting ID",
+                        'message' => "The provided fitting id is not associated with any of the fittings downloaded from ESI",
+                        'type' => 'danger',
+                        'close' => 1
+                    ]);
+                    return redirect(route('fittings.load'));
+                }
+                $fitting = $fittings->get($id);
+                $items = $fitting->get('items');
+                $itemIds = $items->pluck('type_id')->unique();
+                $types = Type::whereIn('id', $itemIds->toArray())->get();
             }
         }
         $fittings = collect(); $groups = collect();

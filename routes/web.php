@@ -25,7 +25,7 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::match(['GET', 'DELETE'], '/fittings', 'FittingController@list')->name('fittings.list');
     Route::match(['GET', 'DELETE'], '/fitting/{fitting}', 'FittingController@view')->name('fittings.view');
-    Route::match(['GET', 'POST'], '/fittings/load', 'FittingController@load')->name('fittings.load');
+    Route::match(['GET', 'POST'], '/fittings/load/', 'FittingController@load')->name('fittings.load');
 
     Route::match(['GET'], '/{member}/overview', 'MemberController@overview')->name('overview')->middleware("authorized");
     Route::match(['GET'], '/{member}/assets', 'MemberController@assets')->name('assets')->middleware("authorized:esi-assets.read_assets.v1");
