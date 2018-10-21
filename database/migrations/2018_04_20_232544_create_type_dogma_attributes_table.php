@@ -17,11 +17,8 @@ class CreateTypeDogmaAttributesTable extends Migration
             $table->unsignedInteger('type_id');
             $table->unsignedInteger('attribute_id');
             $table->float('value', 17, 4);
-            $table->timestamps();
 
             $table->primary(['type_id', 'attribute_id']);
-
-            $table->foreign('type_id')->references('id')->on('types')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

@@ -2,11 +2,11 @@
 
 namespace ESIK\Console\Commands;
 
-use Carbon, Storage;
+use DB, Carbon, Storage;
 use Illuminate\Console\Command;
 use ESIK\Http\Controllers\DataController;
 use ESIK\Models\SDE\{Ancestry, Bloodline, Category, Constellation, Faction, Group, Race, Region};
-use ESIK\Models\ESI\Type;
+use ESIK\Models\ESI\{Type, TypeDogmaAttribute};
 
 class Setup extends Command
 {
@@ -51,7 +51,7 @@ class Setup extends Command
          $end = Carbon::now();
          $diff = $end->timestamp - $start->timestamp;
          $this->info("SDE Import Completed Successfully");
-         $this->info("SDE Import Start: $start - End: $end Duration: $diff seconds");
+         $this->info("SDE Import Start: $start - End: $end  - Duration: $diff seconds");
 
          if ($this->confirm('Delete SDE Cache?')) {
              $this->info("Deleting SDE Cache");
@@ -76,15 +76,56 @@ class Setup extends Command
          $bar = $this->output->createProgressBar($data->count());
          $bar->setFormat('Importing Ancestries: %current% of %max% %percent%%');
          $bar->start();
-         $data->each(function ($ancestry) use ($bar) {
-             $import = Ancestry::firstOrNew(['id' => $ancestry->get('ancestryID')])->fill([
+         $insert = collect();
+         DB::table('ancestries')->delete();
+         foreach ($data as $ancestry) {
+             $insert->push([
+                 'id' => $ancestry->get('ancestryID'),
                  'name' => $ancestry->get('ancestryName'),
-                 'bloodline_id' => $ancestry->get('bloodlineID')
+                 'bloodline_id' => $ancestry->get('bloodlineID'),
+                 'created_at' => now(),
+                 'updated_at' => now()
              ]);
-             $import->save();
-             $bar->advance();
+         }
+         DB::table('ancestries')->insert($insert->toArray());
+         usleep(1000);
+         $bar->finish();
+         print "\n";
+         return true;
+     }
+
+     public function attributes ()
+     {
+         $file = "dgmTypeAttributes.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $groups = Group::select('id')->whereIn('category_id', [6,7,16])->get()->pluck('id')->toArray();
+         $typeIDs = Type::select('id')->whereIn('group_id', $groups)->get()->pluck('id')->toArray();
+         $data = collect(json_decode(Storage::get($file)))->recursive()->whereIn('typeID', $typeIDs);
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Dogma Type Attributes: %current% of %max% %percent%%');
+         $bar->start();
+         foreach ($data->chunk(250) as $chunk) {
+             $insert = collect();
+             foreach ($chunk as $attribute) {
+                 $value = null;
+                 if (!is_null($attribute->get('valueInt'))) {
+                     $value = $attribute->get('valueInt');
+                 } else if (!is_null($attribute->get('valueFloat'))) {
+                     $value = $attribute->get('valueFloat');
+                 }
+                 $insert->push([
+                     'type_id' => $attribute->get('typeID'),
+                     'attribute_id' => $attribute->get('attributeID'),
+                     'value' => $value
+                 ]);
+             }
+             DB::table('type_dogma_attributes')->insert($insert->toArray());
+             $bar->advance(250);
              usleep(1000);
-         });
+         }
          $bar->finish();
          print "\n";
          return true;
@@ -101,15 +142,18 @@ class Setup extends Command
          $bar = $this->output->createProgressBar($data->count());
          $bar->setFormat('Importing Bloodlines: %current% of %max% %percent%%');
          $bar->start();
-         $data->each(function ($bloodline) use ($bar) {
-             $import = Bloodline::firstOrNew(['id' => $bloodline->get('bloodlineID')])->fill([
+         $insert = collect();
+         DB::table('bloodlines')->delete();
+         foreach ($data as $bloodline) {
+             $insert->push([
+                 'id' => $bloodline->get('bloodlineID'),
                  'name' => $bloodline->get('bloodlineName'),
-                 'race_id' => $bloodline->get('raceID')
+                 'race_id' => $bloodline->get('raceID'),
+                 'created_at' => now(),
+                 'updated_at' => now()
              ]);
-             $import->save();
-             $bar->advance();
-             usleep(1000);
-         });
+         }
+         DB::table('bloodlines')->insert($insert->toArray());
          $bar->finish();
          print "\n";
          return true;
@@ -126,15 +170,18 @@ class Setup extends Command
          $bar = $this->output->createProgressBar($data->count());
          $bar->setFormat('Importing Categories: %current% of %max% %percent%%');
          $bar->start();
-         $data->each(function ($group) use ($bar) {
-             $import = Category::firstOrNew(['id' => $group->get('categoryID')])->fill([
-                 'name' => $group->get('categoryName'),
-                 'published' => $group->get('published')
+         $insert = collect();
+         DB::table('categories')->delete();
+         foreach ($data as $category) {
+             $insert->push([
+                 'id' => $category->get('categoryID'),
+                 'name' => $category->get('categoryName'),
+                 'published' => $category->get('published'),
+                 'created_at' => now(),
+                 'updated_at' => now()
              ]);
-             $import->save();
-             $bar->advance();
-             usleep(1000);
-         });
+         }
+         DB::table('categories')->insert($insert->toArray());
          $bar->finish();
          print "\n";
          return true;
@@ -151,19 +198,21 @@ class Setup extends Command
          $bar = $this->output->createProgressBar($data->count());
          $bar->setFormat('Importing Constellations: %current% of %max% %percent%%');
          $bar->start();
-         $data->each(function ($group) use ($bar) {
-             $import = Constellation::firstOrNew(['id' => $group->get('constellationID')])->fill([
-                 'name' => $group->get('constellationName'),
-                 'pos_x' => $group->get('x'),
-                 'pos_y' => $group->get('y'),
-                 'pos_z' => $group->get('z'),
-                 'region_id' => $group->get('regionID')
+         $insert = collect();
+         DB::table('constellations')->delete();
+         foreach ($data as $constellation) {
+             $insert->push([
+                 'id' => $constellation->get('constellationID'),
+                 'name' => $constellation->get('constellationName'),
+                 'pos_x' => $constellation->get('x'),
+                 'pos_y' => $constellation->get('y'),
+                 'pos_z' => $constellation->get('z'),
+                 'region_id' => $constellation->get('regionID'),
+                 'created_at' => now(),
+                 'updated_at' => now()
              ]);
-             $import->save();
-             $bar->advance();
-
-             usleep(1000);
-         });
+         }
+         DB::table('constellations')->insert($insert->toArray());
          $bar->finish();
          print "\n";
          return true;
@@ -180,15 +229,18 @@ class Setup extends Command
          $bar = $this->output->createProgressBar($data->count());
          $bar->setFormat('Importing Factions: %current% of %max% %percent%%');
          $bar->start();
-         $data->each(function ($faction) use ($bar) {
-             $import = Faction::firstOrNew(['id' => $faction->get('factionID')])->fill([
+         $insert = collect();
+         DB::table('factions')->delete();
+         foreach ($data as $faction) {
+             $insert->push([
+                 'id' => $faction->get('factionID'),
                  'name' => $faction->get('factionName'),
-                 'race_id' => $faction->get('raceID')
+                 'race_id' => $faction->get('raceID'),
+                 'created_at' => now(),
+                 'updated_at' => now()
              ]);
-             $import->save();
-             $bar->advance();
-             usleep(1000);
-         });
+         }
+         DB::table('factions')->insert($insert->toArray());
          $bar->finish();
          print "\n";
          return true;
@@ -205,48 +257,23 @@ class Setup extends Command
          $bar = $this->output->createProgressBar($data->count());
          $bar->setFormat('Importing Groups: %current% of %max% %percent%%');
          $bar->start();
-         $data->each(function ($group) use ($bar) {
-             $import = Group::firstOrNew(['id' => $group->get('groupID')])->fill([
-                 'name' => $group->get('groupName'),
-                 'published' => $group->get('published'),
-                 'category_id' => $group->get('categoryID')
-             ]);
-             $import->save();
-             $bar->advance();
-             usleep(1000);
-         });
-         $bar->finish();
-         print "\n";
-         return true;
-     }
-
-     public function modules ()
-     {
-         $groups = Group::where('category_id', 7)->get()->pluck('id');
-         $files = ["invTypes.json", "dgmTypeAttributes.json"];
-         foreach($files as $file) {
-             $exists = Storage::disk('local')->exists($file);
-             if (!$exists) {
-                 $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         DB::table('groups')->delete();
+         foreach ($data->chunk(100) as $chunk) {
+             $insert = collect();
+             foreach ($chunk as $group) {
+                 $insert->push([
+                     'id' => $group->get('groupID'),
+                     'name' => $group->get('groupName'),
+                     'published' => $group->get('published'),
+                     'category_id' => $group->get('categoryID'),
+                     'created_at' => now(),
+                     'updated_at' => now()
+                ]);
              }
-         }
-         $data = collect(json_decode(Storage::get("invTypes.json")))->recursive()->whereIn('groupID', $groups->toArray());
-         $attributes = collect(json_decode(Storage::get("dgmTypeAttributes.json")))->recursive();
-         $bar = $this->output->createProgressBar($data->count());
-         $bar->setFormat('Importing Modules: %current% of %max% %percent%%');
-         $bar->start();
-         $data->each(function ($module)  use ($attributes, $bar) {
-             Type::firstOrNew([
-                 'id' => $module->get('typeID')
-             ], [
-                 'name' => $module->get('typeName'),
-                 'published' => $module->get('published'),
-                 'group_id' => $module->get('groupID'),
-                 'volume' => $module->get('volume')
-             ])->save();
-             $bar->advance();
+             DB::table('groups')->insert($insert->toArray());
+             $bar->advance(100);
              usleep(1000);
-         });
+         }
          $bar->finish();
          print "\n";
          return true;
@@ -263,14 +290,17 @@ class Setup extends Command
          $bar = $this->output->createProgressBar($data->count());
          $bar->setFormat('Importing Races: %current% of %max% %percent%%');
          $bar->start();
-         $data->each(function ($race) use ($bar) {
-             $import = Race::firstOrNew(['id' => $race->get('raceID')])->fill([
-                 'name' => $race->get('raceName')
+         $insert = collect();
+         DB::table('races')->delete();
+         foreach ($data as $race) {
+             $insert->push([
+                 'id' => $race->get('raceID'),
+                 'name' => $race->get('raceName'),
+                 'created_at' => now(),
+                 'updated_at' => now()
              ]);
-             $import->save();
-             $bar->advance();
-             usleep(1000);
-         });
+         }
+         DB::table('races')->insert($insert->toArray());
          $bar->finish();
          print "\n";
          return true;
@@ -287,81 +317,56 @@ class Setup extends Command
          $bar = $this->output->createProgressBar($data->count());
          $bar->setFormat('Importing Regions: %current% of %max% %percent%%');
          $bar->start();
-         $data->each(function ($group) use ($bar) {
-             $import = Region::firstOrNew(['id' => $group->get('regionID')])->fill([
+         $insert = collect();
+         DB::table('regions')->delete();
+         foreach ($data as $group) {
+             $insert->push([
+                 'id' => $group->get('regionID'),
                  'name' => $group->get('regionName'),
                  'pos_x' => $group->get('x'),
                  'pos_y' => $group->get('y'),
-                 'pos_z' => $group->get('z')
+                 'pos_z' => $group->get('z'),
+                 'created_at' => now(),
+                 'updated_at' => now()
              ]);
-             $import->save();
-             $bar->advance();
-             usleep(1000);
-         });
+         }
+         DB::table('regions')->insert($insert->toArray());
          $bar->finish();
          print "\n";
          return true;
      }
 
-     public function ships ()
+     public function types ()
      {
-         $groups = Group::where('category_id', 6)->get()->pluck('id');
-         $files = ["invTypes.json", "dgmTypeAttributes.json"];
-         foreach($files as $file) {
-             $exists = Storage::disk('local')->exists($file);
-             if (!$exists) {
-                 $this->dataCont->downloadSDE($file, storage_path("app/$file"));
-             }
+         $groups = Group::whereIn('category_id', [6,7,16])->get()->pluck('id');
+         $file = "invTypes.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
          }
          $data = collect(json_decode(Storage::get("invTypes.json")))->recursive()->whereIn('groupID', $groups->toArray());
-         $attributes = collect(json_decode(Storage::get("dgmTypeAttributes.json")))->recursive();
          $bar = $this->output->createProgressBar($data->count());
-         $bar->setFormat('Importing Ships: %current% of %max% %percent%%');
+         $bar->setFormat('Importing Types: %current% of %max% %percent%%');
          $bar->start();
-         $data->each(function ($ship)  use ($attributes, $bar) {
-             Type::firstOrNew([
-                 'id' => $ship->get('typeID')
-             ], [
-                 'name' => $ship->get('typeName'),
-                 'published' => $ship->get('published'),
-                 'group_id' => $ship->get('groupID'),
-                 'volume' => $ship->get('volume')
-             ])->save();
-             $bar->advance();
-             usleep(1000);
-         });
-         $bar->finish();
-         print "\n";
-         return true;
-     }
-
-     public function skillz ()
-     {
-         $groups = Group::where('category_id', 16)->get()->pluck('id');
-         $files = ["invTypes.json", "dgmTypeAttributes.json"];
-         foreach($files as $file) {
-             $exists = Storage::disk('local')->exists($file);
-             if (!$exists) {
-                 $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         $insert = collect();
+         DB::table('types')->whereIn('group_id', $groups->toArray())->delete();
+         foreach ($data->chunk(250) as $chunk) {
+             $insert = collect();
+             foreach ($chunk as $types) {
+                 $insert->push([
+                     'id' => $types->get('typeID'),
+                     'name' => $types->get('typeName'),
+                     'published' => $types->get('published'),
+                     'group_id' => $types->get('groupID'),
+                     'volume' => $types->get('volume'),
+                     'created_at' => now(),
+                     'updated_at' => now()
+                 ]);
              }
-         }
-         $data = collect(json_decode(Storage::get("invTypes.json")))->recursive()->whereIn('groupID', $groups->toArray());
-         $attributes = collect(json_decode(Storage::get("dgmTypeAttributes.json")))->recursive();
-         $bar = $this->output->createProgressBar($data->count());
-         $bar->setFormat('Importing Skillz: %current% of %max% %percent%%');
-         $bar->start();
-         $data->each(function ($skills)  use ($attributes, $bar) {
-             Type::firstOrNew([
-                 'id' => $skills->get('typeID')
-             ], [
-                 'name' => $skills->get('typeName'),
-                 'published' => $skills->get('published'),
-                 'group_id' => $skills->get('groupID'),
-                 'volume' => $skills->get('volume')
-             ])->save();
-             $bar->advance();
+             DB::table('types')->insert($insert->toArray());
+             $bar->advance(250);
              usleep(1000);
-         });
+         }
          $bar->finish();
          print "\n";
          return true;
