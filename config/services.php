@@ -48,7 +48,8 @@ return [
         'sde' => [
             'import' => [
                 'ancestries', 'bloodlines', 'categories', 'constellations',
-                'factions', 'groups',  'races', 'regions', 'types', 'attributes'
+                'factions', 'groups',  'races', 'regions', 'types', 'attributes',
+                'skillz'
             ]
         ],
         'scopes'=> [

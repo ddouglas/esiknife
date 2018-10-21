@@ -336,6 +336,34 @@ class Setup extends Command
          return true;
      }
 
+     public function skillz ()
+     {
+         $groups = Group::whereIn('category_id', [6,7,16])->get()->pluck('id');
+         $count = Type::whereIn('group_id', $groups->toArray())->count();
+         $bar = $this->output->createProgressBar($count);
+         $bar->setFormat('Calculating Type Skillz: %current% of %max% %percent%%');
+         $bar->start();
+         $map = collect(config('services.eve.dogma.attributes.skillz.map'));
+         DB::table('type_skillz')->delete();
+         Type::whereIn('group_id', $groups->toArray())->with('skillAttributes')->chunk(50, function ($chunk) use ($bar, $map) {
+             $skillz = collect();
+             foreach ($chunk as $type) {
+                 $attributes = $type->skillAttributes->keyBy('attribute_id');
+                 foreach ($map as $skill => $level) {
+                     if ($attributes->has($skill) && $attributes->has($level)) {
+                         $skillz->push([
+                             'type_id' => $type->id,
+                             'id' => (int)$attributes->get($skill)->value,
+                             'value' => (int)$attributes->get($level)->value
+                         ]);
+                     }
+                 }
+             }
+             DB::table('type_skillz')->insert($skillz->toArray());
+             $bar->advance(50);
+         });
+     }
+
      public function types ()
      {
          $groups = Group::whereIn('category_id', [6,7,16])->get()->pluck('id');
