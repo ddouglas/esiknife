@@ -14,4 +14,5 @@ class TypeDogmaEffect extends Model
     protected $table = 'type_dogma_effects';
     public $incrementing = false;
     protected static $unguarded = true;
+    public $timestamps = false;
 }

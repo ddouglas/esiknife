@@ -14,4 +14,5 @@ class TypeDogmaAttribute extends Model
     protected $table = 'type_dogma_attributes';
     public $incrementing = false;
     protected static $unguarded = true;
+    public $timestamps = false;
 }
