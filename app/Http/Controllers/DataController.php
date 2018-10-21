@@ -1727,44 +1727,10 @@ class DataController extends Controller
     }
 
     // Methods related to importing the SDE from zzeve
-    public function getChrAncestries()
-    {
-        return $this->httpCont->getChrAncestries();
-    }
 
-    public function getChrBloodlines()
+    public function downloadSDE(string $file, string $destination)
     {
-        return $this->httpCont->getChrBloodlines();
-    }
-
-    public function getChrFactions()
-    {
-        return $this->httpCont->getChrFactions();
-    }
-
-    public function getChrRaces()
-    {
-        return $this->httpCont->getChrRaces();
-    }
-
-    public function getInvCategories()
-    {
-        return $this->httpCont->getInvCategories();
-    }
-
-    public function getInvGroups()
-    {
-        return $this->httpCont->getInvGroups();
-    }
-
-    public function getMapConstellations()
-    {
-        return $this->httpCont->getMapConstellations();
-    }
-
-    public function getMapRegions()
-    {
-        return $this->httpCont->getMapRegions();
+        return $this->httpCont->downloadSDE($file, $destination);
     }
 
     public function dispatchJob (string $class, Collection $params, Carbon $delay = null) {

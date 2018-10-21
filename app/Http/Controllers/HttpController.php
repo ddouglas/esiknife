@@ -52,6 +52,15 @@ class HttpController extends Controller
         return $response;
     }
 
+    public function download(array $headers, string $url, string $path, string $destination)
+    {
+        $curl = new Curl();
+        foreach ($headers as $key=>$value) {
+            $curl->setHeader($key, $value);
+        }
+        $curl->download($url.$path, $destination);
+    }
+
     public function oauthVerifyAuthCode (string $code, string $authorization = null)
     {
         return $this->request([
@@ -522,64 +531,11 @@ class HttpController extends Controller
         ], 'post', config('services.eve.urls.esi'),"/v1/universe/ids/", json_encode($names));
     }
 
-    public function getChrAncestries()
+    public function downloadSDE(string $file, string $destination)
     {
-        return $this->request([
+        return $this->download([
             "Content-Type" => "application/json",
             "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.sde'),"/chrAncestries.json", []);
-    }
-    public function getChrBloodlines()
-    {
-        return $this->request([
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.sde'),"/chrBloodlines.json", []);
-    }
-
-    public function getChrFactions()
-    {
-        return $this->request([
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.sde'),"/chrFactions.json", []);
-    }
-
-    public function getChrRaces()
-    {
-        return $this->request([
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.sde'),"/chrRaces.json", []);
-    }
-    public function getInvCategories()
-    {
-        return $this->request([
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.sde'),"/invCategories.json", []);
-    }
-    public function getInvGroups()
-    {
-        return $this->request([
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.sde'),"/invGroups.json", []);
-    }
-
-    public function getMapConstellations()
-    {
-        return $this->request([
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.sde'),"/mapConstellations.json", []);
-    }
-
-    public function getMapRegions()
-    {
-        return $this->request([
-            "Content-Type" => "application/json",
-            "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.sde'),"/mapRegions.json", []);
+        ], config('services.eve.urls.sde'),"/$file", $destination);
     }
 }

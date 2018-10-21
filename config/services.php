@@ -47,9 +47,8 @@ return [
         ],
         'sde' => [
             'import' => [
-                'invGroups','invCategories','mapRegions',
-                'mapConstellations', 'chrAncestries', 'chrBloodlines',
-                'chrRaces', 'chrFactions'
+                'ancestries','bloodlines','categories','constellations','factions',
+                'groups','modules','races','regions','ships','skillz'
             ]
         ],
         'scopes'=> [

@@ -2,9 +2,11 @@
 
 namespace ESIK\Console\Commands;
 
+use Carbon, Storage;
 use Illuminate\Console\Command;
 use ESIK\Http\Controllers\DataController;
 use ESIK\Models\SDE\{Ancestry, Bloodline, Category, Constellation, Faction, Group, Race, Region};
+use ESIK\Models\ESI\Type;
 
 class Setup extends Command
 {
@@ -38,260 +40,331 @@ class Setup extends Command
      *
      * @return mixed
      */
-    public function handle()
-    {
-        $this->info("Starting SDE Import");
+     public function handle()
+     {
+         $start = Carbon::now();
+         $this->info("Starting SDE Import");
+         foreach (config('services.eve.sde.import') as $type) {
+             $this->{$type}();
+             sleep(1);
+         }
+         $end = Carbon::now();
+         $diff = $end->timestamp - $start->timestamp;
+         $this->info("SDE Import Completed Successfully");
+         $this->info("SDE Import Start: $start - End: $end Duration: $diff seconds");
 
-        foreach (config('services.eve.sde.import') as $type) {
-            $this->{$type}();
-        }
-        $this->info("SDE Import Completed Successfully");
+         if ($this->confirm('Delete SDE Cache?')) {
+             $this->info("Deleting SDE Cache");
+             $files = Storage::disk('local')->files();
+             $files = collect($files)->filter(function ($file) {
+                 return $file !== ".gitignore";
+             });
+             Storage::disk('local')->delete($files->toArray());
+             $this->info($files->count() . " files deleted successfully");
+         }
+         return true;
+     }
 
-        $groups = Group::whereIn('category_id', [6,7,16])->where('published', 1)->get();
-        $bar = $this->output->createProgressBar($groups->count());
-        $types = collect();
-        $groups->each(function ($group) use (&$types, &$bar) {
-            $groupRequest = $this->dataCont->getGroup($group->id);
-            $status = $groupRequest->status;
-            $payload = $groupRequest->payload;
-            if (!$status) {
-                return true;
-            }
-            $bar->advance();
-            $types = $types->merge(collect($payload->response->types));
-        });
-        $count = $types->count();
-        $now = now(); $x = 1;
-        $bar = $this->output->createProgressBar($count);
-        $types->each(function ($type) use ($count, &$now, &$x, $bar) {
-            $getType = $this->dataCont->getType($type);
-            $status = $getType->status;
-            $payload = $getType->payload;
-            if (!$status) {
-                $this->error($payload->message);
-                $bar->advance();
-            }
-            $bar->advance();
-            if ($x%20==0) {
-                sleep(1);
-            }
-            $x++;
-        });
-    }
+     public function ancestries ()
+     {
+         $file = "chrAncestries.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $data = collect(json_decode(Storage::get($file)))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Ancestries: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($ancestry) use ($bar) {
+             $import = Ancestry::firstOrNew(['id' => $ancestry->get('ancestryID')])->fill([
+                 'name' => $ancestry->get('ancestryName'),
+                 'bloodline_id' => $ancestry->get('bloodlineID')
+             ]);
+             $import->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
 
-    public function chrAncestries()
-    {
-        $getAncestries = collect($this->dataCont->getChrAncestries())->recursive();
-        $status = $getAncestries->get('status');
-        $payload = $getAncestries->get('payload');
-        if (!$status) {
-            $this->alert(__FUNCTION__. "entcountered an error while requesting data. Error: ". $payload->get('message'));
-            activity(__FUNCTION__)->withProperties($payload->toArray())->log($payload->get('message'));
-            return $status;
-        }
-        $data =collect($payload->get('response'))->recursive();
-        $this->info("Importing Data for ". __FUNCTION__);
-        $bar = $this->output->createProgressBar($data->count());
-        $data->each(function ($ancestry) use ($bar) {
-            $import = Ancestry::firstOrNew(['id' => $ancestry->get('ancestryID')])->fill([
-                'name' => $ancestry->get('ancestryName'),
-                'bloodline_id' => $ancestry->get('bloodlineID')
-            ]);
-            $import->save();
-            $bar->advance();
+     public function bloodlines ()
+     {
+         $file = "chrBloodlines.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $data = collect(json_decode(Storage::get($file)))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Bloodlines: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($bloodline) use ($bar) {
+             $import = Bloodline::firstOrNew(['id' => $bloodline->get('bloodlineID')])->fill([
+                 'name' => $bloodline->get('bloodlineName'),
+                 'race_id' => $bloodline->get('raceID')
+             ]);
+             $import->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
 
-            usleep(1000);
-        });
-        print "\n";
-        return $status;
-    }
+     public function categories ()
+     {
+         $file = "invCategories.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $data = collect(json_decode(Storage::get($file)))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Categories: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($group) use ($bar) {
+             $import = Category::firstOrNew(['id' => $group->get('categoryID')])->fill([
+                 'name' => $group->get('categoryName'),
+                 'published' => $group->get('published')
+             ]);
+             $import->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
 
-    public function chrBloodlines()
-    {
-        $getBloodlines = collect($this->dataCont->getChrBloodlines())->recursive();
-        $status = $getBloodlines->get('status');
-        $payload = $getBloodlines->get('payload');
-        if (!$status) {
-            $this->alert(__FUNCTION__. "entcountered an error while requesting data. Error: ". $payload->get('message'));
-            activity(__FUNCTION__)->withProperties($payload->toArray())->log($payload->get('message'));
-            return $status;
-        }
-        $data = collect($payload->get('response'));
-        $this->info("Importing Data for ". __FUNCTION__);
-        $bar = $this->output->createProgressBar($data->count());
-        $data->each(function ($bloodline) use ($bar) {
-            $import = Bloodline::firstOrNew(['id' => $bloodline->get('bloodlineID')])->fill([
-                'name' => $bloodline->get('bloodlineName'),
-                'race_id' => $bloodline->get('raceID')
-            ]);
-            $import->save();
-            $bar->advance();
-            usleep(1000);
-        });
-        print "\n";
-        return $status;
-    }
+     public function constellations ()
+     {
+         $file = "mapConstellations.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $data = collect(json_decode(Storage::get($file)))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Constellations: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($group) use ($bar) {
+             $import = Constellation::firstOrNew(['id' => $group->get('constellationID')])->fill([
+                 'name' => $group->get('constellationName'),
+                 'pos_x' => $group->get('x'),
+                 'pos_y' => $group->get('y'),
+                 'pos_z' => $group->get('z'),
+                 'region_id' => $group->get('regionID')
+             ]);
+             $import->save();
+             $bar->advance();
 
-    public function chrFactions()
-    {
-        $getFactions = collect($this->dataCont->getChrFactions())->recursive();
-        $status = $getFactions->get('status');
-        $payload = $getFactions->get('payload');
-        if (!$status) {
-            if ($payload->code >= 400 && $payload->code < 500) {
-                activity(__FUNCTION__)->withProperties($payload)->log($payload->message);
-            }
-            return $status;
-        }
-        $data = collect($payload->get('response'));
-        $this->info("Importing Data for ". __FUNCTION__);
-        $bar = $this->output->createProgressBar($data->count());
-        collect($payload->get('response'))->recursive()->each(function ($faction) use ($bar) {
-            $import = Faction::firstOrNew(['id' => $faction->get('factionID')])->fill([
-                'name' => $faction->get('factionName'),
-                'race_id' => $faction->get('raceID')
-            ]);
-            $import->save();
-            $bar->advance();
-            usleep(1000);
-        });
-        print "\n";
-        return $status;
-    }
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
 
-    public function chrRaces()
-    {
-        $getRaces = collect($this->dataCont->getChrRaces())->recursive();
-        $status = $getRaces->get('status');
-        $payload = $getRaces->get('payload');
-        if (!$status) {
-            $this->alert(__FUNCTION__. "entcountered an error while requesting data. Error: ". $payload->get('message'));
-            activity(__FUNCTION__)->withProperties($payload->toArray())->log($payload->get('message'));
-            return $status;
-        }
-        $data = collect($payload->get('response'));
-        $this->info("Importing Data for ". __FUNCTION__);
-        $bar = $this->output->createProgressBar($data->count());
-        $data->each(function ($race) use ($bar) {
-            $import = Race::firstOrNew(['id' => $race->get('raceID')])->fill([
-                'name' => $race->get('raceName')
-            ]);
-            $import->save();
-            $bar->advance();
-            usleep(1000);
-        });
-        print "\n";
-        return $status;
-    }
+     public function factions ()
+     {
+         $file = "chrFactions.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $data = collect(json_decode(Storage::get($file)))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Factions: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($faction) use ($bar) {
+             $import = Faction::firstOrNew(['id' => $faction->get('factionID')])->fill([
+                 'name' => $faction->get('factionName'),
+                 'race_id' => $faction->get('raceID')
+             ]);
+             $import->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
 
-    public function invGroups()
-    {
-        $getInvGroups = collect($this->dataCont->getInvGroups())->recursive();
-        $status = $getInvGroups->get('status');
-        $payload = $getInvGroups->get('payload');
-        if (!$status) {
-            $this->alert(__FUNCTION__. "entcountered an error while requesting data. Error: ". $payload->get('message'));
-            activity(__FUNCTION__)->withProperties($payload->toArray())->log($payload->get('message'));
-            return $status;
-        }
-        $data = collect($payload->get('response'));
-        $this->info("Importing Data for ". __FUNCTION__);
-        $bar = $this->output->createProgressBar($data->count());
-        $data->each(function ($group) use ($bar) {
-            $import = Group::firstOrNew(['id' => $group->get('groupID')])->fill([
-                'name' => $group->get('groupName'),
-                'published' => $group->get('published'),
-                'category_id' => $group->get('categoryID')
-            ]);
-            $import->save();
-            $bar->advance();
-            usleep(1000);
-        });
-        print "\n";
-        return $status;
-    }
+     public function groups ()
+     {
+         $file = "invGroups.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $data = collect(json_decode(Storage::get($file)))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Groups: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($group) use ($bar) {
+             $import = Group::firstOrNew(['id' => $group->get('groupID')])->fill([
+                 'name' => $group->get('groupName'),
+                 'published' => $group->get('published'),
+                 'category_id' => $group->get('categoryID')
+             ]);
+             $import->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
 
-    public function invCategories()
-    {
-        $getInvCategories = collect($this->dataCont->getInvCategories())->recursive();
-        $status = $getInvCategories->get('status');
-        $payload = $getInvCategories->get('payload');
-        if (!$status) {
-            $this->alert(__FUNCTION__. "entcountered an error while requesting data. Error: ". $payload->get('message'));
-            activity(__FUNCTION__)->withProperties($payload->toArray())->log($payload->get('message'));
-            return $status;
-        }
-        $data = collect($payload->get('response'));
-        $this->info("Importing Data for ". __FUNCTION__);
-        $bar = $this->output->createProgressBar($data->count());
-        $data->each(function ($group) use ($bar) {
-            $import = Category::firstOrNew(['id' => $group->get('categoryID')])->fill([
-                'name' => $group->get('categoryName'),
-                'published' => $group->get('published')
-            ]);
-            $import->save();
-            $bar->advance();
-            usleep(1000);
-        });
-        print "\n";
-        return $status;
-    }
+     public function modules ()
+     {
+         $groups = Group::where('category_id', 7)->get()->pluck('id');
+         $files = ["invTypes.json", "dgmTypeAttributes.json"];
+         foreach($files as $file) {
+             $exists = Storage::disk('local')->exists($file);
+             if (!$exists) {
+                 $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+             }
+         }
+         $data = collect(json_decode(Storage::get("invTypes.json")))->recursive()->whereIn('groupID', $groups->toArray());
+         $attributes = collect(json_decode(Storage::get("dgmTypeAttributes.json")))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Modules: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($module)  use ($attributes, $bar) {
+             Type::firstOrNew([
+                 'id' => $module->get('typeID')
+             ], [
+                 'name' => $module->get('typeName'),
+                 'published' => $module->get('published'),
+                 'group_id' => $module->get('groupID'),
+                 'volume' => $module->get('volume')
+             ])->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
 
-    public function mapRegions()
-    {
-        $getMapRegions = collect($this->dataCont->getMapRegions())->recursive();
-        $status = $getMapRegions->get('status');
-        $payload = $getMapRegions->get('payload');
-        if (!$status) {
-            $this->alert(__FUNCTION__. "entcountered an error while requesting data. Error: ". $payload->get('message'));
-            activity(__FUNCTION__)->withProperties($payload->toArray())->log($payload->get('message'));
-            return false;
-        }
-        $data = collect($payload->get('response'));
-        $this->info("Importing Data for ". __FUNCTION__);
-        $bar = $this->output->createProgressBar($data->count());
-        $data->each(function ($group) use ($bar) {
-            $import = Region::firstOrNew(['id' => $group->get('regionID')])->fill([
-                'name' => $group->get('regionName'),
-                'pos_x' => $group->get('x'),
-                'pos_y' => $group->get('y'),
-                'pos_z' => $group->get('z')
-            ]);
-            $import->save();
-            $bar->advance();
-            usleep(1000);
-        });
-        print "\n";
-        return $status;
-    }
+     public function races ()
+     {
+         $file = "chrRaces.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $data = collect(json_decode(Storage::get($file)))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Races: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($race) use ($bar) {
+             $import = Race::firstOrNew(['id' => $race->get('raceID')])->fill([
+                 'name' => $race->get('raceName')
+             ]);
+             $import->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
 
-    public function mapConstellations()
-    {
-        $getMapConstellations = collect($this->dataCont->getMapConstellations())->recursive();
-        $status = $getMapConstellations->get('status');
-        $payload = $getMapConstellations->get('payload');
-        if (!$status) {
-            $this->alert(__FUNCTION__. "entcountered an error while requesting data. Error: ". $payload->get('message'));
-            activity(__FUNCTION__)->withProperties($payload->toArray())->log($payload->get('message'));
-            return $status;
-        }
-        $data = collect($payload->get('response'));
-        $this->info("Importing Data for ". __FUNCTION__);
-        $bar = $this->output->createProgressBar($data->count());
-        $data->each(function ($group) use ($bar) {
-            $import = Constellation::firstOrNew(['id' => $group->get('constellationID')])->fill([
-                'name' => $group->get('constellationName'),
-                'pos_x' => $group->get('x'),
-                'pos_y' => $group->get('y'),
-                'pos_z' => $group->get('z'),
-                'region_id' => $group->get('regionID')
-            ]);
-            $import->save();
-            $bar->advance();
+     public function regions ()
+     {
+         $file = "mapRegions.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $data = collect(json_decode(Storage::get($file)))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Regions: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($group) use ($bar) {
+             $import = Region::firstOrNew(['id' => $group->get('regionID')])->fill([
+                 'name' => $group->get('regionName'),
+                 'pos_x' => $group->get('x'),
+                 'pos_y' => $group->get('y'),
+                 'pos_z' => $group->get('z')
+             ]);
+             $import->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
 
-            usleep(1000);
-        });
-        print "\n";
-        return $status;
-    }
+     public function ships ()
+     {
+         $groups = Group::where('category_id', 6)->get()->pluck('id');
+         $files = ["invTypes.json", "dgmTypeAttributes.json"];
+         foreach($files as $file) {
+             $exists = Storage::disk('local')->exists($file);
+             if (!$exists) {
+                 $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+             }
+         }
+         $data = collect(json_decode(Storage::get("invTypes.json")))->recursive()->whereIn('groupID', $groups->toArray());
+         $attributes = collect(json_decode(Storage::get("dgmTypeAttributes.json")))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Ships: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($ship)  use ($attributes, $bar) {
+             Type::firstOrNew([
+                 'id' => $ship->get('typeID')
+             ], [
+                 'name' => $ship->get('typeName'),
+                 'published' => $ship->get('published'),
+                 'group_id' => $ship->get('groupID'),
+                 'volume' => $ship->get('volume')
+             ])->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
+
+     public function skillz ()
+     {
+         $groups = Group::where('category_id', 16)->get()->pluck('id');
+         $files = ["invTypes.json", "dgmTypeAttributes.json"];
+         foreach($files as $file) {
+             $exists = Storage::disk('local')->exists($file);
+             if (!$exists) {
+                 $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+             }
+         }
+         $data = collect(json_decode(Storage::get("invTypes.json")))->recursive()->whereIn('groupID', $groups->toArray());
+         $attributes = collect(json_decode(Storage::get("dgmTypeAttributes.json")))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Skillz: %current% of %max% %percent%%');
+         $bar->start();
+         $data->each(function ($skills)  use ($attributes, $bar) {
+             Type::firstOrNew([
+                 'id' => $skills->get('typeID')
+             ], [
+                 'name' => $skills->get('typeName'),
+                 'published' => $skills->get('published'),
+                 'group_id' => $skills->get('groupID'),
+                 'volume' => $skills->get('volume')
+             ])->save();
+             $bar->advance();
+             usleep(1000);
+         });
+         $bar->finish();
+         print "\n";
+         return true;
+     }
+
 }
