@@ -39,6 +39,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::match(['GET'], '/{member}/mail/{mail_id}', 'MemberController@mail')->name('mail')->middleware("authorized:esi-mail.read_mail.v1");
     Route::match(['GET'], '/{member}/skills', 'MemberController@skills')->name('skillz')->middleware("authorized:esi-skills.read_skills.v1");
     Route::match(['GET'], '/{member}/skills/flyable', 'MemberController@flyable')->name('skillz.flyable')->middleware("authorized:esi-skills.read_skills.v1");
+    Route::match(['GET'], '/{member}/skills/analyzer', 'MemberController@analyzer')->name('skillz.analyzer')->middleware("authorized:esi-skills.read_skills.v1");
     Route::match(['GET'], '/{member}/skillqueue', 'MemberController@queue')->name('skillqueue')->middleware("authorized:esi-skills.read_skillqueue.v1");
     Route::match(['GET'], '/{member}/transactions', 'MemberController@transactions')->name('transactions')->middleware("authorized:esi-wallet.read_character_wallet.v1");
     Route::match(['GET'], '/{member}/journal', 'MemberController@journal')->name('journal')->middleware("authorized:esi-wallet.read_character_wallet.v1");

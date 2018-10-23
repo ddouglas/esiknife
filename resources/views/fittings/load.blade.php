@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My Bookmarks')
+@section('title', 'Load My Fittings')
 
 @section('content')
     <div class="container">

@@ -23,6 +23,45 @@ class MemberController extends Controller
         ]);
     }
 
+    public function analyzer (int $member)
+    {
+        $member = Member::with('skillz')->findOrFail($member);
+
+        $fittings = Auth::user()->fittings()->with('hull.group')->get();
+        if ($fittings->isEmpty()) {
+            Session::flash('alert', [
+                'header' => "Insufficient Number of Fittings",
+                'message' => "You must have atleast one fitting saved to the database before you can view that page.",
+                'type' => "info",
+                'close' => 1
+            ]);
+            return redirect(route('portal.skillz.list'));
+        }
+        $groups = $fittings->pluck('hull.group');
+        if (Request::has('group')) {
+            $group = (int) Request::get('group');
+            $fittings = $fittings->where('hull.group_id', $group);
+        }
+        $skillz = $member->skillz->keyBy('id');
+        foreach ($fittings as $fitting) {
+            $missing = collect();
+            foreach ($fitting->skills as $skill) {
+                if (!$skillz->has($skill->get('id'))) {
+                    $skill->put('current', 0);
+                    $missing->put($skill->get('id'),$skill);
+                } else if ($skillz->get($skill->get('id'))->pivot->active_skill_level < $skill->get('level')) {
+                    $skill->put('current', $skillz->get($skill->get('id'))->pivot->active_skill_level);
+                    $missing->put($skill->get('id'),$skill);
+                }
+            }
+            $fitting->missing = $missing;
+        }
+        return view('portal.skillz.analyzer', [
+            'fittings' => $fittings,
+            'groups' => $groups
+        ])->withMember($member);
+    }
+
     public function assets (int $member)
     {
         $member = Member::findOrFail($member);
