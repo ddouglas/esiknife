@@ -47,7 +47,7 @@ return [
         ],
         'sde' => [
             'import' => [
-                'ancestries', 'bloodlines', 'categories', 'constellations',
+                'ancestries', 'bloodlines', 'categories', 'constellations', 'effects',
                 'factions', 'groups',  'races', 'regions', 'types', 'attributes',
                 'skillz'
             ]
@@ -128,7 +128,7 @@ return [
             'attributes' => [
                 'skillz' => [
                     'all' => [
-                        182,183,184,1285,1289,1290,277,278,279,1286,1287,1288
+                        182,183,184,1285,1289,1290,277,278,279,1286,1287,1288,275
                     ],
                     'indicators' => [
                         182,183,184,1285,1289,1290
@@ -143,7 +143,8 @@ return [
                         1285 => 1286,
                         1289 => 1287,
                         1290 => 1288
-                    ]
+                    ],
+                    'rank' => 275
                 ]
             ]
         ],

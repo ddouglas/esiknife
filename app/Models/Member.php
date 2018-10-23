@@ -114,7 +114,7 @@ class Member extends Authenticatable
 
     public function fittings ()
     {
-        return $this->hasMany(Fitting::class, 'id');
+        return $this->hasMany(Fitting::class, 'member_id');
     }
 
     public function groups()

@@ -13,6 +13,10 @@
         <div class="row">
             <div class="col-lg-4">
                 <div class="list-group">
+                    <a href="{{ route('fittings.list') }}" class="btn btn-info">
+                        My Fits
+                    </a>
+                    <hr />
                     @if (isset($groups) && $groups->isNotEmpty())
                         <div class="list-group-item">
                             Click on a ship group below to filter your fittings to only that group

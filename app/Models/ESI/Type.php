@@ -15,7 +15,7 @@ class Type extends Model
 
     public function skillz()
     {
-        return $this->belongsToMany(Type::class, 'type_skillz', 'type_id', 'id')->withPivot('value');
+        return $this->belongsToMany(Type::class, 'type_skillz', 'type_id', 'id')->withPivot('value')->with('skillz');
     }
 
     public function attributes()
@@ -25,7 +25,7 @@ class Type extends Model
 
     public function skillAttributes()
     {
-        return $this->hasMany(TypeDogmaAttribute::class, 'type_id')->whereIn('attribute_id', [182,183,184,1285,1289,1290,277,278,279,1286,1287,1288]);
+        return $this->hasMany(TypeDogmaAttribute::class, 'type_id')->whereIn('attribute_id', config('services.eve.dogma.attributes.skillz.all'));
     }
 
     public function effects()

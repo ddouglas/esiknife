@@ -15,7 +15,7 @@ class Setup extends Command
      *
      * @var string
      */
-    protected $signature = 'setup';
+    protected $signature = 'setup {tables?} {--delete_cache : Delete the downloaded SDE Files when command has finished processing}';
 
     /**
      * The console command description.
@@ -44,7 +44,19 @@ class Setup extends Command
      {
          $start = Carbon::now();
          $this->info("Starting SDE Import");
-         foreach (config('services.eve.sde.import') as $type) {
+         $import = collect(config('services.eve.sde.import'));
+         $tables = collect(explode(',',$this->argument('tables')));
+
+         if ($tables->isNotEmpty()) {
+             foreach ($tables as $table) {
+                 if (!$import->containsStrict($table)) {
+                     $this->alert('Invalid Table Specified. Please only specify valid table names: '. $import->implode(', '));
+                     return false;
+                 }
+             }
+             $import = $tables;
+         }
+         foreach ($import as $type) {
              $this->{$type}();
              sleep(1);
          }
@@ -53,16 +65,16 @@ class Setup extends Command
          $this->info("SDE Import Completed Successfully");
          $this->info("SDE Import Start: $start - End: $end  - Duration: $diff seconds");
 
-         if ($this->confirm('Delete SDE Cache?')) {
-             $this->info("Deleting SDE Cache");
-             $files = Storage::disk('local')->files();
-             $files = collect($files)->filter(function ($file) {
-                 return $file !== ".gitignore";
-             });
-             Storage::disk('local')->delete($files->toArray());
-             $this->info($files->count() . " files deleted successfully");
+         if (!$this->option('delete_cache') && !$this->confirm('Delete SDE Cache?')) {
+             return true;
          }
-         return true;
+         $this->info("Deleting SDE Cache");
+         $files = Storage::disk('local')->files();
+         $files = collect($files)->filter(function ($file) {
+             return $file !== ".gitignore";
+         });
+         Storage::disk('local')->delete($files->toArray());
+         $this->info($files->count() . " files deleted successfully");
      }
 
      public function ancestries ()
@@ -101,12 +113,11 @@ class Setup extends Command
          if (!$exists) {
              $this->dataCont->downloadSDE($file, storage_path("app/$file"));
          }
-         $groups = Group::select('id')->whereIn('category_id', [6,7,16])->get()->pluck('id')->toArray();
-         $typeIDs = Type::select('id')->whereIn('group_id', $groups)->get()->pluck('id')->toArray();
-         $data = collect(json_decode(Storage::get($file)))->recursive()->whereIn('typeID', $typeIDs);
+         $data = collect(json_decode(Storage::get($file)))->recursive();
          $bar = $this->output->createProgressBar($data->count());
          $bar->setFormat('Importing Dogma Type Attributes: %current% of %max% %percent%%');
          $bar->start();
+         DB::table('type_dogma_attributes')->delete();
          foreach ($data->chunk(250) as $chunk) {
              $insert = collect();
              foreach ($chunk as $attribute) {
@@ -213,6 +224,36 @@ class Setup extends Command
              ]);
          }
          DB::table('constellations')->insert($insert->toArray());
+         $bar->finish();
+         print "\n";
+         return true;
+     }
+
+     public function effects ()
+     {
+         $file = "dgmTypeEffects.json";
+         $exists = Storage::disk('local')->exists($file);
+         if (!$exists) {
+             $this->dataCont->downloadSDE($file, storage_path("app/$file"));
+         }
+         $data = collect(json_decode(Storage::get($file)))->recursive();
+         $bar = $this->output->createProgressBar($data->count());
+         $bar->setFormat('Importing Dogma Type Effects: %current% of %max% %percent%%');
+         $bar->start();
+         DB::table('type_dogma_effects')->delete();
+         foreach ($data->chunk(250) as $chunk) {
+             $insert = collect();
+             foreach ($chunk as $effect) {
+                 $insert->push([
+                     'type_id' => $effect->get('typeID'),
+                     'effect_id' => $effect->get('effectID'),
+                     'is_default' => $effect->get('isDefault')
+                 ]);
+             }
+             DB::table('type_dogma_effects')->insert($insert->toArray());
+             $bar->advance(250);
+             usleep(1000);
+         }
          $bar->finish();
          print "\n";
          return true;
@@ -338,14 +379,14 @@ class Setup extends Command
 
      public function skillz ()
      {
-         $groups = Group::whereIn('category_id', [6,7,16])->get()->pluck('id');
+         $groups = Group::whereIn('category_id', [6,7,8,16,18,20,22,32,87])->get()->pluck('id');
          $count = Type::whereIn('group_id', $groups->toArray())->count();
          $bar = $this->output->createProgressBar($count);
          $bar->setFormat('Calculating Type Skillz: %current% of %max% %percent%%');
          $bar->start();
          $map = collect(config('services.eve.dogma.attributes.skillz.map'));
          DB::table('type_skillz')->delete();
-         Type::whereIn('group_id', $groups->toArray())->with('skillAttributes')->chunk(50, function ($chunk) use ($bar, $map) {
+         Type::whereIn('group_id', $groups->toArray())->with('skillAttributes')->chunk(100, function ($chunk) use ($bar, $map) {
              $skillz = collect();
              foreach ($chunk as $type) {
                  $attributes = $type->skillAttributes->keyBy('attribute_id');
@@ -358,15 +399,22 @@ class Setup extends Command
                          ]);
                      }
                  }
+                 if ($attributes->has(config('services.eve.dogma.attributes.skillz.rank'))){
+                     $type->rank = (int) $attributes->get(config('services.eve.dogma.attributes.skillz.rank'))->value;
+                     $type->save();
+                 }
              }
              DB::table('type_skillz')->insert($skillz->toArray());
-             $bar->advance(50);
+             $bar->advance(100);
          });
+         $bar->finish();
+         print "\n";
+         return true;
      }
 
      public function types ()
      {
-         $groups = Group::whereIn('category_id', [6,7,16])->get()->pluck('id');
+         $groups = Group::whereIn('category_id', [6,7,8,16,18,20,22,32,87])->get()->pluck('id');
          $file = "invTypes.json";
          $exists = Storage::disk('local')->exists($file);
          if (!$exists) {

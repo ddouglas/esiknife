@@ -537,8 +537,6 @@ class DataController extends Controller
         $types = Type::whereIn('id', $types->toArray())->with('group')->get()->keyBy('id');
         $fittings->map(function ($fitting) use ($types) {
             $fitting->put('hull', $types->get($fitting->get('ship_type_id')));
-            // $fitting->put('hull_group_id', $types->get($fitting->get('ship_type_id'))->group_id);
-            $fitting->put('hull_group', $types->get($fitting->get('ship_type_id'))->group);
             return $fitting;
         });
         return (object)[
@@ -1663,45 +1661,42 @@ class DataController extends Controller
                 'group_id' => $response->get('group_id'),
                 'volume' => $response->get('volume')
             ]);
-            $type->save();
+            // $type->save();
 
-            if ($response->has('dogma_effects')) {
-                $effects = $response->get('dogma_effects');
-                $dbEffects = $type->effects()->whereIn('effect_id', $effects->pluck('effect_id')->toArray())->get()->keyBy('effect_id');
-                $missingEffects = collect();
-                $effects->each(function ($effect) use ($dbEffects, $type, $missingEffects) {
-                    if (!$dbEffects->has($effect->get('effect_id'))) {
-                        $missingEffects->push($effect->toArray());
-                    }
-                });
-                $type->effects()->createMany($missingEffects->toArray());
-            }
+            // if ($response->has('dogma_effects')) {
+            //     $effects = $response->get('dogma_effects');
+            //     $dbEffects = $type->effects()->whereIn('effect_id', $effects->pluck('effect_id')->toArray())->get()->keyBy('effect_id');
+            //     $missingEffects = collect();
+            //     $effects->each(function ($effect) use ($dbEffects, $type, $missingEffects) {
+            //         if (!$dbEffects->has($effect->get('effect_id'))) {
+            //             $missingEffects->push($effect->toArray());
+            //         }
+            //     });
+            //     $type->effects()->createMany($missingEffects->toArray());
+            // }
             if ($response->has('dogma_attributes')) {
                 $attributes = $response->get('dogma_attributes');
-                $dbAttributes = $type->attributes()->whereIn('attribute_id', $attributes->pluck('attribute_id')->toArray())->get()->keyBy('attribute_id');
-                $missingAttributes = collect();
-                $attributes->each(function ($attribute) use ($dbAttributes, $type, $missingAttributes) {
-                    if ($attribute->get('attribute_id') == 4) {
-                        return true;
-                    }
-                    if (!$dbAttributes->has($attribute->get('attribute_id'))) {
-                        $attribute->toArray();
-                        $missingAttributes->push($attribute->toArray());
-                    }
-                });
-                $type->attributes()->createMany($missingAttributes->toArray());
+
+                // $type->attributes()->delete();
+                // $dbAttributes = $type->attributes()->whereIn('attribute_id', $attributes->pluck('attribute_id')->toArray())->get()->keyBy('attribute_id');
+                // $missingAttributes = collect();
+                // $attributes->each(function ($attribute) use ($dbAttributes, $type, $missingAttributes) {
+                //     if ($attribute->get('attribute_id') == 4) {
+                //         return true;
+                //     }
+                //     if (!$dbAttributes->has($attribute->get('attribute_id'))) {
+                //         $attribute->toArray();
+                //         $missingAttributes->push($attribute->toArray());
+                //     }
+                // });
+                // $type->attributes()->createMany($missingAttributes->toArray());
                 $typeDogma = $attributes->whereIn('attribute_id', config('services.eve.attributes.skillz.all'))->keyBy('attribute_id');
+                dd($attributes, $typeDogma, config('services.eve.attributes.skillz.all'));
                 $typeSkillz = collect();
                 collect(config('services.eve.attributes.skillz.mapping'))->each(function ($level, $skill) use ($typeDogma, $typeSkillz) {
                     if ($typeDogma->has($skill) && $typeDogma->has($level)) {
                         $skillId = (int)$typeDogma->get($skill)->get('value');
                         $skillLvl = (int)$typeDogma->get($level)->get('value');
-                        $dogmaSkill = Type::firstOrNew(['id' => $skillId]);
-                        if (!$dogmaSkill->exists) {
-                            $job = new \ESIK\Jobs\ESI\GetType($skillId);
-                            $job->delay(now());
-                            $this->dispatch($job);
-                        }
                         $typeSkillz->push(collect([
                             'id' => $skillId,
                             'value' => $skillLvl

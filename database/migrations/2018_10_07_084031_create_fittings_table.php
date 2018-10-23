@@ -19,11 +19,12 @@ class CreateFittingsTable extends Migration
             $table->unsignedInteger('type_id'); // ID of the Ship Type that the fitting is for
             $table->string('name'); // The Player assigned name of the Fitting
             $table->text('description'); // The player assigned description of the fitting
+            $table->json('skills');
             $table->timestamps();
 
             $table->primary('id');
             $table->index('member_id');
-            
+
             $table->foreign('member_id')->references('id')->on('members')->onUpdate('cascade')->onDelete('cascade');
         });
     }
