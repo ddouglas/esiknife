@@ -12,9 +12,7 @@
                         Granting Access to your data
                     </div>
                     <div class="card-body">
-                        @if ($isGroup)
-                            {{ $isGroup ? $grant->name : $grant->member->info->name }} is requesting access to your data with the following scopes. Please review this entire screen before clicking <strong>"Grant Access to Data"</strong> or <strong>"Do not grant Access to Data"</strong>
-                        @endif
+                        {{ $isGroup ? $grant->name : $grant->member->info->name }} is requesting access to your data with the following scopes. Please review this entire screen before clicking <strong>"Grant Access to Data"</strong> or <strong>"Do not grant Access to Data"</strong>
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group">

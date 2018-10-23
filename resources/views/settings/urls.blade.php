@@ -95,7 +95,7 @@
                                                 @foreach (config('services.eve.scopes') as $key => $scope)
                                                     <li>
                                                         <label for="scopes[{{ $key }}]">
-                                                            <input type="checkbox" name="scopes[{{ $key }}]" id="scopes[{{ $key }}]" class="item" @if(isset(old('scopes')[$key])){{ "checked" }} @endif /> {{ $scope }}
+                                                            <input type="checkbox" name="scopes[{{ $key }}]" id="scopes[{{ $key }}]" class="item" @if(isset(old('scopes')[$key])){{ "checked" }} @endif /> {{ $scope['scope'] }}
                                                         </label>
                                                     </li>
                                                 @endforeach
