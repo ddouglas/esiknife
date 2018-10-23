@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My Bookmarks')
+@section('title', $member->info->name ."'s Bookmarks")
 
 @section('content')
     <div class="container">

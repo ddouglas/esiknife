@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My Skillqueue')
+@section('title', Auth::user()->info->name . "'s Skillqueue")
 
 @section('content')
     <div class="container">

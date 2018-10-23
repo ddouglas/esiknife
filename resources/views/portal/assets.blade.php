@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My Assets')
+@section('title', $member->info->name ."'s Assets")
 
 @section('content')
     <div class="container">

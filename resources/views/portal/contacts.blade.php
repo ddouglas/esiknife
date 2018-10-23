@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My Contacts')
+@section('title', $member->info->name ."'s Contacts")
 
 @section('content')
     <div class="container">

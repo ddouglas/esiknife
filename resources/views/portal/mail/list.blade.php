@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My EveMail')
+@section('title', Auth::user()->info->name . "'s EveMails")
 
 @section('content')
     <div class="container">

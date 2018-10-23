@@ -399,7 +399,7 @@ class Setup extends Command
                          ]);
                      }
                  }
-                 if ($attributes->has(config('services.eve.dogma.attributes.skillz.rank'))){
+                 if ($attributes->has(config('services.eve.dogma.attributes.skillz.rank'))) {
                      $type->rank = (int) $attributes->get(config('services.eve.dogma.attributes.skillz.rank'))->value;
                      $type->save();
                  }

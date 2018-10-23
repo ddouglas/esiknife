@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My EveMail')
+@section('title', $mail->subject)
 
 @section('content')
     <div class="container">

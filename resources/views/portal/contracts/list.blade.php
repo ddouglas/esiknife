@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My Contracts')
+@section('title', Auth::user()->info->name . "'s Contracts")
 
 @section('css')
     <style>

@@ -1,6 +1,6 @@
 @extends('layout.index')
 
-@section('title', 'My Wallet Transactions')
+@section('title', Auth::user()->info->name . "'s Journals")
 
 @section('content')
     <div class="container">
