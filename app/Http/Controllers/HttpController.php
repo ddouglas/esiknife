@@ -290,7 +290,7 @@ class HttpController extends Controller
             "Authorization" => "Bearer ". $token,
             "Content-Type" => "application/json",
             "User-Agent" => config("services.eve.userAgent")
-        ], 'get', config('services.eve.urls.esi'),"/v4/characters/{$id}/wallet/journal/", []);
+        ], 'get', config('services.eve.urls.esi'),"/v6/characters/{$id}/wallet/journal/", []);
     }
 
     public function getCharactersCharacterIdWalletTransactions ($id, $token)
