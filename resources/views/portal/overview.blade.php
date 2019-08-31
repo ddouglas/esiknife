@@ -46,6 +46,9 @@
                                     <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Current Location:</strong> {{ $member->location->system->name }}</li>
                                 @endif
                             @endif
+                            @if (isset($scopes) && $scopes->contains(config('services.eve.scopes.readCharacterWallet')))
+                                <li class="list-group-item d-flex justify-content-between align-items-center"><strong>Wallet Balance:</strong> {{ number_format($member->wallet_balance, 2) }} ISK</li> 
+                            @endif
                         </ul>
                     </div>
                 </div>
